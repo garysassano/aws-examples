@@ -1,0 +1,12 @@
+{
+  "root": false,
+  "extends": "//",
+  "files": {
+    "includes": [
+      "src/**",
+      "!src/assets",
+      "package.json",
+      "cdk.json"
+    ]
+  }
+}

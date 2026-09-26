@@ -1,0 +1,34 @@
+node_modules/
+coverage/
+dist/
+logs/
+*.log
+*.tsbuildinfo
+.env*
+!.env.example
+
+# cdk
+cdk.out/
+# Context lookups are cached per AWS account; examples run in the reader's own.
+cdk.context.json
+
+# cdktn
+.gen/
+cdktn.out/
+cdktf.out/
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+terraform.tfstate.d/
+
+# sst and astro
+.sst/
+.astro/
+
+# rust
+target/
+
+# python
+__pycache__/
+.venv/

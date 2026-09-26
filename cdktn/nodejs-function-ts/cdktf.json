@@ -1,0 +1,15 @@
+{
+  "language": "typescript",
+  "languageOptions": {
+    "importExtension": ".js"
+  },
+  "app": "node --import tsx src/main.ts",
+  "output": "cdktn.out",
+  "projectId": "a4076fde-2fc9-4746-8898-1bef0df1d9ae",
+  "sendCrashReports": "false",
+  "targetVersions": {
+    "terraform": ">=1.5.7",
+    "opentofu": ">=1.6.0"
+  },
+  "terraformProviders": ["hashicorp/aws@~> 6.66.0", "jSherz/node-lambda-packager@~> 1.15.0"]
+}

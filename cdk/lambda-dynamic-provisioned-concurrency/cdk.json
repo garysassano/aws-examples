@@ -1,0 +1,7 @@
+{
+  "app": "node --import tsx src/main.ts",
+  "output": "cdk.out",
+  "context": {
+    "cli-telemetry": false
+  }
+}

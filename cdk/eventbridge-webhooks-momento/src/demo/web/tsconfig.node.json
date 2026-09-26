@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "isolatedModules": true,
+    "lib": ["ES2025"],
+    "module": "ESNext",
+    "moduleDetection": "force",
+    "moduleResolution": "bundler",
+    "noEmit": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "target": "ES2025",
+    "types": ["node"]
+  },
+  "include": ["vite.config.ts"]
+}

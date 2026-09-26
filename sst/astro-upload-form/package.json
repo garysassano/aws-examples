@@ -1,0 +1,31 @@
+{
+  "name": "sst-astro-upload-form",
+  "private": true,
+  "version": "0.0.0",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "astro": "astro",
+    "build": "astro build",
+    "check": "pnpm lint && pnpm typecheck && pnpm build",
+    "deploy": "sst deploy",
+    "destroy": "sst remove",
+    "dev": "sst dev astro dev",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "typecheck": "astro check"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "catalog:",
+    "@aws-sdk/s3-request-presigner": "catalog:",
+    "astro": "catalog:",
+    "astro-sst": "catalog:",
+    "sst": "catalog:"
+  },
+  "devDependencies": {
+    "@astrojs/check": "catalog:",
+    "@biomejs/biome": "catalog:",
+    "@types/node": "catalog:",
+    "typescript": "^6.0.3"
+  }
+}

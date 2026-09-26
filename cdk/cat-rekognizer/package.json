@@ -1,0 +1,42 @@
+{
+  "name": "cdk-cat-rekognizer",
+  "private": true,
+  "version": "0.0.0",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "cdk": "cdk",
+    "check": "pnpm lint && pnpm typecheck && pnpm synth",
+    "deploy": "cdk deploy",
+    "destroy": "cdk destroy",
+    "diff": "cdk diff",
+    "format": "biome format --write .",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "synth": "cdk synth --strict",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@aws-lambda-powertools/idempotency": "catalog:",
+    "@aws-lambda-powertools/logger": "catalog:",
+    "@aws-lambda-powertools/parser": "catalog:",
+    "@aws-sdk/client-dynamodb": "catalog:",
+    "@aws-sdk/client-rekognition": "catalog:",
+    "@aws-sdk/client-s3": "catalog:",
+    "@aws-sdk/s3-request-presigner": "catalog:",
+    "@middy/core": "catalog:",
+    "@middy/event-normalizer": "catalog:",
+    "@types/aws-lambda": "catalog:",
+    "aws-cdk-lib": "catalog:",
+    "constructs": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "catalog:",
+    "@types/node": "catalog:",
+    "aws-cdk": "catalog:",
+    "esbuild": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:"
+  }
+}

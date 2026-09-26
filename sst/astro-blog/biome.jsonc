@@ -1,0 +1,29 @@
+{
+  "$schema": "../../node_modules/@biomejs/biome/configuration_schema.json",
+  "root": false,
+  "extends": "//",
+  "files": {
+    "includes": [
+      "src/**",
+      "!src/assets",
+      "package.json",
+      "astro.config.mjs",
+      "sst.config.ts"
+    ]
+  },
+  "overrides": [
+    {
+      "includes": [
+        "**/*.astro"
+      ],
+      "linter": {
+        "rules": {
+          "correctness": {
+            "noUnusedImports": "off",
+            "noUnusedVariables": "off"
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "name": "cdk-eventbridge-webhooks-momento",
+  "private": true,
+  "version": "0.0.0",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "cdk": "cdk",
+    "check": "pnpm lint && pnpm typecheck && pnpm synth",
+    "deploy": "cdk deploy",
+    "destroy": "cdk destroy",
+    "diff": "cdk diff",
+    "format": "biome format --write .",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "synth": "cdk synth --strict",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@aws-cdk/aws-pipes-alpha": "catalog:",
+    "@aws-cdk/aws-pipes-enrichments-alpha": "catalog:",
+    "@aws-cdk/aws-pipes-sources-alpha": "catalog:",
+    "@aws-cdk/aws-pipes-targets-alpha": "catalog:",
+    "aws-cdk-lib": "catalog:",
+    "constructs": "catalog:"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "catalog:",
+    "@types/node": "catalog:",
+    "aws-cdk": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:",
+    "zod": "catalog:"
+  }
+}

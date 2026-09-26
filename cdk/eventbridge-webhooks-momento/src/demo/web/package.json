@@ -1,0 +1,35 @@
+{
+  "name": "cdk-eventbridge-webhooks-momento-demo-web",
+  "private": true,
+  "version": "0.0.0",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "check": "pnpm lint && pnpm typecheck && pnpm build",
+    "dev": "vite",
+    "lint": "biome check .",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit -p tsconfig.app.json && tsc --noEmit -p tsconfig.node.json"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "catalog:",
+    "@aws-sdk/util-dynamodb": "^3.996.9",
+    "@gomomento/sdk-web": "^1.118.1",
+    "@tippyjs/react": "^4.2.6",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "react-toastify": "^11.1.0",
+    "tippy.js": "^6.3.7"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "catalog:",
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.1",
+    "tailwindcss": "^4.3.3",
+    "typescript": "catalog:",
+    "vite": "^8.3.0"
+  }
+}

@@ -1,0 +1,6 @@
+# This Lambda app is built on its own inside Docker, so it is its own pnpm root.
+packages:
+  - "."
+
+allowBuilds:
+  esbuild: true

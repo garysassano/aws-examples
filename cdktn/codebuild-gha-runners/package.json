@@ -1,0 +1,36 @@
+{
+  "name": "cdktn-codebuild-gha-runners",
+  "private": true,
+  "version": "0.0.0",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "cdktn": "cdktn",
+    "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm synth",
+    "deploy": "cdktn deploy --auto-approve",
+    "destroy": "cdktn destroy --auto-approve",
+    "diff": "cdktn diff",
+    "format": "biome format --write .",
+    "gen": "cdktn get",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "synth": "cdktn synth",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "cdktn": "catalog:",
+    "constructs": "catalog:",
+    "yaml": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "catalog:",
+    "@types/node": "catalog:",
+    "cdktn-cli": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}
