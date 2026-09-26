@@ -1,2 +1,0 @@
-awslambdaric
-runtime_client

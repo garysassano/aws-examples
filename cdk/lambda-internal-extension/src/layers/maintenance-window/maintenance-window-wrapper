@@ -1,0 +1,11 @@
+#!/bin/bash
+# Lambda runs this instead of the runtime entrypoint because AWS_LAMBDA_EXEC_WRAPPER points here.
+# "$@" is the managed runtime's own command, e.g. `/var/lang/bin/python3.15 /var/runtime/bootstrap.py`.
+# Swapping _HANDLER makes the stock runtime interface client load the maintenance-window gate,
+# which calls the configured handler whenever no maintenance window is active.
+set -euo pipefail
+
+export MAINTENANCE_WINDOW_ORIGINAL_HANDLER="${_HANDLER}"
+export _HANDLER="maintenance_window_gate.handler"
+
+exec "$@"

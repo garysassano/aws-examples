@@ -17,7 +17,6 @@ catalog:
   aws-cdk-lib: ^2.270.0
   # Alpha modules ship in lockstep with aws-cdk-lib; bump them together.
   "@aws-cdk/aws-apprunner-alpha": 2.270.0-alpha.0
-  "@aws-cdk/aws-lambda-python-alpha": 2.270.0-alpha.0
   "@aws-cdk/aws-pipes-alpha": 2.270.0-alpha.0
   "@aws-cdk/aws-pipes-enrichments-alpha": 2.270.0-alpha.0
   "@aws-cdk/aws-pipes-sources-alpha": 2.270.0-alpha.0

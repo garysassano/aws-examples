@@ -8,6 +8,7 @@
     "moduleResolution": "NodeNext",
     "noEmit": true,
     "noImplicitReturns": true,
+    "noUncheckedIndexedAccess": true,
     "skipLibCheck": true,
     "strict": true,
     "strictPropertyInitialization": false,
@@ -17,10 +18,13 @@
     ]
   },
   "include": [
-    "src/**/*.ts"
+    "src/**/*.ts",
+    "test/**/*.ts"
   ],
   "exclude": [
     "cdk.out",
+    "coverage",
+    "dist",
     "node_modules"
   ]
 }

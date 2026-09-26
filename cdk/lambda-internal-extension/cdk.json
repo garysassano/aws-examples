@@ -3,5 +3,9 @@
   "output": "cdk.out",
   "context": {
     "cli-telemetry": false
+  },
+  "watch": {
+    "include": ["src/**/*.ts"],
+    "exclude": ["README.md", "cdk*.json", "node_modules", "coverage", "dist"]
   }
 }

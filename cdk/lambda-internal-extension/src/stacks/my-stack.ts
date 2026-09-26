@@ -1,6 +1,6 @@
-import { join } from "node:path";
-import { PythonLayerVersion } from "@aws-cdk/aws-lambda-python-alpha";
-import { AttributeType, BillingMode, Table } from "aws-cdk-lib/aws-dynamodb";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { AttributeType, BillingMode, type CfnTable, Table } from "aws-cdk-lib/aws-dynamodb";
 import {
   Effect,
   ManagedPolicy,
@@ -9,90 +9,114 @@ import {
   Role,
   ServicePrincipal,
 } from "aws-cdk-lib/aws-iam";
-import { Code, Function, Runtime } from "aws-cdk-lib/aws-lambda";
+import {
+  Code,
+  Function,
+  LayerVersion,
+  LoggingFormat,
+  Runtime,
+  RuntimeFamily,
+} from "aws-cdk-lib/aws-lambda";
+import { LogGroup, RetentionDays } from "aws-cdk-lib/aws-logs";
 import { StringListParameter } from "aws-cdk-lib/aws-ssm";
-import { RemovalPolicy, Stack, type StackProps, Validations } from "aws-cdk-lib/core";
+import {
+  CfnDeletionPolicy,
+  Duration,
+  RemovalPolicy,
+  Stack,
+  type StackProps,
+} from "aws-cdk-lib/core";
 import type { Construct } from "constructs";
+import { getMaintenanceWindow } from "../utils/maintenance-window.js";
 
-// Function and layer code live in the Python package next to src/.
-const codeRoot = join(import.meta.dirname, "../../cdk_aws_lambda_internal_extension");
+const stackDir = dirname(fileURLToPath(import.meta.url));
 
-// Midnight today to midnight tomorrow, computed at synth time.
-function getMaintenanceWindow(): string[] {
-  const today = new Date();
-  const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
-  const midnight = (d: Date) => `${d.toISOString().slice(0, 10)}T00:00:00Z`;
-  return [midnight(today), midnight(tomorrow)];
-}
+// Public preview runtime; aws-cdk-lib has no Runtime.PYTHON_3_15 constant yet.
+const PYTHON_3_15 = new Runtime("python3.15", RuntimeFamily.PYTHON);
 
 export class MyStack extends Stack {
   constructor(scope: Construct, id: string, props: StackProps = {}) {
     super(scope, id, props);
 
-    new StringListParameter(this, "MaintenanceWindow", {
+    const maintenanceWindowParameter = new StringListParameter(this, "MaintenanceWindow", {
       parameterName: "maintenance-window",
-      stringListValue: getMaintenanceWindow(),
+      stringListValue: getMaintenanceWindow(this.node.tryGetContext("maintenanceWindow")),
     });
 
-    new Table(this, "MaintenanceWindowEventsTable", {
-      tableName: "maintenance-window-events-table",
-      partitionKey: { name: "timestamp", type: AttributeType.STRING },
+    // Renamed along with the key change: CloudFormation cannot replace a custom-named table in place.
+    // A replacement retains the previous table, so archived events awaiting replay survive it;
+    // `cdk destroy` still deletes the current one.
+    const maintenanceWindowEventsTable = new Table(this, "MaintenanceWindowEventsTable", {
+      tableName: "maintenance-window-events",
+      partitionKey: { name: "invoke_id", type: AttributeType.STRING },
+      sortKey: { name: "timestamp", type: AttributeType.STRING },
       billingMode: BillingMode.PAY_PER_REQUEST,
       removalPolicy: RemovalPolicy.DESTROY,
     });
+    (maintenanceWindowEventsTable.node.defaultChild as CfnTable).cfnOptions.updateReplacePolicy =
+      CfnDeletionPolicy.RETAIN;
 
-    // Build Python Lambda layer inside Docker
-    const maintenanceWindowLambdaLayer = new PythonLayerVersion(
-      this,
-      "MaintenanceWindowLambdaLayer",
-      {
-        layerVersionName: "maintenance-window-layer",
-        description: "Wrapper script + Forked awslambdaric",
-        entry: join(codeRoot, "layers", "maintenance-window"),
-        compatibleRuntimes: [Runtime.PYTHON_3_9],
-        removalPolicy: RemovalPolicy.DESTROY,
-      },
-    );
+    const maintenanceWindowLambdaLayer = new LayerVersion(this, "MaintenanceWindowLambdaLayer", {
+      layerVersionName: "maintenance-window-layer",
+      description: "Wrapper script + maintenance-window handler gate",
+      code: Code.fromAsset(join(stackDir, "../layers/maintenance-window"), {
+        exclude: ["**/__pycache__"],
+      }),
+      compatibleRuntimes: [PYTHON_3_15],
+      removalPolicy: RemovalPolicy.DESTROY,
+    });
 
-    const lambdaPreHandlerPolicy = new ManagedPolicy(this, "LambdaPreHandlerPolicy", {
-      managedPolicyName: "lambda-pre-handler-policy",
-      description: "Lambda pre-handler customer managed policy",
+    const maintenanceWindowGatePolicy = new ManagedPolicy(this, "MaintenanceWindowGatePolicy", {
+      managedPolicyName: "maintenance-window-gate-policy",
+      description: "Lets the maintenance-window gate read the window and archive skipped events",
       document: new PolicyDocument({
         statements: [
           new PolicyStatement({
             effect: Effect.ALLOW,
-            actions: ["dynamodb:PutItem", "ssm:GetParameter"],
-            resources: ["*"],
+            actions: ["dynamodb:PutItem"],
+            resources: [maintenanceWindowEventsTable.tableArn],
+          }),
+          new PolicyStatement({
+            effect: Effect.ALLOW,
+            actions: ["ssm:GetParameter"],
+            resources: [maintenanceWindowParameter.parameterArn],
           }),
         ],
       }),
     });
 
-    const testLambdaRole = new Role(this, "TestLambdaRole", {
-      roleName: "test-lambda-role",
+    const currentTimeRole = new Role(this, "CurrentTimeRole", {
+      roleName: "current-time-role",
       assumedBy: new ServicePrincipal("lambda.amazonaws.com"),
       managedPolicies: [
-        lambdaPreHandlerPolicy,
+        maintenanceWindowGatePolicy,
         ManagedPolicy.fromAwsManagedPolicyName("service-role/AWSLambdaBasicExecutionRole"),
       ],
     });
 
-    const testLambda = new Function(this, "TestLambda", {
-      functionName: "test-lambda",
-      description: "Lambda for testing maintenance window",
-      code: Code.fromAsset(join(codeRoot, "functions", "test")),
-      handler: "index.handler",
-      runtime: Runtime.PYTHON_3_9,
-      role: testLambdaRole,
-      environment: { AWS_LAMBDA_EXEC_WRAPPER: "/opt/python/wrapper-script" },
-      layers: [maintenanceWindowLambdaLayer],
+    // Stack-managed, so `cdk destroy` removes it; Lambda's own group would never expire.
+    const currentTimeLogGroup = new LogGroup(this, "CurrentTimeLogGroup", {
+      retention: RetentionDays.ONE_WEEK,
+      removalPolicy: RemovalPolicy.DESTROY,
     });
 
-    // The layer's wrapper script execs /var/lang/bin/python3.9, so the function
-    // stays on python3.9 until the forked runtime is moved to a newer Python.
-    Validations.of(testLambda).acknowledge({
-      id: "CloudFormation-Validate::W2531",
-      reason: "Pinned to python3.9 by the maintenance-window layer's wrapper script",
+    new Function(this, "CurrentTimeFunction", {
+      functionName: "current-time",
+      description: "Returns the current time, behind the maintenance-window gate",
+      code: Code.fromAsset(join(stackDir, "../functions/current-time")),
+      handler: "index.handler",
+      runtime: PYTHON_3_15,
+      role: currentTimeRole,
+      // The gate's SDK calls take at most about 6 seconds before failing open.
+      timeout: Duration.seconds(15),
+      loggingFormat: LoggingFormat.JSON,
+      logGroup: currentTimeLogGroup,
+      environment: {
+        AWS_LAMBDA_EXEC_WRAPPER: "/opt/maintenance-window-wrapper",
+        MAINTENANCE_WINDOW_PARAMETER_NAME: maintenanceWindowParameter.parameterName,
+        MAINTENANCE_WINDOW_TABLE_NAME: maintenanceWindowEventsTable.tableName,
+      },
+      layers: [maintenanceWindowLambdaLayer],
     });
   }
 }

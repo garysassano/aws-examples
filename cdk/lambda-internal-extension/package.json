@@ -4,14 +4,9 @@
   "version": "0.0.0",
   "license": "MIT",
   "type": "module",
-  "dependencies": {
-    "@aws-cdk/aws-lambda-python-alpha": "catalog:",
-    "aws-cdk-lib": "catalog:",
-    "constructs": "catalog:"
-  },
   "scripts": {
     "cdk": "cdk",
-    "check": "pnpm lint && pnpm typecheck && pnpm synth",
+    "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm synth",
     "deploy": "cdk deploy",
     "destroy": "cdk destroy",
     "diff": "cdk diff",
@@ -19,7 +14,14 @@
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "synth": "cdk synth --strict",
+    "test": "pnpm test:cdk && pnpm test:gate",
+    "test:cdk": "node --import tsx --test \"test/*.test.ts\"",
+    "test:gate": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src/layers/maintenance-window/python uv run --no-project --python 3.15 --with boto3==1.40.4 python -m unittest discover -s test",
     "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "catalog:",
+    "constructs": "catalog:"
   },
   "devDependencies": {
     "@biomejs/biome": "catalog:",
