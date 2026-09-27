@@ -1,6 +1,6 @@
-# cdk-emi-services
+# cdk-ecs-mi-services
 
-CDK app that deploys two ECS web services with an EMI (ECS Managed Instances) capacity provider. This repository demonstrates [Amazon ECS Managed Instances](https://aws.amazon.com/about-aws/whats-new/2025/09/amazon-ecs-managed-instances/).
+CDK app that deploys two ECS web services with an ECS Managed Instances (ECS MI) capacity provider. This repository demonstrates [Amazon ECS Managed Instances](https://aws.amazon.com/about-aws/whats-new/2025/09/amazon-ecs-managed-instances/).
 
 ## Prerequisites
 

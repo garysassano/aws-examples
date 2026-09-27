@@ -1,5 +1,5 @@
 {
-  "name": "cdk-emi-services",
+  "name": "cdk-ecs-mi-services",
   "private": true,
   "version": "0.0.0",
   "license": "MIT",
