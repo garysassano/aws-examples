@@ -16,12 +16,10 @@ const trgEnv: Environment = {
 
 const app = new App();
 
-const otlpSenderStack = new OtlpSenderStack(app, "OtlpSenderStack-src", {
-  stackName: "OtlpSenderStack-src",
+const otlpSenderStack = new OtlpSenderStack(app, "cdk-cross-account-cwl-sub-org-src", {
   env: srcEnv,
 });
-const otlpReceiverStack = new OtlpReceiverStack(app, "OtlpReceiverStack-trg", {
-  stackName: "OtlpReceiverStack-trg",
+const otlpReceiverStack = new OtlpReceiverStack(app, "cdk-cross-account-cwl-sub-org-trg", {
   env: trgEnv,
 });
 
