@@ -1,11 +1,12 @@
 import { join } from "node:path";
 import { EndpointType, LambdaIntegration, RestApi } from "aws-cdk-lib/aws-apigateway";
 import { AttributeType, TableV2 } from "aws-cdk-lib/aws-dynamodb";
-import { Effect, PolicyStatement, ServicePrincipal } from "aws-cdk-lib/aws-iam";
+import { PolicyStatement, ServicePrincipal } from "aws-cdk-lib/aws-iam";
 import {
   ApplicationLogLevel,
   Architecture,
   FunctionUrlAuthType,
+  LayerVersion,
   LoggingFormat,
   Runtime,
   SystemLogLevel,
@@ -27,33 +28,18 @@ import {
 import { RustFunction } from "cargo-lambda-cdk";
 import type { Construct } from "constructs";
 import { PythonFunction } from "uv-python-lambda";
+import { getExporter } from "../utils/exporter.js";
 import { validateEnv } from "../utils/validate-env.js";
 
-// Constants
-const COLLECTORS_SECRETS_KEY_PREFIX = "serverless-otlp-forwarder/keys/";
-
-// Required environment variables
-const env = validateEnv(["OTEL_EXPORTER_OTLP_ENDPOINT", "OTEL_EXPORTER_OTLP_HEADERS"]);
+// ROTel Lambda extension v0.1.6 (rotel v0.2.4). Every supported region publishes this
+// layer version; see https://github.com/rotel-dev/rotel-lambda-extension/releases.
+const ROTEL_EXTENSION_LAYER_VERSION = 7;
 
 export class MyStack extends Stack {
   constructor(scope: Construct, id: string, props: StackProps = {}) {
     super(scope, id, props);
 
-    //==============================================================================
-    // VENDOR SECRET (SECRETS MANAGER)
-    //==============================================================================
-
-    new Secret(this, "VendorSecret", {
-      secretName: `${COLLECTORS_SECRETS_KEY_PREFIX}vendor`,
-      description: "Vendor API key for OTLP forwarder",
-      secretStringValue: SecretValue.unsafePlainText(
-        JSON.stringify({
-          name: "vendor",
-          endpoint: env.OTEL_EXPORTER_OTLP_ENDPOINT,
-          auth: env.OTEL_EXPORTER_OTLP_HEADERS,
-        }),
-      ),
-    });
+    const exporter = getExporter(this.node.tryGetContext("exporter"));
 
     //==============================================================================
     // QUOTES TABLE (DDB)
@@ -145,7 +131,7 @@ export class MyStack extends Stack {
       },
     });
     new Schedule(this, "ClientNodeSchedule", {
-      scheduleName: `client-node-schedule`,
+      scheduleName: "client-node-schedule",
       description: `Trigger ${clientNode.functionName} every 5 minutes`,
       schedule: ScheduleExpression.rate(Duration.minutes(5)),
       target: new LambdaInvoke(clientNode),
@@ -175,7 +161,7 @@ export class MyStack extends Stack {
       },
     });
     new Schedule(this, "ClientPythonSchedule", {
-      scheduleName: `client-python-schedule`,
+      scheduleName: "client-python-schedule",
       description: `Trigger ${clientPython.functionName} every 5 minutes`,
       schedule: ScheduleExpression.rate(Duration.minutes(5)),
       target: new LambdaInvoke(clientPython),
@@ -221,7 +207,7 @@ export class MyStack extends Stack {
 
     const otlpForwarder = new RustFunction(this, "OtlpForwarder", {
       functionName: "otlp-forwarder",
-      manifestPath: join(import.meta.dirname, "../functions/otlp-forwarder-cwl", "Cargo.toml"),
+      manifestPath: join(import.meta.dirname, "../functions/otlp-forwarder", "Cargo.toml"),
       architecture: Architecture.ARM_64,
       memorySize: 1024,
       timeout: Duration.minutes(15),
@@ -230,29 +216,79 @@ export class MyStack extends Stack {
       applicationLogLevelV2: ApplicationLogLevel.INFO,
       bundling: { cargoLambdaFlags: ["--quiet"] },
       environment: {
-        // OTLP Forwarder
-        COLLECTORS_CACHE_TTL_SECONDS: "300",
-        COLLECTORS_SECRETS_KEY_PREFIX,
         // Lambda OTel Lite
         LAMBDA_EXTENSION_SPAN_PROCESSOR_MODE: "async",
         LAMBDA_TRACING_ENABLE_FMT_LAYER: "true",
         // OTel SDK
-        OTEL_EXPORTER_OTLP_ENDPOINT: env.OTEL_EXPORTER_OTLP_ENDPOINT,
-        OTEL_EXPORTER_OTLP_HEADERS: env.OTEL_EXPORTER_OTLP_HEADERS,
         OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf",
       },
     });
-    otlpForwarder.addToRolePolicy(
-      new PolicyStatement({
-        effect: Effect.ALLOW,
-        actions: [
-          "secretsmanager:GetSecretValue",
-          "secretsmanager:BatchGetSecretValue",
-          "secretsmanager:ListSecrets",
-        ],
-        resources: ["*"],
-      }),
-    );
+
+    //==============================================================================
+    // OTLP EXPORTER
+    //==============================================================================
+
+    if (exporter === "otlp") {
+      // The forwarder sends the spans, and its own, to the OTLP endpoint.
+      const env = validateEnv(["OTEL_EXPORTER_OTLP_ENDPOINT", "OTEL_EXPORTER_OTLP_HEADERS"]);
+      otlpForwarder.addEnvironment("OTEL_EXPORTER_OTLP_ENDPOINT", env.OTEL_EXPORTER_OTLP_ENDPOINT);
+      otlpForwarder.addEnvironment("OTEL_EXPORTER_OTLP_HEADERS", env.OTEL_EXPORTER_OTLP_HEADERS);
+    } else {
+      // The forwarder sends the spans, and its own, to the ROTel Lambda extension,
+      // which exports them to ClickHouse together with the forwarder's logs.
+      const env = validateEnv([
+        "CLICKHOUSE_ENDPOINT",
+        "CLICKHOUSE_DATABASE",
+        "CLICKHOUSE_USERNAME",
+        "CLICKHOUSE_PASSWORD",
+      ]);
+      const clickHouseConfig = new Secret(this, "ClickHouseConfig", {
+        secretName: "clickhouse-config",
+        description: "ClickHouse connection settings for the ROTel Lambda extension",
+        secretObjectValue: {
+          endpoint: SecretValue.unsafePlainText(env.CLICKHOUSE_ENDPOINT),
+          database: SecretValue.unsafePlainText(env.CLICKHOUSE_DATABASE),
+          user: SecretValue.unsafePlainText(env.CLICKHOUSE_USERNAME),
+          password: SecretValue.unsafePlainText(env.CLICKHOUSE_PASSWORD),
+        },
+      });
+
+      otlpForwarder.addLayers(
+        LayerVersion.fromLayerVersionArn(
+          this,
+          "RotelExtension",
+          `arn:aws:lambda:${this.region}:418653438961:layer:rotel-extension-arm64:${ROTEL_EXTENSION_LAYER_VERSION}`,
+        ),
+      );
+      otlpForwarder.addEnvironment("OTEL_EXPORTER_OTLP_ENDPOINT", "http://localhost:4318");
+      otlpForwarder.addEnvironment("ROTEL_EXPORTER", "clickhouse");
+      otlpForwarder.addEnvironment(
+        "ROTEL_CLICKHOUSE_EXPORTER_ENDPOINT",
+        `secret://${clickHouseConfig.secretArn}#endpoint`,
+      );
+      otlpForwarder.addEnvironment(
+        "ROTEL_CLICKHOUSE_EXPORTER_DATABASE",
+        `secret://${clickHouseConfig.secretArn}#database`,
+      );
+      otlpForwarder.addEnvironment(
+        "ROTEL_CLICKHOUSE_EXPORTER_USER",
+        `secret://${clickHouseConfig.secretArn}#user`,
+      );
+      otlpForwarder.addEnvironment(
+        "ROTEL_CLICKHOUSE_EXPORTER_PASSWORD",
+        `secret://${clickHouseConfig.secretArn}#password`,
+      );
+
+      // ROTel resolves the secret at cold start with BatchGetSecretValue, which only
+      // returns the secrets the role may read with GetSecretValue.
+      clickHouseConfig.grantRead(otlpForwarder);
+      otlpForwarder.addToRolePolicy(
+        new PolicyStatement({
+          actions: ["secretsmanager:BatchGetSecretValue"],
+          resources: ["*"],
+        }),
+      );
+    }
 
     //==============================================================================
     // OTLP TRANSPORT (CW LOGS)

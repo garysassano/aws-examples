@@ -1,12 +1,10 @@
 [workspace]
 members = [
-    "src/layers/otlp-stdout-kinesis-extension",
     "src/functions/app-backend",
     "src/functions/app-frontend",
     "src/functions/client-rust",
     "src/functions/client-rust-wide",
-    "src/functions/otlp-forwarder-cwl",
-    "src/functions/otlp-forwarder-kinesis",
+    "src/functions/otlp-forwarder",
 ]
 
 resolver = "3"
@@ -22,7 +20,6 @@ lambda-lw-http-router = "0.4.0"
 lambda-otel-lite = "0.17.0"
 otlp-sigv4-client = "0.12.0"
 otlp-stdout-client = "0.4.1"
-otlp-stdout-logs-processor = { path = "src/functions/otlp-forwarder-cwl" }
 otlp-stdout-span-exporter = "0.16.0"
 serverless-otlp-forwarder-core = "0.1.0"
 

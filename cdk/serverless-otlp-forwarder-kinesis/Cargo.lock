@@ -2245,7 +2245,34 @@ dependencies = [
 ]
 
 [[package]]
-name = "otlp-stdout-kinesis-extension-layer"
+name = "otlp-forwarder"
+version = "1.0.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "aws-config",
+ "aws_lambda_events",
+ "bytes",
+ "chrono",
+ "lambda-otel-lite",
+ "lambda_runtime",
+ "opentelemetry",
+ "opentelemetry-otlp",
+ "opentelemetry_sdk",
+ "otlp-stdout-span-exporter",
+ "reqwest",
+ "reqwest-middleware",
+ "reqwest-tracing",
+ "serde",
+ "serde_json",
+ "serverless-otlp-forwarder-core",
+ "tokio",
+ "tracing",
+ "url",
+]
+
+[[package]]
+name = "otlp-stdout-kinesis-extension"
 version = "1.0.0"
 dependencies = [
  "anyhow",
@@ -2270,58 +2297,6 @@ dependencies = [
  "tokio",
  "tracing",
  "uuid",
-]
-
-[[package]]
-name = "otlp-stdout-kinesis-processor"
-version = "1.0.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "aws-config",
- "aws_lambda_events",
- "bytes",
- "chrono",
- "lambda-otel-lite",
- "lambda_runtime",
- "opentelemetry",
- "opentelemetry-otlp",
- "opentelemetry_sdk",
- "otlp-stdout-span-exporter",
- "reqwest",
- "reqwest-middleware",
- "reqwest-tracing",
- "serde",
- "serde_json",
- "serverless-otlp-forwarder-core",
- "tokio",
- "tracing",
- "url",
-]
-
-[[package]]
-name = "otlp-stdout-logs-processor"
-version = "1.0.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "aws_lambda_events",
- "bytes",
- "lambda-otel-lite",
- "lambda_runtime",
- "opentelemetry",
- "opentelemetry-otlp",
- "opentelemetry_sdk",
- "otlp-stdout-span-exporter",
- "reqwest",
- "reqwest-middleware",
- "reqwest-tracing",
- "serde",
- "serde_json",
- "serverless-otlp-forwarder-core",
- "tokio",
- "tracing",
- "url",
 ]
 
 [[package]]

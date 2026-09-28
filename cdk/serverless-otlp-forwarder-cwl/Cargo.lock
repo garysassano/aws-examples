@@ -193,7 +193,6 @@ dependencies = [
  "aws-credential-types",
  "aws-sigv4",
  "aws-smithy-async",
- "aws-smithy-eventstream",
  "aws-smithy-http",
  "aws-smithy-runtime",
  "aws-smithy-runtime-api",
@@ -218,31 +217,6 @@ dependencies = [
  "aws-credential-types",
  "aws-runtime",
  "aws-smithy-async",
- "aws-smithy-http",
- "aws-smithy-json",
- "aws-smithy-observability",
- "aws-smithy-runtime",
- "aws-smithy-runtime-api",
- "aws-smithy-types",
- "aws-types",
- "bytes",
- "fastrand",
- "http 0.2.12",
- "http 1.5.0",
- "regex-lite",
- "tracing",
-]
-
-[[package]]
-name = "aws-sdk-kinesis"
-version = "1.99.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e0b1fd4b3cbcb323651b0348636fbab4871cc69470e18eeba0fb905bc733f1bc"
-dependencies = [
- "aws-credential-types",
- "aws-runtime",
- "aws-smithy-async",
- "aws-smithy-eventstream",
  "aws-smithy-http",
  "aws-smithy-json",
  "aws-smithy-observability",
@@ -338,7 +312,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "efa49f3c607b92daae0c078d48a4571f599f966dce3caee5f1ea55c4d9073f99"
 dependencies = [
  "aws-credential-types",
- "aws-smithy-eventstream",
  "aws-smithy-http",
  "aws-smithy-runtime-api",
  "aws-smithy-types",
@@ -366,23 +339,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "aws-smithy-eventstream"
-version = "0.60.18"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "35b9c7354a3b13c66f60fe4616d6d1969c9fd36b1b5333a5dfb3ee716b33c588"
-dependencies = [
- "aws-smithy-types",
- "bytes",
- "crc32fast",
-]
-
-[[package]]
 name = "aws-smithy-http"
 version = "0.63.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "630e67f2a31094ffa51b210ae030855cb8f3b7ee1329bdd8d085aaf61e8b97fc"
 dependencies = [
- "aws-smithy-eventstream",
  "aws-smithy-runtime-api",
  "aws-smithy-types",
  "bytes",
@@ -424,7 +385,7 @@ dependencies = [
  "rustls-pki-types",
  "tokio",
  "tokio-rustls 0.26.5",
- "tower 0.5.3",
+ "tower",
  "tracing",
 ]
 
@@ -1823,28 +1784,6 @@ dependencies = [
 
 [[package]]
 name = "lambda-extension"
-version = "0.11.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "97d55c5d66b02ea61602bb33e7e98d1924bb4987f8860de1f78ccc83318e0a07"
-dependencies = [
- "async-stream",
- "bytes",
- "chrono",
- "http 1.5.0",
- "http-body-util",
- "hyper 1.11.1",
- "hyper-util",
- "lambda_runtime_api_client 0.11.1",
- "serde",
- "serde_json",
- "tokio",
- "tokio-stream",
- "tower 0.4.13",
- "tracing",
-]
-
-[[package]]
-name = "lambda-extension"
 version = "0.12.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "93b210229eea17bb96fcffcb8c01e833fe2672189f967aace90758ec10031ee7"
@@ -1855,12 +1794,12 @@ dependencies = [
  "http-body-util",
  "hyper 1.11.1",
  "hyper-util",
- "lambda_runtime_api_client 0.12.4",
+ "lambda_runtime_api_client",
  "serde",
  "serde_json",
  "tokio",
  "tokio-stream",
- "tower 0.5.3",
+ "tower",
  "tracing",
 ]
 
@@ -1915,7 +1854,7 @@ dependencies = [
  "bon",
  "futures-executor",
  "futures-util",
- "lambda-extension 0.12.2",
+ "lambda-extension",
  "lambda_runtime",
  "opentelemetry",
  "opentelemetry-aws",
@@ -1925,7 +1864,7 @@ dependencies = [
  "serde",
  "serde_json",
  "tokio",
- "tower 0.5.3",
+ "tower",
  "tracing",
  "tracing-opentelemetry",
  "tracing-subscriber",
@@ -1947,7 +1886,7 @@ dependencies = [
  "http-body-util",
  "http-serde",
  "hyper 1.11.1",
- "lambda_runtime_api_client 0.12.4",
+ "lambda_runtime_api_client",
  "opentelemetry-semantic-conventions 0.29.0",
  "pin-project",
  "serde",
@@ -1955,29 +1894,8 @@ dependencies = [
  "serde_path_to_error",
  "tokio",
  "tokio-stream",
- "tower 0.5.3",
+ "tower",
  "tracing",
-]
-
-[[package]]
-name = "lambda_runtime_api_client"
-version = "0.11.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c90a10f094475a34a04da2be11686c4dcfe214d93413162db9ffdff3d3af293a"
-dependencies = [
- "bytes",
- "futures-channel",
- "futures-util",
- "http 1.5.0",
- "http-body 1.1.0",
- "http-body-util",
- "hyper 1.11.1",
- "hyper-util",
- "tokio",
- "tower 0.4.13",
- "tower-service",
- "tracing",
- "tracing-subscriber",
 ]
 
 [[package]]
@@ -1994,7 +1912,7 @@ dependencies = [
  "http-body-util",
  "hyper 1.11.1",
  "hyper-util",
- "tower 0.5.3",
+ "tower",
  "tracing",
  "tracing-subscriber",
 ]
@@ -2245,62 +2163,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "otlp-stdout-kinesis-extension-layer"
-version = "1.0.0"
-dependencies = [
- "anyhow",
- "aws-config",
- "aws-sdk-kinesis",
- "base64 0.22.1",
- "chrono",
- "flate2",
- "hex",
- "lambda-extension 0.11.0",
- "lambda-otel-lite",
- "nix",
- "opentelemetry",
- "opentelemetry-proto",
- "opentelemetry-semantic-conventions 0.30.0",
- "opentelemetry_sdk",
- "otlp-stdout-span-exporter",
- "prost",
- "rand 0.9.5",
- "serde",
- "serde_json",
- "tokio",
- "tracing",
- "uuid",
-]
-
-[[package]]
-name = "otlp-stdout-kinesis-processor"
-version = "1.0.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "aws-config",
- "aws_lambda_events",
- "bytes",
- "chrono",
- "lambda-otel-lite",
- "lambda_runtime",
- "opentelemetry",
- "opentelemetry-otlp",
- "opentelemetry_sdk",
- "otlp-stdout-span-exporter",
- "reqwest",
- "reqwest-middleware",
- "reqwest-tracing",
- "serde",
- "serde_json",
- "serverless-otlp-forwarder-core",
- "tokio",
- "tracing",
- "url",
-]
-
-[[package]]
-name = "otlp-stdout-logs-processor"
+name = "otlp-forwarder"
 version = "1.0.0"
 dependencies = [
  "anyhow",
@@ -2856,7 +2719,7 @@ dependencies = [
  "sync_wrapper",
  "tokio",
  "tokio-rustls 0.26.5",
- "tower 0.5.3",
+ "tower",
  "tower-http",
  "tower-service",
  "url",
@@ -3593,23 +3456,7 @@ dependencies = [
  "prost",
  "tokio",
  "tokio-stream",
- "tower 0.5.3",
- "tower-layer",
- "tower-service",
- "tracing",
-]
-
-[[package]]
-name = "tower"
-version = "0.4.13"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b8fa9be0de6cf49e536ce1851f987bd21a43b771b09473c3549a6c853db37c1c"
-dependencies = [
- "futures-core",
- "futures-util",
- "pin-project",
- "pin-project-lite",
- "tokio",
+ "tower",
  "tower-layer",
  "tower-service",
  "tracing",
@@ -3646,7 +3493,7 @@ dependencies = [
  "http 1.5.0",
  "http-body 1.1.0",
  "pin-project-lite",
- "tower 0.5.3",
+ "tower",
  "tower-layer",
  "tower-service",
  "url",
@@ -3823,7 +3670,6 @@ version = "1.26.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2ef6dac1e96601b4fb3acccccff2139741fcb757cb9a36089bf5be91cfb285ce"
 dependencies = [
- "getrandom 0.4.3",
  "js-sys",
  "wasm-bindgen",
 ]

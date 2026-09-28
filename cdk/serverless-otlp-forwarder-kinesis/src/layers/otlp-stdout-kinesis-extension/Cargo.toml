@@ -1,5 +1,5 @@
 [package]
-name = "otlp-stdout-kinesis-extension-layer"
+name = "otlp-stdout-kinesis-extension"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
