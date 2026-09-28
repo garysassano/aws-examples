@@ -262,13 +262,12 @@ async fn telemetry_handler(
         };
 
         // Send the PlatformTelemetry message (if any was created)
-        if let Some(parsed_event) = parsed_event_opt {
-            if let Err(e) = tx
+        if let Some(parsed_event) = parsed_event_opt
+            && let Err(e) = tx
                 .send(ProcessorInput::PlatformTelemetry(parsed_event))
                 .await
-            {
-                tracing::error!("Failed to send platform event to processor channel: {}", e);
-            }
+        {
+            tracing::error!("Failed to send platform event to processor channel: {}", e);
         }
     }
 

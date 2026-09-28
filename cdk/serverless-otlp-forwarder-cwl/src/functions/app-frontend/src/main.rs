@@ -1,14 +1,13 @@
 use aws_lambda_events::apigw::ApiGatewayV2httpRequest;
 use chrono::{DateTime, Duration, FixedOffset, Utc};
 use lambda_lw_http_router::{define_router, route};
-use lambda_otel_lite::{create_traced_handler, init_telemetry, TelemetryConfig};
-use lambda_runtime::{service_fn, Error as LambdaError, LambdaEvent, Runtime};
+use lambda_otel_lite::{TelemetryConfig, create_traced_handler, init_telemetry};
+use lambda_runtime::{Error as LambdaError, LambdaEvent, Runtime, service_fn};
 use reqwest::Client;
 use reqwest_middleware::ClientBuilder;
 use reqwest_middleware::ClientWithMiddleware;
 use reqwest_tracing::TracingMiddleware;
-use serde::Serialize;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use std::env;
 use std::sync::Arc;
 use std::time::Duration as StdDuration;
@@ -19,54 +18,45 @@ use tracing::instrument;
 // Embed the quotes.html template at compile time
 const QUOTES_TEMPLATE: &str = include_str!("templates/quotes.html");
 
-// Application configuration
-struct Config {
-    target_url: String,
-    templates: Tera,
-}
-
-impl Config {
-    fn from_env() -> Result<Self, LambdaError> {
-        let target_url = env::var("TARGET_URL")
-            .map_err(|_| "TARGET_URL environment variable must be set".to_string())?;
-
-        let mut templates = Tera::default();
-        templates
-            .add_raw_template("quotes.html", QUOTES_TEMPLATE)
-            .map_err(|e| format!("Failed to add template: {}", e))?;
-
-        Ok(Self {
-            target_url,
-            templates,
-        })
-    }
-}
-
 #[derive(Clone)]
 struct AppState {
     http_client: ClientWithMiddleware,
-    base_context: TeraContext,
     target_url: String,
     templates: Tera,
 }
 
 define_router!(event = ApiGatewayV2httpRequest, state = AppState);
 
-fn format_relative_time(timestamp: &str) -> Result<String, LambdaError> {
-    let timestamp = DateTime::parse_from_rfc3339(timestamp)
-        .or_else(|_| DateTime::parse_from_rfc3339("1970-01-01T00:00:00Z"))
-        .map_err(|e| format!("Invalid timestamp format: {}", e))?;
+/// Loads the quotes template, with the values every page shows in the global context.
+fn load_templates() -> Result<Tera, LambdaError> {
+    let mut templates = Tera::new();
+    templates
+        .add_raw_template("quotes.html", QUOTES_TEMPLATE)
+        .map_err(|e| format!("Failed to add template: {}", e))?;
+    templates
+        .global_context()
+        .insert("app_name", "Quote Viewer");
+    templates
+        .global_context()
+        .insert("version", env!("CARGO_PKG_VERSION"));
+    Ok(templates)
+}
 
-    let now = Utc::now();
-    let duration = now.signed_duration_since(timestamp.with_timezone(&Utc));
-
-    Ok(if duration.num_minutes() < 60 {
-        format!("{} minutes ago", duration.num_minutes())
-    } else if duration.num_hours() < 24 {
-        format!("{} hours ago", duration.num_hours())
+/// Parses a quote's timestamp and adds a human-readable `relative_time` next to it.
+fn add_relative_time(quote: &mut Value) -> Option<DateTime<FixedOffset>> {
+    let timestamp = DateTime::parse_from_rfc3339(quote.get("timestamp")?.as_str()?).ok()?;
+    let age = Utc::now().signed_duration_since(timestamp);
+    let relative_time = if age.num_minutes() < 60 {
+        format!("{} minutes ago", age.num_minutes())
+    } else if age.num_hours() < 24 {
+        format!("{} hours ago", age.num_hours())
     } else {
-        format!("{} days ago", duration.num_days())
-    })
+        format!("{} days ago", age.num_days())
+    };
+    quote
+        .as_object_mut()?
+        .insert("relative_time".to_string(), relative_time.into());
+    Some(timestamp)
 }
 
 #[instrument(skip_all)]
@@ -112,6 +102,16 @@ enum QuoteError {
     RequestError(String),
 }
 
+impl QuoteError {
+    fn status_code(&self) -> u16 {
+        match self {
+            QuoteError::NotFound(_) => 404,
+            QuoteError::BackendError(status, _) => *status,
+            QuoteError::RequestError(_) => 500,
+        }
+    }
+}
+
 #[instrument(skip_all)]
 async fn get_quote(
     client: &ClientWithMiddleware,
@@ -132,9 +132,7 @@ async fn get_quote(
             QuoteError::RequestError(format!("Failed to parse response as JSON: {}", e))
         }),
 
-        reqwest::StatusCode::NOT_FOUND => {
-            Err(QuoteError::NotFound(format!("Quote {} not found", id)))
-        }
+        reqwest::StatusCode::NOT_FOUND => Err(QuoteError::NotFound(id.to_string())),
 
         status => {
             let error_body = response
@@ -173,36 +171,6 @@ impl TimeFrame {
     fn is_quote_in_range(&self, quote_time: DateTime<FixedOffset>) -> bool {
         let age = Utc::now().signed_duration_since(quote_time);
         age >= self.start && age < self.end
-    }
-}
-
-#[derive(Debug, Serialize)]
-struct ProcessedQuote {
-    #[serde(flatten)]
-    quote: Value,
-    relative_time: String,
-}
-
-impl ProcessedQuote {
-    fn from_value(mut quote: Value) -> Option<Self> {
-        let timestamp = quote.get("timestamp")?.as_str()?;
-        let relative_time = format_relative_time(timestamp).ok()?;
-        quote.as_object_mut()?.insert(
-            "relative_time".to_string(),
-            Value::String(relative_time.clone()),
-        );
-
-        Some(Self {
-            quote,
-            relative_time,
-        })
-    }
-
-    fn timestamp(&self) -> Option<DateTime<FixedOffset>> {
-        self.quote
-            .get("timestamp")?
-            .as_str()
-            .and_then(|t| DateTime::parse_from_rfc3339(t).ok())
     }
 }
 
@@ -248,7 +216,7 @@ async fn handle_home(rctx: RouteContext) -> Result<Value, LambdaError> {
     let quotes = get_and_process_quotes(&rctx, &timeframe).await?;
 
     // Render template
-    let mut tera_ctx = rctx.state.base_context.clone();
+    let mut tera_ctx = TeraContext::new();
     tera_ctx.insert("quotes", &quotes);
     tera_ctx.insert("timeframe", &timeframe.name);
 
@@ -261,50 +229,36 @@ async fn handle_home(rctx: RouteContext) -> Result<Value, LambdaError> {
     Ok(html_response(200, html_content))
 }
 
+/// Returns the quotes within the time frame, newest first.
 async fn get_and_process_quotes(
     rctx: &RouteContext,
     timeframe: &TimeFrame,
-) -> Result<Vec<ProcessedQuote>, LambdaError> {
+) -> Result<Vec<Value>, LambdaError> {
     let response = get_all_quotes(&rctx.state.http_client, &rctx.state.target_url).await?;
 
-    let quotes = match response {
-        Value::Array(quotes) => quotes,
-        _ => return Ok(Vec::new()),
+    let Value::Array(quotes) = response else {
+        return Ok(Vec::new());
     };
 
-    // Process quotes with a more functional approach
-    let mut processed_quotes = quotes
+    let mut quotes = quotes
         .into_iter()
-        .filter_map(ProcessedQuote::from_value)
-        .filter(|quote| {
-            quote
-                .timestamp()
-                .is_some_and(|t| timeframe.is_quote_in_range(t))
-        })
+        .filter_map(|mut quote| Some((add_relative_time(&mut quote)?, quote)))
+        .filter(|(timestamp, _)| timeframe.is_quote_in_range(*timestamp))
         .collect::<Vec<_>>();
+    quotes.sort_by(|(a, _), (b, _)| b.cmp(a));
 
-    // Sort quotes by timestamp in descending order (newest first)
-    processed_quotes.sort_by(|a, b| match (a.timestamp(), b.timestamp()) {
-        (Some(a), Some(b)) => b.cmp(&a),
-        (Some(_), None) => std::cmp::Ordering::Less,
-        (None, Some(_)) => std::cmp::Ordering::Greater,
-        (None, None) => std::cmp::Ordering::Equal,
-    });
-
-    Ok(processed_quotes)
+    Ok(quotes.into_iter().map(|(_, quote)| quote).collect())
 }
 
-/// Helper function to render the quotes template with common context
+/// Renders the page for a single quote, or an error message instead.
 fn render_quotes_template(
     templates: &Tera,
-    base_ctx: &TeraContext,
     quotes: Vec<Value>,
     error_message: Option<&str>,
 ) -> Result<String, LambdaError> {
-    let mut ctx = base_ctx.clone();
+    let mut ctx = TeraContext::new();
     ctx.insert("quotes", &quotes);
     ctx.insert("single_quote", &true);
-    ctx.insert("time", "current");
 
     if let Some(msg) = error_message {
         ctx.insert("error_message", msg);
@@ -338,7 +292,6 @@ async fn handle_quote(rctx: RouteContext) -> Result<Value, LambdaError> {
         _ => {
             let html_content = render_quotes_template(
                 &rctx.state.templates,
-                &rctx.state.base_context,
                 vec![],
                 Some("Quote ID not provided"),
             )?;
@@ -349,52 +302,16 @@ async fn handle_quote(rctx: RouteContext) -> Result<Value, LambdaError> {
 
     match get_quote(&rctx.state.http_client, &rctx.state.target_url, quote_id).await {
         Ok(mut quote) => {
-            if let Some(timestamp) = quote.get("timestamp").and_then(|t| t.as_str()) {
-                let relative_time = format_relative_time(timestamp)?;
-                quote
-                    .as_object_mut()
-                    .ok_or_else(|| "Invalid quote format".to_string())?
-                    .insert("relative_time".to_string(), Value::String(relative_time));
-            }
-
-            let html_content = render_quotes_template(
-                &rctx.state.templates,
-                &rctx.state.base_context,
-                vec![quote],
-                None,
-            )?;
+            add_relative_time(&mut quote);
+            let html_content = render_quotes_template(&rctx.state.templates, vec![quote], None)?;
 
             Ok(html_response(200, html_content))
         }
-        Err(QuoteError::NotFound(msg)) => {
-            let html_content = render_quotes_template(
-                &rctx.state.templates,
-                &rctx.state.base_context,
-                vec![],
-                Some(&msg),
-            )?;
+        Err(err) => {
+            let html_content =
+                render_quotes_template(&rctx.state.templates, vec![], Some(&err.to_string()))?;
 
-            Ok(html_response(404, html_content))
-        }
-        Err(QuoteError::BackendError(status, msg)) => {
-            let html_content = render_quotes_template(
-                &rctx.state.templates,
-                &rctx.state.base_context,
-                vec![],
-                Some(&format!("Backend error: {} - {}", status, msg)),
-            )?;
-
-            Ok(html_response(status, html_content))
-        }
-        Err(QuoteError::RequestError(msg)) => {
-            let html_content = render_quotes_template(
-                &rctx.state.templates,
-                &rctx.state.base_context,
-                vec![],
-                Some(&format!("Request error: {}", msg)),
-            )?;
-
-            Ok(html_response(500, html_content))
+            Ok(html_response(err.status_code(), html_content))
         }
     }
 }
@@ -404,8 +321,8 @@ async fn main() -> Result<(), LambdaError> {
     // Initialize telemetry with default configuration
     let (_, completion_handler) = init_telemetry(TelemetryConfig::default()).await?;
 
-    // Load configuration from environment
-    let config = Config::from_env()?;
+    let target_url =
+        env::var("TARGET_URL").map_err(|_| "TARGET_URL environment variable must be set")?;
 
     // Initialize application state
     let state = Arc::new(AppState {
@@ -420,14 +337,8 @@ async fn main() -> Result<(), LambdaError> {
                 .with(TracingMiddleware::default())
                 .build()
         },
-        base_context: {
-            let mut ctx = TeraContext::new();
-            ctx.insert("app_name", "Quote Viewer");
-            ctx.insert("version", env!("CARGO_PKG_VERSION"));
-            ctx
-        },
-        target_url: config.target_url,
-        templates: config.templates,
+        target_url,
+        templates: load_templates()?,
     });
 
     // Initialize router
@@ -450,4 +361,54 @@ async fn handle_lambda_event(
     state: Arc<AppState>,
 ) -> Result<Value, LambdaError> {
     router.handle_request(event, state).await
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn quote(timestamp: &str) -> Value {
+        json!({
+            "pk": "abc123",
+            "timestamp": timestamp,
+            "payload": {"quote": "Stay hungry, <stay> foolish.", "author": "Steve Jobs"}
+        })
+    }
+
+    #[test]
+    fn renders_the_quote_list() {
+        let mut quote = quote(&Utc::now().to_rfc3339());
+        assert!(add_relative_time(&mut quote).is_some());
+
+        let mut ctx = TeraContext::new();
+        ctx.insert("quotes", &vec![quote]);
+        ctx.insert("timeframe", "now");
+        let html = load_templates()
+            .unwrap()
+            .render("quotes.html", &ctx)
+            .unwrap();
+
+        assert!(html.contains("<title>Quote Viewer - v1.0.0</title>"));
+        assert!(html.contains("Stay hungry, &lt;stay&gt; foolish."));
+        assert!(html.contains("0 minutes ago"));
+        assert!(html.contains(r#"href="/quote/abc123""#));
+        assert!(html.contains(r#"class="nav-button current">Last 6 Hours"#));
+    }
+
+    #[test]
+    fn renders_a_single_quote_and_errors() {
+        let templates = load_templates().unwrap();
+
+        let mut quote = quote("2020-01-01T00:00:00Z");
+        add_relative_time(&mut quote);
+        let html = render_quotes_template(&templates, vec![quote], None).unwrap();
+        assert!(html.contains("Back to all quotes"));
+        assert!(html.contains("days ago"));
+        assert!(!html.contains("View quote"));
+
+        let error = QuoteError::NotFound("abc123".to_string());
+        let html = render_quotes_template(&templates, vec![], Some(&error.to_string())).unwrap();
+        assert!(html.contains("Quote abc123 not found"));
+        assert_eq!(error.status_code(), 404);
+    }
 }

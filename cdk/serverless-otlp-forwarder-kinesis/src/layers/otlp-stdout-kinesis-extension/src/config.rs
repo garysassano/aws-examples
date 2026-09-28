@@ -30,16 +30,16 @@ impl Config {
     pub fn from_env() -> Result<Self, Error> {
         let kinesis_stream_name = env::var(ENV_VAR_STREAM_NAME).ok();
 
-        if kinesis_stream_name.is_none() {
-            tracing::info!(
-                "extension: {} not set, disabling Kinesis output. Will write records to stdout.",
-                ENV_VAR_STREAM_NAME
-            );
-        } else {
-            tracing::info!(
-                "extension: Kinesis stream name set: {}",
-                kinesis_stream_name.as_ref().unwrap()
-            );
+        match &kinesis_stream_name {
+            Some(stream_name) => {
+                tracing::info!("extension: Kinesis stream name set: {}", stream_name);
+            }
+            None => {
+                tracing::info!(
+                    "extension: {} not set, disabling Kinesis output. Will write records to stdout.",
+                    ENV_VAR_STREAM_NAME
+                );
+            }
         }
 
         let buffer_timeout_ms = env::var(ENV_VAR_BUFFER_TIMEOUT_MS)

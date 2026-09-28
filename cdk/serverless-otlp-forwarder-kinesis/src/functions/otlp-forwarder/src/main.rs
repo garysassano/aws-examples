@@ -77,7 +77,7 @@ async fn function_handler(
     event: LambdaEvent<KinesisEventProcessorWrapper>,
     http_client: Arc<InstrumentedHttpClient>,
 ) -> Result<(), LambdaError> {
-    tracing::info!("otlp-stdout-kinesis-processor: function_handler started.");
+    tracing::debug!("Processing Kinesis batch.");
 
     let source_identifier = event
         .payload
@@ -94,17 +94,17 @@ async fn function_handler(
         event.payload.0,
         &parser,
         &source_identifier,
-        http_client.as_ref(), // Pass &InstrumentedOtlpClient
+        http_client.as_ref(),
         &compaction_config,
     )
     .await
     {
         Ok(_) => {
-            tracing::info!("otlp-stdout-kinesis-processor: Batch processed successfully.");
+            tracing::debug!("Batch processed successfully.");
             Ok(())
         }
         Err(e) => {
-            tracing::error!(error = %e, "otlp-stdout-kinesis-processor: Error processing event batch.");
+            tracing::error!(error = %e, "Error processing event batch.");
             Err(LambdaError::from(e.to_string()))
         }
     }
@@ -127,9 +127,7 @@ async fn main() -> Result<(), LambdaError> {
             .build(),
     )
     .await?;
-    tracing::info!(
-        "lambda-otel-lite initialized with OTLP HTTP exporter for otlp-stdout-kinesis-processor."
-    );
+    tracing::info!("lambda-otel-lite initialized with OTLP HTTP exporter.");
 
     let base_reqwest_client = ReqwestClient::new();
     // Wrap it with tracing middleware
@@ -149,12 +147,6 @@ async fn main() -> Result<(), LambdaError> {
             async move { function_handler(event, client_for_handler).await }
         });
 
-    tracing::info!("otlp-stdout-kinesis-processor starting Lambda runtime.");
+    tracing::info!("Starting Lambda runtime.");
     Runtime::new(service).run().await
-}
-
-#[cfg(test)]
-mod tests {
-    // Kinesis processor specific tests (if any) would go here.
-    // For now, main logic is tested in core and parser.rs has its own tests.
 }

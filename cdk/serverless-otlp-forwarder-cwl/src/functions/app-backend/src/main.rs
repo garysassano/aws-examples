@@ -1,15 +1,17 @@
-use lazy_static::lazy_static;
 use serde_dynamo::to_attribute_value;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
-use std::{env, sync::Arc};
-use tracing::{instrument, Instrument};
+use std::{
+    env,
+    sync::{Arc, LazyLock},
+};
+use tracing::{Instrument, instrument};
 
 use aws_lambda_events::event::apigw::ApiGatewayProxyRequest;
-use aws_sdk_dynamodb::{types::AttributeValue, Client as DynamoDbClient};
+use aws_sdk_dynamodb::{Client as DynamoDbClient, types::AttributeValue};
 use lambda_lw_http_router::{define_router, route};
-use lambda_otel_lite::{create_traced_handler, init_telemetry, TelemetryConfig};
-use lambda_runtime::{service_fn, tracing::field, Error as LambdaError, LambdaEvent, Runtime};
+use lambda_otel_lite::{TelemetryConfig, create_traced_handler, init_telemetry};
+use lambda_runtime::{Error as LambdaError, LambdaEvent, Runtime, service_fn, tracing::field};
 use opentelemetry::{Array, Value as OtelValue};
 use tracing_opentelemetry::OpenTelemetrySpanExt;
 
@@ -74,9 +76,8 @@ macro_rules! dynamodb_span {
     }};
 }
 
-lazy_static! {
-    static ref TABLE_NAME: String = env::var("TABLE_NAME").expect("TABLE_NAME must be set");
-}
+static TABLE_NAME: LazyLock<String> =
+    LazyLock::new(|| env::var("TABLE_NAME").expect("TABLE_NAME must be set"));
 
 #[derive(Clone)]
 struct AppState {
@@ -99,7 +100,7 @@ async fn handle_post_quotes(ctx: RouteContext) -> Result<Value, LambdaError> {
                         "error": "Invalid JSON in request body",
                         "details": e.to_string()
                     }).to_string()
-                }))
+                }));
             }
         },
         None => {
@@ -109,15 +110,14 @@ async fn handle_post_quotes(ctx: RouteContext) -> Result<Value, LambdaError> {
                 "body": json!({
                     "error": "Missing request body"
                 }).to_string()
-            }))
+            }));
         }
     };
 
-    let id = {
-        let mut hasher = Sha256::new();
-        hasher.update(serde_json::to_string(&post_body)?.as_bytes());
-        format!("{:x}", hasher.finalize())
-    };
+    let id = Sha256::digest(serde_json::to_string(&post_body)?)
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect::<String>();
 
     write_item(&id, &timestamp, &post_body, &ctx.state).await?;
 

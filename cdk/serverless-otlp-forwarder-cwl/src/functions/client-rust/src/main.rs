@@ -1,8 +1,8 @@
+use aws_lambda_events::encodings::Body;
 use aws_lambda_events::event::apigw::{ApiGatewayV2httpRequest, ApiGatewayV2httpResponse};
 use lambda_otel_lite::{OtelTracingLayer, TelemetryConfig, init_telemetry};
 use lambda_runtime::{Error, LambdaEvent, Runtime, tower::ServiceBuilder};
 use opentelemetry::trace::Status;
-use rand::Rng;
 use std::borrow::Cow;
 use std::fmt::{self, Display};
 use tracing::instrument;
@@ -33,7 +33,7 @@ async fn nested_function(event: &ApiGatewayV2httpRequest) -> Result<String, Erro
 
     // Simulate random errors if the path is /error
     if event.raw_path.as_deref() == Some("/error") {
-        let r: f64 = rand::rng().random();
+        let r: f64 = rand::random();
         if r < 0.25 {
             return Err(ErrorType::Expected);
         } else if r < 0.5 {
@@ -42,6 +42,14 @@ async fn nested_function(event: &ApiGatewayV2httpRequest) -> Result<String, Erro
     }
 
     Ok("success".to_string())
+}
+
+/// Builds a Function URL response with the given status code and body.
+fn response(status_code: i64, body: impl Into<Body>) -> ApiGatewayV2httpResponse {
+    let mut response = ApiGatewayV2httpResponse::default();
+    response.status_code = status_code;
+    response.body = Some(body.into());
+    response
 }
 
 /// Simple Hello World Lambda function using lambda-otel-lite.
@@ -71,11 +79,7 @@ async fn handler(
     match nested_function(&event.payload).await {
         Ok(_) => {
             // Return a successful response
-            Ok(ApiGatewayV2httpResponse {
-                status_code: 200,
-                body: Some(format!("Hello from request {request_id}").into()),
-                ..Default::default()
-            })
+            Ok(response(200, format!("Hello from request {request_id}")))
         }
         Err(ErrorType::Expected) => {
             // Log the error and return a 400 Bad Request
@@ -88,11 +92,7 @@ async fn handler(
             );
 
             // Return a 400 Bad Request for expected errors
-            Ok(ApiGatewayV2httpResponse {
-                status_code: 400,
-                body: Some("{{\"message\": \"This is an expected error\"}}".into()),
-                ..Default::default()
-            })
+            Ok(response(400, r#"{"message": "This is an expected error"}"#))
         }
         Err(ErrorType::Unexpected) => {
             // For other errors, propagate them up

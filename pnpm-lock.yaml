@@ -142,8 +142,8 @@ catalogs:
       specifier: ^3.1.4
       version: 3.1.4
     aws-cdk:
-      specifier: ^2.1142.0
-      version: 2.1142.0
+      specifier: ^2.1143.0
+      version: 2.1143.0
     aws-cdk-lib:
       specifier: ^2.270.0
       version: 2.270.0
@@ -215,7 +215,7 @@ importers:
         version: 26.6.2
       aws-cdk:
         specifier: 'catalog:'
-        version: 2.1142.0
+        version: 2.1143.0
       esbuild:
         specifier: 'catalog:'
         version: 0.28.2
@@ -249,7 +249,7 @@ importers:
         version: 26.6.2
       aws-cdk:
         specifier: 'catalog:'
-        version: 2.1142.0
+        version: 2.1143.0
       tsx:
         specifier: 'catalog:'
         version: 4.23.15
@@ -280,7 +280,7 @@ importers:
         version: 26.6.2
       aws-cdk:
         specifier: 'catalog:'
-        version: 2.1142.0
+        version: 2.1143.0
       esbuild:
         specifier: 'catalog:'
         version: 0.28.2
@@ -320,7 +320,7 @@ importers:
         version: 26.6.2
       aws-cdk:
         specifier: 'catalog:'
-        version: 2.1142.0
+        version: 2.1143.0
       esbuild:
         specifier: 'catalog:'
         version: 0.28.2
@@ -381,7 +381,7 @@ importers:
         version: 26.6.2
       aws-cdk:
         specifier: 'catalog:'
-        version: 2.1142.0
+        version: 2.1143.0
       esbuild:
         specifier: 'catalog:'
         version: 0.28.2
@@ -409,7 +409,7 @@ importers:
         version: 26.6.2
       aws-cdk:
         specifier: 'catalog:'
-        version: 2.1142.0
+        version: 2.1143.0
       tsx:
         specifier: 'catalog:'
         version: 4.23.15
@@ -449,7 +449,7 @@ importers:
         version: 26.6.2
       aws-cdk:
         specifier: 'catalog:'
-        version: 2.1142.0
+        version: 2.1143.0
       esbuild:
         specifier: 'catalog:'
         version: 0.28.2
@@ -492,7 +492,7 @@ importers:
         version: 26.6.2
       aws-cdk:
         specifier: 'catalog:'
-        version: 2.1142.0
+        version: 2.1143.0
       esbuild:
         specifier: 'catalog:'
         version: 0.28.2
@@ -523,7 +523,7 @@ importers:
         version: 26.6.2
       aws-cdk:
         specifier: 'catalog:'
-        version: 2.1142.0
+        version: 2.1143.0
       esbuild:
         specifier: 'catalog:'
         version: 0.28.2
@@ -554,7 +554,7 @@ importers:
         version: 26.6.2
       aws-cdk:
         specifier: 'catalog:'
-        version: 2.1142.0
+        version: 2.1143.0
       tsx:
         specifier: 'catalog:'
         version: 4.23.15
@@ -582,7 +582,7 @@ importers:
         version: 26.6.2
       aws-cdk:
         specifier: 'catalog:'
-        version: 2.1142.0
+        version: 2.1143.0
       tsx:
         specifier: 'catalog:'
         version: 4.23.15
@@ -610,7 +610,7 @@ importers:
         version: 26.6.2
       aws-cdk:
         specifier: 'catalog:'
-        version: 2.1142.0
+        version: 2.1143.0
       esbuild:
         specifier: 'catalog:'
         version: 0.28.2
@@ -653,7 +653,7 @@ importers:
         version: 26.6.2
       aws-cdk:
         specifier: 'catalog:'
-        version: 2.1142.0
+        version: 2.1143.0
       tsx:
         specifier: 'catalog:'
         version: 4.23.15
@@ -788,7 +788,7 @@ importers:
         version: 26.6.2
       aws-cdk:
         specifier: 'catalog:'
-        version: 2.1142.0
+        version: 2.1143.0
       esbuild:
         specifier: 'catalog:'
         version: 0.28.2
@@ -816,7 +816,7 @@ importers:
         version: 26.6.2
       aws-cdk:
         specifier: 'catalog:'
-        version: 2.1142.0
+        version: 2.1143.0
       tsx:
         specifier: 'catalog:'
         version: 4.23.15
@@ -847,7 +847,7 @@ importers:
         version: 26.6.2
       aws-cdk:
         specifier: 'catalog:'
-        version: 2.1142.0
+        version: 2.1143.0
       esbuild:
         specifier: 'catalog:'
         version: 0.28.2
@@ -884,7 +884,7 @@ importers:
         version: 26.6.2
       aws-cdk:
         specifier: 'catalog:'
-        version: 2.1142.0
+        version: 2.1143.0
       esbuild:
         specifier: 'catalog:'
         version: 0.28.2
@@ -912,7 +912,7 @@ importers:
         version: 26.6.2
       aws-cdk:
         specifier: 'catalog:'
-        version: 2.1142.0
+        version: 2.1143.0
       tsx:
         specifier: 'catalog:'
         version: 4.23.15
@@ -937,7 +937,7 @@ importers:
         version: 26.6.2
       aws-cdk:
         specifier: 'catalog:'
-        version: 2.1142.0
+        version: 2.1143.0
       esbuild:
         specifier: 'catalog:'
         version: 0.28.2
@@ -995,7 +995,7 @@ importers:
         version: 26.6.2
       aws-cdk:
         specifier: 'catalog:'
-        version: 2.1142.0
+        version: 2.1143.0
       esbuild:
         specifier: 'catalog:'
         version: 0.28.2
@@ -1026,7 +1026,7 @@ importers:
         version: 26.6.2
       aws-cdk:
         specifier: 'catalog:'
-        version: 2.1142.0
+        version: 2.1143.0
       esbuild:
         specifier: 'catalog:'
         version: 0.28.2
@@ -1108,7 +1108,7 @@ importers:
         version: 26.6.2
       aws-cdk:
         specifier: 'catalog:'
-        version: 2.1142.0
+        version: 2.1143.0
       esbuild:
         specifier: 'catalog:'
         version: 0.28.2
@@ -1187,7 +1187,7 @@ importers:
         version: 26.6.2
       aws-cdk:
         specifier: 'catalog:'
-        version: 2.1142.0
+        version: 2.1143.0
       esbuild:
         specifier: 'catalog:'
         version: 0.28.2
@@ -3686,8 +3686,8 @@ packages:
       - yaml
       - mime-types
 
-  aws-cdk@2.1142.0:
-    resolution: {integrity: sha512-gNOeii+avTJmOwfR8tVgraZ5A2EBC/529EXg7e+yBp8Zl608dAv5CtFRoJt8QoKiruiCwYr4HF6ClNAse/NkSg==}
+  aws-cdk@2.1143.0:
+    resolution: {integrity: sha512-bTbgEmNuN6UMDAyhGFWOAnriafSu7j0cAjaFKRw1/WEs6RE5g062D2v2+YE8Dw6qw7RgNGQPH5Nv47TsK5kZSQ==}
     engines: {node: '>= 18.0.0'}
     hasBin: true
 
@@ -8044,7 +8044,7 @@ snapshots:
       '@aws-cdk/cloud-assembly-schema': 54.24.0
       constructs: 10.7.2
 
-  aws-cdk@2.1142.0: {}
+  aws-cdk@2.1143.0: {}
 
   aws4fetch@1.0.18: {}
 

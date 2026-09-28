@@ -64,7 +64,7 @@ mod tests {
         let entry = &batch.records[0];
         assert_eq!(entry.data.as_ref(), record_data.as_bytes());
         // Check if partition key is a valid UUID
-        assert!(Uuid::parse_str(entry.partition_key()).is_ok());
+        assert!(Uuid::parse_str(entry.partition_key().unwrap()).is_ok());
     }
 
     #[test]

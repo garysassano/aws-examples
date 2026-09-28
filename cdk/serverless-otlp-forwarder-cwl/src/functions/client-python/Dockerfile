@@ -1,5 +1,5 @@
 # Build arg defaults (allow simple `docker build .` when testing)
-ARG PYTHON_VERSION=3.13
+ARG PYTHON_VERSION=3.14
 ARG UV_VERSION
 FROM ghcr.io/astral-sh/uv:${UV_VERSION:+${UV_VERSION}-}python${PYTHON_VERSION}-bookworm-slim
 

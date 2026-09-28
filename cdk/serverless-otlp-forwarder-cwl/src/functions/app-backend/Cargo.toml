@@ -13,7 +13,6 @@ chrono = { workspace = true }
 lambda-lw-http-router = { workspace = true }
 lambda-otel-lite = { workspace = true }
 lambda_runtime = { workspace = true }
-lazy_static = { workspace = true }
 opentelemetry = { workspace = true }
 serde_dynamo = { workspace = true }
 serde_json = { workspace = true }

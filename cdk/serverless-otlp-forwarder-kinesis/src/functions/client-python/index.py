@@ -1,18 +1,17 @@
 import json
 import os
-import requests
 
+import requests
+from lambda_otel_lite import create_traced_handler, init_telemetry
 from opentelemetry import trace
 from opentelemetry.trace import StatusCode
-
-from lambda_otel_lite import init_telemetry, create_traced_handler
 
 # Initialize telemetry once at module load
 tracer, completion_handler = init_telemetry()
 
 # Create a sessions object for requests
 http_session = requests.Session()
-target_url = os.environ.get("TARGET_URL")
+target_url = os.environ["TARGET_URL"]
 quotes_url = "https://dummyjson.com/quotes/random"
 
 
@@ -28,7 +27,7 @@ def get_random_quote():
 def save_quote(quote: dict):
     """Save the quote to the target URL."""
     response = http_session.post(
-        f"{target_url}",
+        target_url,
         json=quote,
         headers={
             "content-type": "application/json",

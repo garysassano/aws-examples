@@ -81,7 +81,7 @@ async fn function_handler(
     event: LambdaEvent<LogsEventProcessorWrapper>,
     http_client: Arc<InstrumentedHttpClient>,
 ) -> Result<(), LambdaError> {
-    tracing::info!("otlp-stdout-logs-processor: function_handler started.");
+    tracing::debug!("Processing CloudWatch Logs batch.");
 
     let log_group = event.payload.0.aws_logs.data.log_group.clone();
 
@@ -98,11 +98,11 @@ async fn function_handler(
     .await
     {
         Ok(_) => {
-            tracing::info!("otlp-stdout-logs-processor: Batch processed successfully.");
+            tracing::debug!("Batch processed successfully.");
             Ok(())
         }
         Err(e) => {
-            tracing::error!(error = %e, "otlp-stdout-logs-processor: Error processing event batch.");
+            tracing::error!(error = %e, "Error processing event batch.");
             Err(LambdaError::from(e.to_string()))
         }
     }
@@ -127,9 +127,7 @@ async fn main() -> Result<(), LambdaError> {
             .build(),
     )
     .await?;
-    tracing::info!(
-        "lambda-otel-lite initialized with OTLP HTTP exporter for otlp-stdout-logs-processor."
-    );
+    tracing::info!("lambda-otel-lite initialized with OTLP HTTP exporter.");
 
     // Create a base reqwest client
     let base_reqwest_client = ReqwestClient::new();
@@ -150,11 +148,6 @@ async fn main() -> Result<(), LambdaError> {
             async move { function_handler(event, client_for_handler).await }
         });
 
-    tracing::info!("otlp-stdout-logs-processor starting Lambda runtime.");
+    tracing::info!("Starting Lambda runtime.");
     Runtime::new(service).run().await
-}
-
-#[cfg(test)]
-mod tests {
-    // Intentionally empty for now.
 }

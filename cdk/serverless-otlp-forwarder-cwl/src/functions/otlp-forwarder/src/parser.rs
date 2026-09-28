@@ -3,7 +3,6 @@ use aws_lambda_events::event::cloudwatch_logs::LogsEvent;
 use otlp_stdout_span_exporter::ExporterOutput;
 use serverless_otlp_forwarder_core::core_parser::EventParser;
 use serverless_otlp_forwarder_core::telemetry::TelemetryData;
-use tracing;
 
 // Define a local struct for parsing CloudWatch Logs events containing OTLP stdout format.
 pub struct CloudWatchLogsOtlpStdoutParser;
@@ -62,17 +61,16 @@ impl EventParser for CloudWatchLogsOtlpStdoutParser {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use aws_lambda_events::event::cloudwatch_logs::{AwsLogs, LogData, LogEntry};
+    use aws_lambda_events::event::cloudwatch_logs::LogEntry;
     use serde_json::json;
 
-    // A valid base64-encoded, gzipped, minimal OTLP protobuf payload string.
-    // Represents an empty ExportTraceServiceRequest.
-    const VALID_TEST_PAYLOAD_STRING: &str = "H4sIAAAAAAAAAAMAAAAAAAAAAAA="; // gzip(protobuf([]))
+    // A base64-encoded, gzipped, empty OTLP ExportTraceServiceRequest.
+    const VALID_TEST_PAYLOAD_STRING: &str = "H4sIAAAAAAAAAAMAAAAAAAAAAAA=";
 
-    // Helper to create a JSON string that mimics otlp_stdout_span_exporter::ExporterOutput format
-    fn create_test_exporter_output_log_message(source: &str) -> String {
-        let output = json!({
-            "__otel_otlp_stdout": "otlp-stdout-span-exporter@0.2.2",
+    // A log message in the otlp_stdout_span_exporter::ExporterOutput format.
+    fn exporter_output(source: &str) -> String {
+        json!({
+            "__otel_otlp_stdout": "otlp-stdout-span-exporter@0.17.1",
             "source": source,
             "endpoint": "http://original.collector/v1/traces",
             "method": "POST",
@@ -80,105 +78,64 @@ mod tests {
             "headers": {
                 "content-type": "application/x-protobuf"
             },
-            "content-type": "application/x-protobuf", // This is the type *before* base64/gzip in ExporterOutput model
-            "content-encoding": "gzip", // This is the encoding *before* base64 in ExporterOutput model
+            "content-type": "application/x-protobuf",
+            "content-encoding": "gzip",
             "base64": true
-        });
-        serde_json::to_string(&output).unwrap()
+        })
+        .to_string()
+    }
+
+    fn logs_event(messages: Vec<String>) -> LogsEvent {
+        let mut event = LogsEvent::default();
+        event.aws_logs.data.log_group = "/aws/lambda/test-func".to_string();
+        event.aws_logs.data.log_events = messages
+            .into_iter()
+            .map(|message| {
+                let mut entry = LogEntry::default();
+                entry.message = message;
+                entry
+            })
+            .collect();
+        event
     }
 
     #[test]
     fn test_cloudwatch_logs_parser_success() {
-        let parser = CloudWatchLogsOtlpStdoutParser;
-        let log_message1 = create_test_exporter_output_log_message("service-a");
-        let log_message2 = create_test_exporter_output_log_message("service-b");
+        let event = logs_event(vec![
+            exporter_output("service-a"),
+            exporter_output("service-b"),
+        ]);
 
-        let event = LogsEvent {
-            aws_logs: AwsLogs {
-                data: LogData {
-                    owner: "123456789012".to_string(),
-                    log_group: "/aws/lambda/test-func".to_string(),
-                    log_stream: "stream1".to_string(),
-                    message_type: "DATA_MESSAGE".to_string(),
-                    subscription_filters: vec!["filter1".to_string()],
-                    log_events: vec![
-                        LogEntry {
-                            id: "e1".to_string(),
-                            timestamp: 1000,
-                            message: log_message1,
-                        },
-                        LogEntry {
-                            id: "e2".to_string(),
-                            timestamp: 2000,
-                            message: log_message2,
-                        },
-                    ],
-                },
-            },
-        };
-
-        let result = parser.parse(event, "/aws/lambda/test-func").unwrap();
+        let result = CloudWatchLogsOtlpStdoutParser
+            .parse(event, "/aws/lambda/test-func")
+            .unwrap();
         assert_eq!(result.len(), 2);
-        // The `source` in TelemetryData comes from ExporterOutput.source
         assert_eq!(result[0].source, "service-a");
         assert_eq!(result[1].source, "service-b");
-        // TelemetryData::from_log_record ensures payload is decoded & content_type is protobuf
+        // from_log_record decodes and decompresses the payload
         assert_eq!(result[0].content_type, "application/x-protobuf");
-        assert_eq!(result[0].content_encoding, None); // Should be decompressed by from_log_record
+        assert_eq!(result[0].content_encoding, None);
     }
 
     #[test]
     fn test_cloudwatch_logs_parser_malformed_json_in_log_entry() {
-        let parser = CloudWatchLogsOtlpStdoutParser;
-        let malformed_json_message = "{\"key\": \"value\" but not closed";
-        let valid_json_message = create_test_exporter_output_log_message("service-ok");
+        let event = logs_event(vec![
+            "{\"key\": \"value\" but not closed".to_string(),
+            exporter_output("service-ok"),
+        ]);
 
-        let event = LogsEvent {
-            aws_logs: AwsLogs {
-                data: LogData {
-                    owner: "123456789012".to_string(),
-                    log_group: "/aws/lambda/test-func".to_string(),
-                    log_stream: "stream1".to_string(),
-                    message_type: "DATA_MESSAGE".to_string(),
-                    subscription_filters: vec!["filter1".to_string()],
-                    log_events: vec![
-                        LogEntry {
-                            id: "e1".to_string(),
-                            timestamp: 1000,
-                            message: malformed_json_message.to_string(),
-                        },
-                        LogEntry {
-                            id: "e2".to_string(),
-                            timestamp: 2000,
-                            message: valid_json_message,
-                        },
-                    ],
-                },
-            },
-        };
-
-        let result = parser.parse(event, "/aws/lambda/test-func").unwrap();
-        assert_eq!(result.len(), 1); // Skips the malformed one, processes the valid one
+        let result = CloudWatchLogsOtlpStdoutParser
+            .parse(event, "/aws/lambda/test-func")
+            .unwrap();
+        assert_eq!(result.len(), 1);
         assert_eq!(result[0].source, "service-ok");
     }
 
     #[test]
     fn test_cloudwatch_logs_parser_empty_log_events_list() {
-        let parser = CloudWatchLogsOtlpStdoutParser;
-        let event = LogsEvent {
-            aws_logs: AwsLogs {
-                data: LogData {
-                    owner: "123456789012".to_string(),
-                    log_group: "/aws/lambda/test-func".to_string(),
-                    log_stream: "stream1".to_string(),
-                    message_type: "DATA_MESSAGE".to_string(),
-                    subscription_filters: vec!["filter1".to_string()],
-                    log_events: vec![], // Empty log events list
-                },
-            },
-        };
-
-        let result = parser.parse(event, "/aws/lambda/test-func").unwrap();
+        let result = CloudWatchLogsOtlpStdoutParser
+            .parse(logs_event(vec![]), "/aws/lambda/test-func")
+            .unwrap();
         assert!(result.is_empty());
     }
 }

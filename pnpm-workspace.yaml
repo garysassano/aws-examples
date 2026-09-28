@@ -13,7 +13,7 @@ catalog:
   "@astrojs/check": ^0.9.10
   "@astrojs/preact": ^6.0.5
   "@astrojs/rss": ^4.0.19
-  aws-cdk: ^2.1142.0
+  aws-cdk: ^2.1143.0
   aws-cdk-lib: ^2.270.0
   # Alpha modules ship in lockstep with aws-cdk-lib; bump them together.
   "@aws-cdk/aws-apprunner-alpha": 2.270.0-alpha.0

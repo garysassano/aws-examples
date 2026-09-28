@@ -5,8 +5,7 @@ use opentelemetry::{
     InstrumentationScope, KeyValue,
     trace::{SpanContext, SpanId, SpanKind, Status as OtelStatus, TraceFlags, TraceId, TraceState},
 };
-use opentelemetry_sdk::trace::{SpanData, SpanEvents, SpanLinks};
-use rand::Rng;
+use opentelemetry_sdk::trace::{IdGenerator, RandomIdGenerator, SpanData, SpanEvents, SpanLinks};
 use std::borrow::Cow;
 use std::time::{Duration as StdDuration, SystemTime};
 
@@ -75,8 +74,7 @@ impl SpanAggregator {
 
             // Generate and store the span_id for *this* aggregator's span ("Lambda Invoke")
             if self.span_id.is_none() {
-                let mut rng = rand::rng();
-                self.span_id = Some(SpanId::from_bytes(rng.random::<[u8; 8]>()));
+                self.span_id = Some(RandomIdGenerator::default().new_span_id());
                 tracing::debug!(generated_span_id = ?self.span_id, "Generated span_id for Lambda Invoke span");
             }
 
@@ -177,6 +175,7 @@ impl SpanAggregator {
             parent_span_id: self
                 .function_root_span_id
                 .unwrap_or_else(|| SpanId::from_bytes([0; 8])),
+            parent_span_is_remote: false,
             span_kind: self.kind.clone(),
             name: self.name.clone().into(),
             start_time,
@@ -233,13 +232,11 @@ impl SpanAggregator {
             }
         };
 
-        let mut rng = rand::rng();
-
         for span in spans {
             let child_start_time: SystemTime = span.start.into();
             let child_duration = StdDuration::from_secs_f64(span.duration_ms / 1000.0);
             let child_end_time = child_start_time + child_duration;
-            let child_span_id = SpanId::from_bytes(rng.random::<[u8; 8]>());
+            let child_span_id = RandomIdGenerator::default().new_span_id();
 
             let child_span_context = SpanContext::new(
                 trace_id,
@@ -252,6 +249,7 @@ impl SpanAggregator {
             let child_span_data = SpanData {
                 span_context: child_span_context,
                 parent_span_id,
+                parent_span_is_remote: false,
                 span_kind: SpanKind::Internal,
                 name: Self::map_platform_span_name(span.name.as_str()),
                 start_time: child_start_time,
@@ -293,8 +291,7 @@ impl SpanAggregator {
         let end_time = start_time + duration;
 
         // Generate a unique span ID for the init phase span
-        let mut rng = rand::rng();
-        let init_span_id = SpanId::from_bytes(rng.random::<[u8; 8]>());
+        let init_span_id = RandomIdGenerator::default().new_span_id();
 
         let init_span_context = SpanContext::new(
             trace_id,
@@ -307,6 +304,7 @@ impl SpanAggregator {
         let init_span_data = SpanData {
             span_context: init_span_context,
             parent_span_id, // Parent is the actual function's root span
+            parent_span_is_remote: false,
             span_kind: SpanKind::Internal,
             name: INIT_PHASE_NAME.into(),
             start_time,
@@ -364,7 +362,7 @@ mod tests {
         assert!(agg.start_time.is_none());
         assert!(agg.end_time.is_none());
         assert_eq!(agg.status, OtelStatus::Unset);
-        assert_eq!(agg.name, "Lambda Invoke");
+        assert_eq!(agg.name, LAMBDA_INVOKE_NAME);
         assert!(matches!(agg.kind, SpanKind::Server));
         assert!(agg.attributes.is_empty());
         assert!(agg.child_spans_data.is_empty());
@@ -647,7 +645,7 @@ mod tests {
         assert_eq!(span_data.span_context.span_id(), span_id);
         assert_eq!(span_data.span_context.trace_flags(), TraceFlags::SAMPLED);
         assert_eq!(span_data.parent_span_id, root_span_id);
-        assert_eq!(span_data.name.as_ref(), "Lambda Invoke"); // Compare Cow as &str
+        assert_eq!(span_data.name.as_ref(), LAMBDA_INVOKE_NAME);
         assert_eq!(span_data.start_time, start_system_time);
         assert_eq!(span_data.end_time, end_system_time);
         assert_eq!(span_data.status, OtelStatus::Ok);

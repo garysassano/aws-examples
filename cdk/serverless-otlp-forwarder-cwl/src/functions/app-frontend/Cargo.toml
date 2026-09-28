@@ -13,7 +13,6 @@ lambda_runtime = { workspace = true }
 reqwest = { workspace = true }
 reqwest-middleware = { workspace = true }
 reqwest-tracing = { workspace = true }
-serde = { workspace = true }
 serde_json = { workspace = true }
 tera = { workspace = true }
 thiserror = { workspace = true }
