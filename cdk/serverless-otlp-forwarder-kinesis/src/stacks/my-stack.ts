@@ -333,7 +333,9 @@ export class MyStack extends Stack {
     // APPLY ASPECTS
     //==============================================================================
 
-    Aspects.of(this).add(new ApplyKinesisExtensionAspect(otlpStream, otlpStdoutKinesisExtension));
+    Aspects.of(this).add(
+      new ApplyKinesisExtensionAspect(otlpStream, otlpStdoutKinesisExtension, otlpForwarder),
+    );
 
     //==============================================================================
     // OUTPUTS
@@ -361,14 +363,17 @@ export class MyStack extends Stack {
 // CDK ASPECTS
 //==============================================================================
 
+// Attaches the extension to every function except the forwarder: the forwarder's own
+// spans and platform telemetry would otherwise loop back to it through the stream.
 class ApplyKinesisExtensionAspect implements IAspect {
   constructor(
     private readonly kinesisStream: Stream,
     private readonly extensionLayer: LayerVersion,
+    private readonly forwarder: LambdaFunction,
   ) {}
 
   public visit(node: IConstruct): void {
-    if (node instanceof LambdaFunction) {
+    if (node instanceof LambdaFunction && node !== this.forwarder) {
       // Add the extension layer
       node.addLayers(this.extensionLayer);
 
