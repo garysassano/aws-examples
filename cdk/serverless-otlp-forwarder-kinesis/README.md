@@ -64,10 +64,10 @@ The app checks the chosen exporter's variables whenever it runs, so pass the sam
 pnpm destroy -c exporter=clickhouse
 ```
 
-## Architecture Diagram
+## Telemetry Pipeline Diagram
 
-![Architecture Diagram](./src/assets/arch-diagram.svg)
+![Telemetry Pipeline Diagram](./src/assets/telemetry-diagram.svg)
 
-## Observability Diagram
+## Sample Application Diagram
 
-![Observability Diagram](./src/assets/o11y-diagram.svg)
+![Sample Application Diagram](./src/assets/app-diagram.svg)

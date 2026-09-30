@@ -2,7 +2,7 @@
 
 CDK app showcasing a serverless approach to send OpenTelemetry traces from Lambda functions to an OTLP endpoint or to ClickHouse, using CloudWatch Logs and Lambda.
 
-The sample functions write their spans to stdout as OTLP JSON. An account-level CloudWatch Logs subscription filter delivers those log lines to the `otlp-forwarder` function, which sends them to the OTLP endpoint in your environment or, through the [ROTel Lambda extension](https://github.com/rotel-dev/rotel-lambda-extension), to ClickHouse.
+The sample functions write their spans to stdout as gzipped OTLP protobuf in JSON log records. An account-level CloudWatch Logs subscription filter delivers those log lines to the `otlp-forwarder` function, which sends them to the OTLP endpoint in your environment or, through the [ROTel Lambda extension](https://github.com/rotel-dev/rotel-lambda-extension), to ClickHouse.
 
 ### Related Apps
 
@@ -65,10 +65,10 @@ The app checks the chosen exporter's variables whenever it runs, so pass the sam
 pnpm destroy -c exporter=clickhouse
 ```
 
-## Architecture Diagram
+## Telemetry Pipeline Diagram
 
-![Architecture Diagram](./src/assets/arch-diagram.svg)
+![Telemetry Pipeline Diagram](./src/assets/telemetry-diagram.svg)
 
-## Observability Diagram
+## Sample Application Diagram
 
-![Observability Diagram](./src/assets/o11y-diagram.svg)
+![Sample Application Diagram](./src/assets/app-diagram.svg)
