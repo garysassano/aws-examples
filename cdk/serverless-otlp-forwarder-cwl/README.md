@@ -1,12 +1,13 @@
 # cdk-serverless-otlp-forwarder-cwl
 
-CDK app showcasing a serverless approach to send OpenTelemetry traces from Lambda functions to an OTLP endpoint or to ClickHouse, using CloudWatch Logs and Lambda.
+CDK app showcasing a serverless approach to send OpenTelemetry traces from Lambda functions to CloudWatch, to an OTLP endpoint, or to ClickHouse, using CloudWatch Logs and Lambda.
 
-The sample functions write their spans to stdout as gzipped OTLP protobuf in JSON log records. An account-level CloudWatch Logs subscription filter delivers those log lines to the `otlp-forwarder` function, which sends them to the OTLP endpoint in your environment or, through the [ROTel Lambda extension](https://github.com/rotel-dev/rotel-lambda-extension), to ClickHouse.
+The sample functions write their spans to stdout as gzipped OTLP protobuf in JSON log records. An account-level CloudWatch Logs subscription filter delivers those log lines to the `otlp-forwarder` function, which sends them, signing each request with SigV4, to the account's [CloudWatch OTLP endpoint](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch-OTLPEndpoint.html), to the OTLP endpoint in your environment, or, through the [ROTel Lambda extension](https://github.com/rotel-dev/rotel-lambda-extension), to ClickHouse.
 
 ### Related Apps
 
 - [cdk/serverless-otlp-forwarder-kinesis](../serverless-otlp-forwarder-kinesis) - Uses Kinesis Data Streams as OTLP transport layer instead of CloudWatch Logs.
+- [cdk/serverless-otlp-forwarder-cross-account](../serverless-otlp-forwarder-cross-account) - Uses a forwarder in another account instead of the same account, comparing three cross-account transports.
 
 ## Prerequisites
 
@@ -14,7 +15,9 @@ The sample functions write their spans to stdout as gzipped OTLP protobuf in JSO
   - Must have authenticated with [Default Credentials](https://docs.aws.amazon.com/cdk/v2/guide/cli.html#cli_auth) in your local environment.
   - Must have completed the [CDK bootstrapping](https://docs.aws.amazon.com/cdk/v2/guide/bootstrapping.html) for the target AWS environment.
   - Must not already have an account-level subscription filter in the target account, since CloudWatch Logs allows only one.
-- **_OTLP exporter (default):_**
+- **_CloudWatch exporter (default):_**
+  - Must have enabled [Transaction Search](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Enable-TransactionSearch.html) in the target account, so that it accepts spans on its OTLP endpoint.
+- **_OTLP exporter:_**
   - Must have set the `OTEL_EXPORTER_OTLP_ENDPOINT` and `OTEL_EXPORTER_OTLP_HEADERS` variables in your local environment.
 - **_ClickHouse exporter:_**
   - Must have set the `CLICKHOUSE_ENDPOINT`, `CLICKHOUSE_DATABASE`, `CLICKHOUSE_USERNAME` and `CLICKHOUSE_PASSWORD` variables in your local environment.
@@ -45,13 +48,14 @@ pnpm install
 pnpm run deploy
 ```
 
-The forwarder sends the traces to the OTLP endpoint by default. To send them to ClickHouse instead, pass the `exporter` context value:
+The forwarder sends the traces to the account's CloudWatch OTLP endpoint by default, where they appear in Transaction Search. To send them to an OTLP endpoint in your environment or to ClickHouse instead, pass the `exporter` context value:
 
 ```sh
+pnpm run deploy -c exporter=otlp
 pnpm run deploy -c exporter=clickhouse
 ```
 
-With ClickHouse, the ROTel extension also exports the forwarder's own logs, and reads the ClickHouse credentials from the `clickhouse-config` secret when the forwarder starts.
+With ClickHouse, the ROTel extension also exports the forwarder's own logs, and reads the ClickHouse credentials from the `clickhouse-config` secret when the forwarder starts. With CloudWatch, the forwarder writes its own spans to its log group, since the OpenTelemetry SDK exporter it uses for them cannot sign requests.
 
 ## Cleanup
 

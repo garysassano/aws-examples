@@ -1,0 +1,329 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="890.02" height="554" viewBox="-25 -25 890.02 554" role="img" aria-labelledby="title description">
+<title id="title">OTLP forwarding through CloudWatch Logs centralization</title>
+<desc id="description">The span-producer function in the source account sends its spans to the target account with the logs-centralization transport, where otlp-forwarder exports them to Transaction Search.</desc>
+<metadata>{&quot;generator&quot;: &quot;aws-diagrams&quot;, &quot;icon_source&quot;: &quot;https://d1.awsstatic.com/onedam/marketing-channels/website/public/shared/architecture-icon-release/Icon-package_07312026.5846e92413caa21490223536cc97f1269e44fa92.zip&quot;, &quot;icons&quot;: {&quot;Architecture-Group-Icons_07312026/AWS-Account_32.svg&quot;: &quot;f39e6364a75803321948bf0fa87edfc7a1413996b3a38eb64c9ca9f0e81a2b38&quot;, &quot;Architecture-Service-Icons_07312026/Arch_Management-Tools/48/Arch_Amazon-CloudWatch_48.svg&quot;: &quot;9920f2db47fed7e2437c329e8b231edcb0f55db82f02413afa3f2d546c30d552&quot;, &quot;Resource-Icons_07312026/Res_Compute/Res_AWS-Lambda_Lambda-Function_48.svg&quot;: &quot;fedc74964e42037598104090d2c9641c702c5d862461010e54d173c555f6a274&quot;, &quot;Resource-Icons_07312026/Res_Management-Governance/Res_Amazon-CloudWatch_Logs_48.svg&quot;: &quot;d395fbcdfe2a524b8cb8ea1f157be8f8cb02e29e635607acbfa9644a31ff4e12&quot;}, &quot;third_party_icons&quot;: {&quot;nodejs/nodejs-filled.svg&quot;: {&quot;sha256&quot;: &quot;6fa80fc809233490b337cb7361e7ccfb2b27ed99806071c938c2488e653ac82b&quot;, &quot;source&quot;: &quot;manual&quot;}, &quot;opentelemetry/opentelemetry-otlp.svg&quot;: {&quot;sha256&quot;: &quot;16298e1a4fee49c64187d1b4aebd2c47787c1f40284b569815a16dd33fe13a7a&quot;, &quot;source&quot;: &quot;manual&quot;}, &quot;rust/rust-filled.svg&quot;: {&quot;sha256&quot;: &quot;6641bb8d5de64baff5958b9eac53abce6a44a0aabed2919750f37b94e3e68310&quot;, &quot;source&quot;: &quot;manual&quot;}}}</metadata>
+<rect x="-25" y="-25" width="890.02" height="554" fill="#FFFFFF"/>
+<g data-group-id="src">
+<rect x="0" y="0" width="210" height="504" fill="none" stroke="#E7157B" stroke-width="1.2"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 40 40" version="1.1" id="icon-1e5d275dafe0-1" x="0" y="0" preserveAspectRatio="xMidYMid meet" data-icon="" aria-hidden="true">
+    <title>Icon-Architecture-Group/32/AWS-Account_32</title>
+    <g id="icon-1e5d275dafe0-1-Icon-Architecture-Group/32/AWS-Account_32" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <rect id="icon-1e5d275dafe0-1-Rectangle" fill="#E7157B" x="0" y="0" width="40" height="40" />
+        <path d="M24.5,22 C26.43,22 28,23.57 28,25.5 C28,27.43 26.43,29 24.5,29 C22.57,29 21,27.43 21,25.5 C21,23.57 22.57,22 24.5,22 L24.5,22 Z M24.5,30 C26.981,30 29,27.981 29,25.5 C29,23.019 26.981,21 24.5,21 C22.019,21 20,23.019 20,25.5 C20,27.981 22.019,30 24.5,30 L24.5,30 Z M26.023,10.88 L29.084,17 L22.963,17 L26.023,10.88 Z M22.154,18 L29.893,18 C30.065,18 30.227,17.91 30.318,17.763 C30.409,17.615 30.417,17.432 30.34,17.276 L26.471,9.538 C26.301,9.2 25.746,9.2 25.576,9.538 L21.707,17.276 C21.63,17.432 21.638,17.615 21.729,17.763 C21.82,17.91 21.981,18 22.154,18 L22.154,18 Z M11,23 L18,23 L18,16 L11,16 L11,23 Z M10.5,24 L18.5,24 C18.776,24 19,23.776 19,23.5 L19,15.5 C19,15.224 18.776,15 18.5,15 L10.5,15 C10.224,15 10,15.224 10,15.5 L10,23.5 C10,23.776 10.224,24 10.5,24 L10.5,24 Z M8,32 L32,32 L32,8 L8,8 L8,32 Z M32.5,7 L7.5,7 C7.224,7 7,7.224 7,7.5 L7,32.5 C7,32.776 7.224,33 7.5,33 L32.5,33 C32.776,33 33,32.776 33,32.5 L33,7.5 C33,7.224 32.776,7 32.5,7 L32.5,7 Z" id="icon-1e5d275dafe0-1-Fill-1" fill="#FFFFFF" />
+    </g>
+</svg>
+<text x="36" y="19" font-family="Arial, Helvetica, sans-serif" font-size="13" text-anchor="start" fill="#E7157B" font-weight="normal">
+<tspan x="36" dy="0">Source account</tspan>
+</text>
+</g>
+<g data-group-id="trg">
+<rect x="340.02" y="0" width="500" height="504" fill="none" stroke="#E7157B" stroke-width="1.2"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 40 40" version="1.1" id="icon-1e5d275dafe0-2" x="340.02" y="0" preserveAspectRatio="xMidYMid meet" data-icon="" aria-hidden="true">
+    <title>Icon-Architecture-Group/32/AWS-Account_32</title>
+    <g id="icon-1e5d275dafe0-2-Icon-Architecture-Group/32/AWS-Account_32" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <rect id="icon-1e5d275dafe0-2-Rectangle" fill="#E7157B" x="0" y="0" width="40" height="40" />
+        <path d="M24.5,22 C26.43,22 28,23.57 28,25.5 C28,27.43 26.43,29 24.5,29 C22.57,29 21,27.43 21,25.5 C21,23.57 22.57,22 24.5,22 L24.5,22 Z M24.5,30 C26.981,30 29,27.981 29,25.5 C29,23.019 26.981,21 24.5,21 C22.019,21 20,23.019 20,25.5 C20,27.981 22.019,30 24.5,30 L24.5,30 Z M26.023,10.88 L29.084,17 L22.963,17 L26.023,10.88 Z M22.154,18 L29.893,18 C30.065,18 30.227,17.91 30.318,17.763 C30.409,17.615 30.417,17.432 30.34,17.276 L26.471,9.538 C26.301,9.2 25.746,9.2 25.576,9.538 L21.707,17.276 C21.63,17.432 21.638,17.615 21.729,17.763 C21.82,17.91 21.981,18 22.154,18 L22.154,18 Z M11,23 L18,23 L18,16 L11,16 L11,23 Z M10.5,24 L18.5,24 C18.776,24 19,23.776 19,23.5 L19,15.5 C19,15.224 18.776,15 18.5,15 L10.5,15 C10.224,15 10,15.224 10,15.5 L10,23.5 C10,23.776 10.224,24 10.5,24 L10.5,24 Z M8,32 L32,32 L32,8 L8,8 L8,32 Z M32.5,7 L7.5,7 C7.224,7 7,7.224 7,7.5 L7,32.5 C7,32.776 7.224,33 7.5,33 L32.5,33 C32.776,33 33,32.776 33,32.5 L33,7.5 C33,7.224 32.776,7 32.5,7 L32.5,7 Z" id="icon-1e5d275dafe0-2-Fill-1" fill="#FFFFFF" />
+    </g>
+</svg>
+<text x="376.02" y="19" font-family="Arial, Helvetica, sans-serif" font-size="13" text-anchor="start" fill="#E7157B" font-weight="normal">
+<tspan x="376.02" dy="0">Target account</tspan>
+</text>
+</g>
+<g data-edge-from="producer" data-edge-to="logs">
+<polyline points="105,238 105,326" fill="none" stroke="#232F3E" stroke-width="2" stroke-linejoin="miter"/>
+<polygon points="105,334 109,326 101,326" fill="#232F3E"/>
+<text x="156.35" y="282" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="middle" fill="#232F3E" font-weight="normal">
+<tspan x="156.35" dy="0">OTLP protobuf</tspan>
+<tspan x="156.35" dy="15">on stdout</tspan>
+</text>
+</g>
+<g data-edge-from="logs" data-edge-to="copy">
+<polyline points="190,409 352.02,409" fill="none" stroke="#232F3E" stroke-width="2" stroke-linejoin="miter"/>
+<polygon points="360.02,409 352.02,405 352.02,413" fill="#232F3E"/>
+<text x="275.01" y="383" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="middle" fill="#232F3E" font-weight="normal">
+<tspan x="275.01" dy="0">copies</tspan>
+<tspan x="275.01" dy="15">(centralization rule)</tspan>
+</text>
+</g>
+<g data-edge-from="copy" data-edge-to="forwarder">
+<polyline points="530.02,409 642.02,409" fill="none" stroke="#232F3E" stroke-width="2" stroke-linejoin="miter"/>
+<polygon points="650.02,409 642.02,405 642.02,413" fill="#232F3E"/>
+<text x="590.02" y="383" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="middle" fill="#232F3E" font-weight="normal">
+<tspan x="590.02" dy="0">invokes</tspan>
+<tspan x="590.02" dy="15">(log batches)</tspan>
+</text>
+</g>
+<g data-edge-from="forwarder" data-edge-to="sink">
+<polyline points="735.02,334 735.02,246" fill="none" stroke="#232F3E" stroke-width="2" stroke-linejoin="miter"/>
+<polygon points="735.02,238 731.02,246 739.02,246" fill="#232F3E"/>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" id="icon-1e5d275dafe0-3-Layer_1" x="745.02" y="262" viewBox="0 0 32 32" style="enable-background:new 0 0 32 32;" xml:space="preserve" width="32" height="32" preserveAspectRatio="xMidYMid meet" data-icon="" aria-hidden="true">
+<style type="text/css">#icon-1e5d275dafe0-3-Layer_1 .st0 {fill:none;stroke:#002E42;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}#icon-1e5d275dafe0-3-Layer_1 .st1 {fill:#002E42;}#icon-1e5d275dafe0-3-Layer_1 .st2 {fill:none;stroke:#002E42;stroke-width:2;stroke-linecap:round;stroke-miterlimit:10;}#icon-1e5d275dafe0-3-Layer_1 .st3 {fill:none;stroke:#002E42;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;}
+</style>
+<path class="st0" d="M17.4,18.6h3.4" />
+<path class="st0" d="M19.1,19.3v4.3" />
+<path class="st0" d="M27.4,18.6v5" />
+<path class="st1" d="M24.2,18.6c0-0.6-0.4-1-1-1c-0.6,0-1,0.4-1,1H24.2z M22.2,18.6v2.5h2v-2.5H22.2z M22.2,21.1  c0,1.9,1.6,3.5,3.5,3.5v-2c-0.8,0-1.5-0.7-1.5-1.5H22.2z" />
+<path class="st0" d="M27.4,23.6c-1.3,0-4.2,0.4-4.2-2.5" />
+<path class="st0" d="M27.4,22.2c1.9,0,3.4,0,3.4-1.8c0-1.8-1.5-1.8-3.4-1.8" />
+<circle class="st0" cx="13.1" cy="21.1" r="2.5" />
+<path class="st2" d="M3.6,23l-1.4,1.4" />
+<path class="st2" d="M1.1,23.5L3,25.4" />
+<path class="st3" d="M5.6,24.4l-3.7-3.8l4.8-4.8l1.9,2c-1.4,1.5-1.5,3.1-1,4.7L5.6,24.4z" />
+<path class="st3" d="M11,16l-2.5-2.7l4.2-4.2l4.8,4.8l-1.9,1.9C14.1,14.9,12.4,15.2,11,16z" />
+<path class="st3" d="M20.9,13l-7.2-7.2c-0.4-0.4-0.4-0.9,0-1.3L15.3,3c0.4-0.4,0.9-0.4,1.3,0l7.2,7.2c0.4,0.4,0.4,0.9,0,1.3L22.2,13  C21.8,13.3,21.3,13.3,20.9,13z" />
+</svg>
+</g>
+<g data-node-id="producer">
+<rect x="20" y="88" width="170" height="150" fill="#FFFFFF" stroke="#CAD3DC" stroke-width="1.2"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 48 48" version="1.1" id="icon-1e5d275dafe0-4" x="83" y="102" preserveAspectRatio="xMidYMid meet" data-icon="" aria-hidden="true">
+    <title>Icon-Resource/Compute/Res_AWS-Lambda_Lambda-Function_48</title>
+    <g id="icon-1e5d275dafe0-4-Icon-Resource/Compute/Res_AWS-Lambda_Lambda-Function_48" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <path d="M24,44 C12.972,44 4,35.028 4,24 C4,12.972 12.972,4 24,4 C35.028,4 44,12.972 44,24 C44,35.028 35.028,44 24,44 L24,44 Z M24,2 C11.869,2 2,11.869 2,24 C2,36.131 11.869,46 24,46 C36.131,46 46,36.131 46,24 C46,11.869 36.131,2 24,2 L24,2 Z M17.231,35.25 L11.876,35.25 L18.221,21.959 L20.902,27.492 L17.231,35.25 Z M19.114,19.215 C18.946,18.87 18.597,18.651 18.214,18.651 L18.211,18.651 C17.826,18.652 17.477,18.874 17.312,19.221 L9.389,35.819 C9.24,36.129 9.262,36.493 9.445,36.783 C9.628,37.074 9.947,37.25 10.291,37.25 L17.864,37.25 C18.251,37.25 18.603,37.027 18.769,36.678 L22.915,27.915 C23.044,27.642 23.043,27.323 22.911,27.051 L19.114,19.215 Z M36.125,35.25 L30.673,35.25 L20.761,13.953 C20.597,13.601 20.243,13.375 19.854,13.375 L16.251,13.375 L16.255,9.25 L23.475,9.25 L33.339,30.545 C33.503,30.898 33.856,31.125 34.246,31.125 L36.125,31.125 L36.125,35.25 Z M37.125,29.125 L34.885,29.125 L25.021,7.83 C24.856,7.477 24.503,7.25 24.113,7.25 L15.256,7.25 C14.704,7.25 14.257,7.697 14.256,8.249 L14.25,14.374 C14.25,14.64 14.355,14.894 14.543,15.082 C14.73,15.27 14.984,15.375 15.25,15.375 L19.217,15.375 L29.129,36.672 C29.293,37.024 29.646,37.25 30.035,37.25 L37.125,37.25 C37.678,37.25 38.125,36.803 38.125,36.25 L38.125,30.125 C38.125,29.572 37.678,29.125 37.125,29.125 L37.125,29.125 Z" id="icon-1e5d275dafe0-4-Amazon-Lambda-Lambda-Function_Resource-Icon_light-bg" fill="#ED7100" />
+    </g>
+</svg>
+<text x="105" y="168" font-family="Arial, Helvetica, sans-serif" font-size="14" text-anchor="middle" fill="#232F3E" font-weight="600">
+<tspan x="105" dy="0">span-producer</tspan>
+</text>
+<text x="105" y="190" font-family="Consolas, Menlo, DejaVu Sans Mono, Liberation Mono, monospace" font-size="12" text-anchor="middle" fill="#232F3E" font-weight="normal">
+<tspan x="105" dy="0">index.handler</tspan>
+</text>
+<text x="105" y="205" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="middle" fill="#536577" font-weight="normal">
+<tspan x="105" dy="0">Every minute</tspan>
+</text>
+</g>
+<g data-node-id="logs">
+<rect x="20" y="334" width="170" height="150" fill="#FFFFFF" stroke="#CAD3DC" stroke-width="1.2"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 48 48" version="1.1" id="icon-1e5d275dafe0-5" x="80" y="348" preserveAspectRatio="xMidYMid meet" data-icon="" aria-hidden="true">
+    <title>Icon-Resource/Management-Governance/Res_Amazon-CloudWatch_Logs_48</title>
+    <g id="icon-1e5d275dafe0-5-Icon-Resource/Management-Governance/Res_Amazon-CloudWatch_Logs_48" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <path d="M29.4998,17.0004 C26.2418,17.0004 23.4708,19.0924 22.4378,22.0004 L24.6068,22.0004 C25.5198,20.2224 27.3678,19.0004 29.4998,19.0004 C32.5318,19.0004 34.9998,21.4674 34.9998,24.5004 C34.9998,27.5324 32.5318,30.0004 29.4998,30.0004 C27.7958,30.0004 26.2708,29.2214 25.2608,28.0004 L22.8718,28.0004 C24.1318,30.3764 26.6288,32.0004 29.4998,32.0004 C33.6358,32.0004 36.9998,28.6364 36.9998,24.5004 C36.9998,20.3644 33.6358,17.0004 29.4998,17.0004 L29.4998,17.0004 Z M1.9998,33.0004 L14.9998,33.0004 L14.9998,31.0004 L1.9998,31.0004 L1.9998,33.0004 Z M1.9998,18.0004 L14.9998,18.0004 L14.9998,16.0004 L1.9998,16.0004 L1.9998,18.0004 Z M1.9998,26.0004 L28.9998,26.0004 L28.9998,24.0004 L1.9998,24.0004 L1.9998,26.0004 Z M43.8428,35.7384 L38.8178,31.2134 C38.3998,31.7924 37.9318,32.3304 37.4148,32.8214 L42.4118,37.3294 C42.8478,37.7224 43.5278,37.6874 43.9228,37.2494 C44.3148,36.8124 44.2798,36.1344 43.8428,35.7384 L43.8428,35.7384 Z M45.4088,38.5884 C44.8028,39.2594 43.9658,39.6004 43.1248,39.6004 C42.3938,39.6004 41.6588,39.3414 41.0738,38.8154 L35.8338,34.0894 C34.0168,35.2934 31.8398,36.0004 29.4998,36.0004 C24.3798,36.0004 20.0328,32.6344 18.5488,28.0004 L20.6768,28.0004 C22.0738,31.5094 25.4988,34.0004 29.4998,34.0004 C34.7378,34.0004 38.9998,29.7384 38.9998,24.5004 C38.9998,19.2624 34.7378,15.0004 29.4998,15.0004 C25.1278,15.0004 21.4458,17.9734 20.3448,22.0004 L18.2818,22.0004 C19.4278,16.8574 24.0188,13.0004 29.4998,13.0004 C35.8408,13.0004 40.9998,18.1584 40.9998,24.5004 C40.9998,26.2774 40.5828,27.9554 39.8588,29.4604 L45.1828,34.2544 C46.4368,35.3884 46.5378,37.3314 45.4088,38.5884 L45.4088,38.5884 Z M1.9998,41.0004 L20.9998,41.0004 L20.9998,39.0004 L1.9998,39.0004 L1.9998,41.0004 Z M1.9998,10.0004 L22.9998,10.0004 L22.9998,8.0004 L1.9998,8.0004 L1.9998,10.0004 Z" id="icon-1e5d275dafe0-5-Amazon-Cloudwatch_Logs_Resource-Icon_light-bg" fill="#E7157B" />
+    </g>
+</svg>
+<text x="105" y="414" font-family="Arial, Helvetica, sans-serif" font-size="14" text-anchor="middle" fill="#232F3E" font-weight="600">
+<tspan x="105" dy="0">CloudWatch Logs</tspan>
+</text>
+<text x="105" y="436" font-family="Consolas, Menlo, DejaVu Sans Mono, Liberation Mono, monospace" font-size="12" text-anchor="middle" fill="#232F3E" font-weight="normal">
+<tspan x="105" dy="0">/aws/lambda/</tspan>
+<tspan x="105" dy="15">span-producer</tspan>
+</text>
+</g>
+<g data-node-id="copy">
+<rect x="360.02" y="334" width="170" height="150" fill="#FFFFFF" stroke="#CAD3DC" stroke-width="1.2"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 48 48" version="1.1" id="icon-1e5d275dafe0-6" x="420.02" y="348" preserveAspectRatio="xMidYMid meet" data-icon="" aria-hidden="true">
+    <title>Icon-Resource/Management-Governance/Res_Amazon-CloudWatch_Logs_48</title>
+    <g id="icon-1e5d275dafe0-6-Icon-Resource/Management-Governance/Res_Amazon-CloudWatch_Logs_48" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <path d="M29.4998,17.0004 C26.2418,17.0004 23.4708,19.0924 22.4378,22.0004 L24.6068,22.0004 C25.5198,20.2224 27.3678,19.0004 29.4998,19.0004 C32.5318,19.0004 34.9998,21.4674 34.9998,24.5004 C34.9998,27.5324 32.5318,30.0004 29.4998,30.0004 C27.7958,30.0004 26.2708,29.2214 25.2608,28.0004 L22.8718,28.0004 C24.1318,30.3764 26.6288,32.0004 29.4998,32.0004 C33.6358,32.0004 36.9998,28.6364 36.9998,24.5004 C36.9998,20.3644 33.6358,17.0004 29.4998,17.0004 L29.4998,17.0004 Z M1.9998,33.0004 L14.9998,33.0004 L14.9998,31.0004 L1.9998,31.0004 L1.9998,33.0004 Z M1.9998,18.0004 L14.9998,18.0004 L14.9998,16.0004 L1.9998,16.0004 L1.9998,18.0004 Z M1.9998,26.0004 L28.9998,26.0004 L28.9998,24.0004 L1.9998,24.0004 L1.9998,26.0004 Z M43.8428,35.7384 L38.8178,31.2134 C38.3998,31.7924 37.9318,32.3304 37.4148,32.8214 L42.4118,37.3294 C42.8478,37.7224 43.5278,37.6874 43.9228,37.2494 C44.3148,36.8124 44.2798,36.1344 43.8428,35.7384 L43.8428,35.7384 Z M45.4088,38.5884 C44.8028,39.2594 43.9658,39.6004 43.1248,39.6004 C42.3938,39.6004 41.6588,39.3414 41.0738,38.8154 L35.8338,34.0894 C34.0168,35.2934 31.8398,36.0004 29.4998,36.0004 C24.3798,36.0004 20.0328,32.6344 18.5488,28.0004 L20.6768,28.0004 C22.0738,31.5094 25.4988,34.0004 29.4998,34.0004 C34.7378,34.0004 38.9998,29.7384 38.9998,24.5004 C38.9998,19.2624 34.7378,15.0004 29.4998,15.0004 C25.1278,15.0004 21.4458,17.9734 20.3448,22.0004 L18.2818,22.0004 C19.4278,16.8574 24.0188,13.0004 29.4998,13.0004 C35.8408,13.0004 40.9998,18.1584 40.9998,24.5004 C40.9998,26.2774 40.5828,27.9554 39.8588,29.4604 L45.1828,34.2544 C46.4368,35.3884 46.5378,37.3314 45.4088,38.5884 L45.4088,38.5884 Z M1.9998,41.0004 L20.9998,41.0004 L20.9998,39.0004 L1.9998,39.0004 L1.9998,41.0004 Z M1.9998,10.0004 L22.9998,10.0004 L22.9998,8.0004 L1.9998,8.0004 L1.9998,10.0004 Z" id="icon-1e5d275dafe0-6-Amazon-Cloudwatch_Logs_Resource-Icon_light-bg" fill="#E7157B" />
+    </g>
+</svg>
+<text x="445.02" y="414" font-family="Arial, Helvetica, sans-serif" font-size="14" text-anchor="middle" fill="#232F3E" font-weight="600">
+<tspan x="445.02" dy="0">CloudWatch Logs</tspan>
+</text>
+<text x="445.02" y="436" font-family="Consolas, Menlo, DejaVu Sans Mono, Liberation Mono, monospace" font-size="12" text-anchor="middle" fill="#232F3E" font-weight="normal">
+<tspan x="445.02" dy="0">/centralized/…/</tspan>
+<tspan x="445.02" dy="15">span-producer</tspan>
+</text>
+<text x="445.02" y="466" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="middle" fill="#536577" font-weight="normal">
+<tspan x="445.02" dy="0">Account subscription filter</tspan>
+</text>
+</g>
+<g data-node-id="forwarder">
+<rect x="650.02" y="334" width="170" height="150" fill="#FFFFFF" stroke="#CAD3DC" stroke-width="1.2"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 48 48" version="1.1" id="icon-1e5d275dafe0-7" x="713.02" y="348" preserveAspectRatio="xMidYMid meet" data-icon="" aria-hidden="true">
+    <title>Icon-Resource/Compute/Res_AWS-Lambda_Lambda-Function_48</title>
+    <g id="icon-1e5d275dafe0-7-Icon-Resource/Compute/Res_AWS-Lambda_Lambda-Function_48" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <path d="M24,44 C12.972,44 4,35.028 4,24 C4,12.972 12.972,4 24,4 C35.028,4 44,12.972 44,24 C44,35.028 35.028,44 24,44 L24,44 Z M24,2 C11.869,2 2,11.869 2,24 C2,36.131 11.869,46 24,46 C36.131,46 46,36.131 46,24 C46,11.869 36.131,2 24,2 L24,2 Z M17.231,35.25 L11.876,35.25 L18.221,21.959 L20.902,27.492 L17.231,35.25 Z M19.114,19.215 C18.946,18.87 18.597,18.651 18.214,18.651 L18.211,18.651 C17.826,18.652 17.477,18.874 17.312,19.221 L9.389,35.819 C9.24,36.129 9.262,36.493 9.445,36.783 C9.628,37.074 9.947,37.25 10.291,37.25 L17.864,37.25 C18.251,37.25 18.603,37.027 18.769,36.678 L22.915,27.915 C23.044,27.642 23.043,27.323 22.911,27.051 L19.114,19.215 Z M36.125,35.25 L30.673,35.25 L20.761,13.953 C20.597,13.601 20.243,13.375 19.854,13.375 L16.251,13.375 L16.255,9.25 L23.475,9.25 L33.339,30.545 C33.503,30.898 33.856,31.125 34.246,31.125 L36.125,31.125 L36.125,35.25 Z M37.125,29.125 L34.885,29.125 L25.021,7.83 C24.856,7.477 24.503,7.25 24.113,7.25 L15.256,7.25 C14.704,7.25 14.257,7.697 14.256,8.249 L14.25,14.374 C14.25,14.64 14.355,14.894 14.543,15.082 C14.73,15.27 14.984,15.375 15.25,15.375 L19.217,15.375 L29.129,36.672 C29.293,37.024 29.646,37.25 30.035,37.25 L37.125,37.25 C37.678,37.25 38.125,36.803 38.125,36.25 L38.125,30.125 C38.125,29.572 37.678,29.125 37.125,29.125 L37.125,29.125 Z" id="icon-1e5d275dafe0-7-Amazon-Lambda-Lambda-Function_Resource-Icon_light-bg" fill="#ED7100" />
+    </g>
+</svg>
+<text x="735.02" y="414" font-family="Arial, Helvetica, sans-serif" font-size="14" text-anchor="middle" fill="#232F3E" font-weight="600">
+<tspan x="735.02" dy="0">otlp-forwarder</tspan>
+</text>
+<text x="735.02" y="436" font-family="Consolas, Menlo, DejaVu Sans Mono, Liberation Mono, monospace" font-size="12" text-anchor="middle" fill="#232F3E" font-weight="normal">
+<tspan x="735.02" dy="0">bootstrap</tspan>
+</text>
+<text x="735.02" y="451" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="middle" fill="#536577" font-weight="normal">
+<tspan x="735.02" dy="0">Unwraps Logs batches</tspan>
+</text>
+</g>
+<g data-node-id="sink">
+<rect x="650.02" y="88" width="170" height="150" fill="#FFFFFF" stroke="#CAD3DC" stroke-width="1.2"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 64 64" version="1.1" id="icon-1e5d275dafe0-8" x="713.02" y="102" preserveAspectRatio="xMidYMid meet" data-icon="" aria-hidden="true">
+    <title>Icon-Architecture/48/Arch_Amazon-CloudWatch_48</title>
+    <g id="icon-1e5d275dafe0-8-Icon-Architecture/48/Arch_Amazon-CloudWatch_48" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="icon-1e5d275dafe0-8-Icon-Architecture-BG/48/Management-Governance" fill="#E7157B">
+            <rect id="icon-1e5d275dafe0-8-Rectangle" x="0" y="0" width="64" height="64" />
+        </g>
+        <path d="M42.184,39.3811216 C42.184,37.1282698 40.347,35.2954581 38.089,35.2954581 C35.831,35.2954581 33.995,37.1282698 33.995,39.3811216 C33.995,41.6339735 35.831,43.4667852 38.089,43.4667852 C40.347,43.4667852 42.184,41.6339735 42.184,39.3811216 L42.184,39.3811216 Z M44.184,39.3811216 C44.184,42.7344587 41.45,45.4622252 38.089,45.4622252 C34.729,45.4622252 31.995,42.7344587 31.995,39.3811216 C31.995,36.0277846 34.729,33.3000181 38.089,33.3000181 C41.45,33.3000181 44.184,36.0277846 44.184,39.3811216 L44.184,39.3811216 Z M50.743,49.6157337 L45.846,45.2157884 C45.524,45.6398194 45.17,46.0379097 44.785,46.4050706 L49.671,50.8030205 C49.997,51.0953525 50.505,51.0714072 50.802,50.744155 C51.096,50.4179006 51.07,49.9110588 50.743,49.6157337 L50.743,49.6157337 Z M38.089,47.091502 C42.351,47.091502 45.818,43.6324067 45.818,39.3811216 C45.818,35.1298366 42.351,31.6707413 38.089,31.6707413 C33.829,31.6707413 30.362,35.1298366 30.362,39.3811216 C30.362,43.6324067 33.829,47.091502 38.089,47.091502 L38.089,47.091502 Z M52.081,48.1341194 C53.227,49.1667597 53.319,50.9357173 52.288,52.0801021 C51.735,52.6897091 50.971,53 50.205,53 C49.538,53 48.868,52.7655358 48.333,52.2866302 L43.172,47.6412457 C41.691,48.5521641 39.954,49.0869421 38.089,49.0869421 C32.725,49.0869421 28.362,44.7328919 28.362,39.3811216 C28.362,34.0293514 32.725,29.6753012 38.089,29.6753012 C43.454,29.6753012 47.818,34.0293514 47.818,39.3811216 C47.818,40.8447769 47.482,42.2286146 46.897,43.4757646 L52.081,48.1341194 Z M17.697,23.5383254 C17.697,23.9394088 17.72,24.3384968 17.767,24.722619 C17.802,25.0059715 17.713,25.2913194 17.524,25.5048315 C17.375,25.6714508 17.177,25.7831954 16.961,25.8241019 C15.084,26.3079961 12,27.7716514 12,32.1566309 C12,35.4800363 13.836,37.3138458 15.377,38.2676661 C16.049,38.6897017 16.64,38.9052092 17.138,38.9101978 L26.127,38.9101978 L26.127,40.9056378 L17.127,40.9056378 C16.243,40.8966584 15.3,40.577388 14.317,39.9588015 C12.708,38.9640747 10,36.6214281 10,32.1566309 C10,26.8876715 13.526,24.8642953 15.71,24.117003 C15.702,23.924443 15.697,23.7308853 15.697,23.5383254 C15.697,19.1603299 18.673,14.6217015 22.621,12.9784566 C27.232,11.0508615 32.119,12.0066773 35.687,15.5336176 C36.734,16.5672555 37.604,17.8084192 38.285,19.2361566 C39.203,18.5507229 40.304,18.1745825 41.459,18.1745825 C43.874,18.1745825 46.587,19.9684831 47.122,23.8895228 C50.58,24.7216213 54,27.27778 54,32.2174919 C54,35.1078868 52.864,37.4565197 50.713,39.0089721 L49.541,37.3926656 C51.173,36.2143583 52,34.4733368 52,32.2174919 C52,27.2388689 47.811,25.9997007 46.01,25.6983892 C45.743,25.6534918 45.505,25.5018384 45.351,25.2793468 C45.208,25.071821 45.15,24.8184001 45.186,24.5709656 C44.931,21.5319104 43.141,20.1700225 41.459,20.1700225 C40.402,20.1700225 39.409,20.6858438 38.734,21.5857873 C38.514,21.8791169 38.156,22.0297727 37.786,21.9748981 C37.422,21.9210212 37.118,21.6715912 36.993,21.3263801 C36.359,19.5743837 35.446,18.1027466 34.281,16.9513777 C32.851,15.5396039 28.933,12.506535 23.391,14.81925 C20.198,16.1492108 17.697,19.9784603 17.697,23.5383254 L17.697,23.5383254 Z" id="icon-1e5d275dafe0-8-Amazon-CloudWatch_Icon_48_Squid" fill="#FFFFFF" />
+    </g>
+</svg>
+<text x="735.02" y="168" font-family="Arial, Helvetica, sans-serif" font-size="14" text-anchor="middle" fill="#232F3E" font-weight="600">
+<tspan x="735.02" dy="0">Transaction Search</tspan>
+</text>
+<text x="735.02" y="190" font-family="Consolas, Menlo, DejaVu Sans Mono, Liberation Mono, monospace" font-size="12" text-anchor="middle" fill="#232F3E" font-weight="normal">
+<tspan x="735.02" dy="0">aws/spans</tspan>
+</text>
+<text x="735.02" y="205" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="middle" fill="#536577" font-weight="normal">
+<tspan x="735.02" dy="0">X-Ray OTLP endpoint</tspan>
+</text>
+</g>
+<g data-node-id="producer-runtime">
+<svg xmlns="http://www.w3.org/2000/svg" id="icon-1e5d275dafe0-9-Layer_2" data-name="Layer 2" viewBox="0 0 70.15 78.85" x="109.14" y="128.14" width="20" height="20" preserveAspectRatio="xMidYMid meet" data-icon="" aria-hidden="true">
+  <defs>
+    <style>#icon-1e5d275dafe0-9-Layer_2 .cls-1 {
+        fill: #fff;
+      }#icon-1e5d275dafe0-9-Layer_2 .cls-2 {
+        fill: #5fa04e;
+      }
+    </style>
+  </defs>
+  <g id="icon-1e5d275dafe0-9-Layer_1-2" data-name="Layer 1">
+    <g>
+      <path class="cls-2" d="m69.9,22.89v33.18c0,2.17-1.15,4.17-3.03,5.25l-28.77,16.63c-.86.36-1.94.65-3.03.65s-2.09-.29-3.02-.79l-3.25-1.93-6.74-4.01c-.88-.6-.27-.85.11-.97,1.95-.65,2.31-.79,4.33-1.95.21-.14.5-.07.71.08l7.36,4.39c.29.14.65.14.87,0l28.77-16.63c.28-.14.43-.43.43-.79V22.81c0-.36-.15-.64-.43-.79L35.44,5.47c-.29-.15-.65-.15-.87,0L5.8,22.02c-.29.15-.43.51-.43.79v33.19c0,.28.14.64.43.79l7.86,4.53c4.25,2.16,6.92-.36,6.92-2.88V25.69c0-.43.36-.86.87-.86h3.67c.44,0,.87.36.87.86v32.76c0,5.68-3.1,8.99-8.51,8.99-1.18,0-2.18,0-3.97-.64-.73-.27-1.59-.64-2.66-1.16l-7.58-4.32c-1.87-1.08-3.02-3.08-3.02-5.25V22.89c0-2.17,1.15-4.17,3.03-5.26L32.05,1C33.85,0,36.3,0,38.1,1l28.77,16.63c1.88,1.09,3.03,3.09,3.03,5.26Z" />
+      <path class="cls-1" d="m64.64,22.81v33.19c0,.36-.15.65-.43.79l-28.77,16.63c-.22.14-.58.14-.87,0l-7.36-4.39c-.21-.15-.5-.22-.71-.08-2.02,1.16-2.38,1.3-4.33,1.95-.38.12-.99.37-.11.97l-8.55-5.07c1.79.64,2.79.64,3.97.64,5.41,0,8.51-3.31,8.51-8.99V25.69c0-.5-.43-.86-.87-.86h-3.67c-.51,0-.87.43-.87.86v32.75c0,2.52-2.67,5.04-6.92,2.88l-7.86-4.53c-.29-.15-.43-.51-.43-.79V22.81c0-.28.14-.64.43-.79L34.57,5.47c.22-.15.58-.15.87,0l28.77,16.55c.28.15.43.43.43.79Zm-7.57,11.74c.14-.22.21-.43.21-.65-.57-6.91-5.11-10.08-14.34-10.08-8.23,0-13.13,3.46-13.13,9.29,0,6.26,4.9,7.99,12.76,8.78,9.45.93,10.17,2.3,10.17,4.17,0,3.24-2.59,4.61-8.65,4.61-7.64,0-9.3-1.87-9.88-5.69,0-.43-.36-.72-.79-.72h-3.75c-.51,0-.87.44-.87.87,0,4.89,2.6,10.65,15.22,10.65,9.08,0,14.34-3.6,14.34-9.93s-4.18-7.85-13.05-9c-8.94-1.15-9.87-1.8-9.87-3.89,0-1.72.79-4.03,7.42-4.03,5.92,0,8.15,1.3,9.02,5.26.08.37.41.63.79.65h3.82c.22,0,.43-.15.58-.29Z" />
+      <path class="cls-2" d="m57.28,33.9c0,.22-.07.43-.21.65-.15.14-.36.29-.58.29h-3.82c-.38-.02-.71-.28-.79-.65-.87-3.96-3.1-5.26-9.02-5.26-6.63,0-7.42,2.31-7.42,4.03,0,2.09.93,2.74,9.87,3.89,8.87,1.15,13.05,2.81,13.05,9s-5.26,9.93-14.34,9.93c-12.62,0-15.22-5.76-15.22-10.65,0-.43.36-.87.87-.87h3.75c.43,0,.79.29.79.72.58,3.82,2.24,5.69,9.88,5.69,6.06,0,8.65-1.37,8.65-4.61,0-1.87-.72-3.24-10.17-4.17-7.86-.79-12.76-2.52-12.76-8.78,0-5.83,4.9-9.29,13.13-9.29,9.23,0,13.77,3.17,14.34,10.08Z" />
+    </g>
+  </g>
+</svg>
+<text x="119.14" y="166.14" font-family="Arial, Helvetica, sans-serif" font-size="13" text-anchor="middle" fill="#232F3E" font-weight="normal">
+<tspan x="119.14" dy="0"></tspan>
+</text>
+</g>
+<g data-node-id="forwarder-runtime">
+<svg xmlns="http://www.w3.org/2000/svg" id="icon-1e5d275dafe0-10-Layer_2" data-name="Layer 2" viewBox="0 0 105 105" x="739.17" y="374.14" width="20" height="20" preserveAspectRatio="xMidYMid meet" data-icon="" aria-hidden="true">
+  <defs>
+    <style>#icon-1e5d275dafe0-10-Layer_2 .cls-1 {
+        fill: #fff;
+      }#icon-1e5d275dafe0-10-Layer_2 .cls-2, #icon-1e5d275dafe0-10-Layer_2 .cls-3, #icon-1e5d275dafe0-10-Layer_2 .cls-4, #icon-1e5d275dafe0-10-Layer_2 .cls-5, #icon-1e5d275dafe0-10-Layer_2 .cls-6, #icon-1e5d275dafe0-10-Layer_2 .cls-7, #icon-1e5d275dafe0-10-Layer_2 .cls-8, #icon-1e5d275dafe0-10-Layer_2 .cls-9, #icon-1e5d275dafe0-10-Layer_2 .cls-10, #icon-1e5d275dafe0-10-Layer_2 .cls-11, #icon-1e5d275dafe0-10-Layer_2 .cls-12 {
+        fill: none;
+        stroke: #000;
+      }#icon-1e5d275dafe0-10-Layer_2 .cls-2, #icon-1e5d275dafe0-10-Layer_2 .cls-3, #icon-1e5d275dafe0-10-Layer_2 .cls-4, #icon-1e5d275dafe0-10-Layer_2 .cls-5, #icon-1e5d275dafe0-10-Layer_2 .cls-6, #icon-1e5d275dafe0-10-Layer_2 .cls-7, #icon-1e5d275dafe0-10-Layer_2 .cls-8, #icon-1e5d275dafe0-10-Layer_2 .cls-10, #icon-1e5d275dafe0-10-Layer_2 .cls-11, #icon-1e5d275dafe0-10-Layer_2 .cls-12 {
+        stroke-linejoin: round;
+      }#icon-1e5d275dafe0-10-Layer_2 .cls-3 {
+        stroke-width: 3px;
+      }#icon-1e5d275dafe0-10-Layer_2 .cls-4 {
+        stroke-width: 6px;
+      }#icon-1e5d275dafe0-10-Layer_2 .cls-5 {
+        stroke-width: 3px;
+      }#icon-1e5d275dafe0-10-Layer_2 .cls-6 {
+        stroke-width: 3px;
+      }#icon-1e5d275dafe0-10-Layer_2 .cls-7 {
+        stroke-width: 3px;
+      }#icon-1e5d275dafe0-10-Layer_2 .cls-8 {
+        stroke-width: 3px;
+      }#icon-1e5d275dafe0-10-Layer_2 .cls-9 {
+        stroke-width: 9px;
+      }#icon-1e5d275dafe0-10-Layer_2 .cls-10 {
+        stroke-width: 3px;
+      }#icon-1e5d275dafe0-10-Layer_2 .cls-11 {
+        stroke-width: 6px;
+      }#icon-1e5d275dafe0-10-Layer_2 .cls-12 {
+        stroke-width: 6px;
+      }
+    </style>
+  </defs>
+  <g id="icon-1e5d275dafe0-10-Layer_1-2" data-name="Layer 1">
+    <g id="icon-1e5d275dafe0-10-logo">
+      <g id="icon-1e5d275dafe0-10-gear">
+        <g id="icon-1e5d275dafe0-10-mounts">
+          <g>
+            <g>
+              <path class="cls-1" d="m57,38c8,0,8,8,0,8h-13v-8h13Z" />
+              <polygon points="103.5 52.5 98.5 55.5 98.5 49.5 103.5 52.5" />
+              <polygon points="102.52 42.55 98.2 46.47 97.03 40.58 102.52 42.55" />
+              <polygon points="102.52 62.45 97.03 64.42 98.2 58.53 102.52 62.45" />
+              <polygon points="99.62 32.98 96.15 37.67 93.85 32.12 99.62 32.98" />
+              <polygon points="96.15 67.33 99.62 72.02 93.85 72.88 96.15 67.33" />
+              <polygon points="94.9 24.17 92.41 29.44 89.08 24.45 94.9 24.17" />
+              <polygon points="92.41 75.56 94.9 80.83 89.08 80.55 92.41 75.56" />
+              <polygon points="90.28 32.86 94.61 46.18 85.79 41.68 90.28 32.86" />
+              <path class="cls-1" d="m95.5,52.5c0,5.08-.88,9.96-2.5,14.48v-10.98h-6v2c0,8-9,7-10,2s-5-9-6-9c15-8,6-24-6-24H18l-.08-.06c7.83-10.58,20.4-17.44,34.58-17.44,23.75,0,43,19.25,43,43Zm-.89-6.32l-4.33-13.32-4.49,8.82,8.82,4.5Zm-42.11-28.68l7-7h-14l7,7Z" />
+              <path d="m93,66.98v8.02h-3.84c1.54-2.51,2.83-5.2,3.84-8.02Z" />
+              <path d="m93,56v10.98c-1.01,2.82-2.3,5.51-3.84,8.02h-21.16c-9,0-3-19-14-19h-10v8h9v11H15.85c-1.08-1.75-2.04-3.59-2.85-5.49v-5.51h15v-26h-10v-11h47c12,0,21,16,6,24,1,0,5,4,6,9s10,6,10-2v-2h6Zm-36-10c8,0,8-8,0-8h-13v8h13Z" />
+              <path class="cls-1" d="m68,75h21.16c-7.57,12.3-21.16,20.5-36.66,20.5s-29.09-8.2-36.65-20.5h37.15v-11h-9v-8h10c11,0,5,19,14,19Zm3.52,15.59l11.33-8.23-9.78-1.54-1.55,9.77Zm-38.04,0l-1.55-9.77-9.78,1.54,11.33,8.23Z" />
+              <polygon points="88.56 16.44 87.15 22.09 82.91 17.85 88.56 16.44" />
+              <polygon points="87.15 82.91 88.56 88.56 82.91 87.15 87.15 82.91" />
+              <polygon points="82.85 82.36 71.52 90.59 73.07 80.82 82.85 82.36" />
+              <polygon points="80.83 10.1 80.55 15.92 75.56 12.59 80.83 10.1" />
+              <polygon points="80.55 89.08 80.83 94.9 75.56 92.41 80.55 89.08" />
+              <polygon points="72.02 5.38 72.88 11.15 67.33 8.85 72.02 5.38" />
+              <polygon points="72.88 93.85 72.02 99.62 67.33 96.15 72.88 93.85" />
+              <polygon points="62.45 2.48 64.42 7.97 58.53 6.8 62.45 2.48" />
+              <polygon points="64.42 97.03 62.45 102.52 58.53 98.2 64.42 97.03" />
+              <polygon points="59.5 10.5 52.5 17.5 45.5 10.5 59.5 10.5" />
+              <polygon points="52.5 1.5 55.5 6.5 49.5 6.5 52.5 1.5" />
+              <polygon points="55.5 98.5 52.5 103.5 49.5 98.5 55.5 98.5" />
+              <polygon points="42.55 2.48 46.47 6.8 40.58 7.97 42.55 2.48" />
+              <polygon points="46.47 98.2 42.55 102.52 40.58 97.03 46.47 98.2" />
+              <polygon points="37.67 8.85 32.12 11.15 32.98 5.38 37.67 8.85" />
+              <polygon points="37.67 96.15 32.98 99.62 32.12 93.85 37.67 96.15" />
+              <polygon points="31.93 80.82 33.48 90.59 22.15 82.36 31.93 80.82" />
+              <polygon points="29.44 12.59 24.45 15.92 24.17 10.1 29.44 12.59" />
+              <polygon points="29.44 92.41 24.17 94.9 24.45 89.08 29.44 92.41" />
+              <path class="cls-1" d="m28,38v26h-15v5.51c-2.25-5.22-3.5-10.97-3.5-17.01,0-9.58,3.13-18.41,8.42-25.56l.08.06v11h10Zm-8.79,3.68l-4.49-8.82-4.33,13.32,8.82-4.5Z" />
+              <polygon points="22.09 17.85 17.85 22.09 16.44 16.44 22.09 17.85" />
+              <polygon points="22.09 87.15 16.44 88.56 17.85 82.91 22.09 87.15" />
+              <polygon points="14.72 32.86 19.21 41.68 10.39 46.18 14.72 32.86" />
+              <polygon points="15.92 24.45 12.59 29.44 10.1 24.17 15.92 24.45" />
+              <polygon points="12.59 75.56 15.92 80.55 10.1 80.83 12.59 75.56" />
+              <path d="m15.85,75h-2.85v-5.49c.81,1.9,1.77,3.74,2.85,5.49Z" />
+              <polygon points="11.15 32.12 8.85 37.67 5.38 32.98 11.15 32.12" />
+              <polygon points="8.85 67.33 11.15 72.88 5.38 72.02 8.85 67.33" />
+              <polygon points="7.97 40.58 6.8 46.47 2.48 42.55 7.97 40.58" />
+              <polygon points="6.8 58.53 7.97 64.42 2.48 62.45 6.8 58.53" />
+              <polygon points="6.5 49.5 6.5 55.5 1.5 52.5 6.5 49.5" />
+            </g>
+            <g>
+              <path class="cls-2" d="m44,38h13c8,0,8,8,0,8h-13v-8Z" />
+              <path class="cls-2" d="m13,69.51v5.49h40v-11h-9v-8h10c11,0,5,19,14,19h25v-19h-6v2c0,8-9,7-10,2s-5-9-6-9c15-8,6-24-6-24H18v11h10v26h-15v5.51Z" />
+              <path class="cls-9" d="m17.92,26.94c7.83-10.58,20.4-17.44,34.58-17.44,23.75,0,43,19.25,43,43,0,5.08-.88,9.96-2.5,14.48-1.01,2.82-2.3,5.51-3.84,8.02-7.57,12.3-21.16,20.5-36.66,20.5s-29.09-8.2-36.65-20.5c-1.08-1.75-2.04-3.59-2.85-5.49-2.25-5.22-3.5-10.97-3.5-17.01,0-9.58,3.13-18.41,8.42-25.56Z" />
+              <polygon class="cls-8" points="98.5 55.5 103.5 52.5 98.5 49.5 98.5 55.5" />
+              <polygon class="cls-5" points="97.03 64.42 102.52 62.45 98.2 58.53 97.03 64.42" />
+              <polygon class="cls-7" points="93.85 72.88 99.62 72.02 96.15 67.33 93.85 72.88" />
+              <polygon class="cls-10" points="89.08 80.55 94.9 80.83 92.41 75.56 89.08 80.55" />
+              <polygon class="cls-6" points="82.91 87.15 88.56 88.56 87.15 82.91 82.91 87.15" />
+              <polygon class="cls-10" points="75.56 92.41 80.83 94.9 80.55 89.08 75.56 92.41" />
+              <polygon class="cls-3" points="67.33 96.15 72.02 99.62 72.88 93.85 67.33 96.15" />
+              <polygon class="cls-5" points="58.53 98.2 62.45 102.52 64.42 97.03 58.53 98.2" />
+              <polygon class="cls-8" points="49.5 98.5 52.5 103.5 55.5 98.5 49.5 98.5" />
+              <polygon class="cls-5" points="40.58 97.03 42.55 102.52 46.47 98.2 40.58 97.03" />
+              <polygon class="cls-3" points="32.12 93.85 32.98 99.62 37.67 96.15 32.12 93.85" />
+              <polygon class="cls-10" points="24.45 89.08 24.17 94.9 29.44 92.41 24.45 89.08" />
+              <polygon class="cls-6" points="17.85 82.91 16.44 88.56 22.09 87.15 17.85 82.91" />
+              <polygon class="cls-10" points="12.59 75.56 10.1 80.83 15.92 80.55 12.59 75.56" />
+              <polygon class="cls-7" points="8.85 67.33 5.38 72.02 11.15 72.88 8.85 67.33" />
+              <polygon class="cls-5" points="6.8 58.53 2.48 62.45 7.97 64.42 6.8 58.53" />
+              <polygon class="cls-8" points="6.5 49.5 1.5 52.5 6.5 55.5 6.5 49.5" />
+              <polygon class="cls-5" points="7.97 40.58 2.48 42.55 6.8 46.47 7.97 40.58" />
+              <polygon class="cls-7" points="11.15 32.12 5.38 32.98 8.85 37.67 11.15 32.12" />
+              <polygon class="cls-10" points="15.92 24.45 10.1 24.17 12.59 29.44 15.92 24.45" />
+              <polygon class="cls-6" points="22.09 17.85 16.44 16.44 17.85 22.09 22.09 17.85" />
+              <polygon class="cls-10" points="29.44 12.59 24.17 10.1 24.45 15.92 29.44 12.59" />
+              <polygon class="cls-3" points="37.67 8.85 32.98 5.38 32.12 11.15 37.67 8.85" />
+              <polygon class="cls-5" points="46.47 6.8 42.55 2.48 40.58 7.97 46.47 6.8" />
+              <polygon class="cls-8" points="55.5 6.5 52.5 1.5 49.5 6.5 55.5 6.5" />
+              <polygon class="cls-5" points="64.42 7.97 62.45 2.48 58.53 6.8 64.42 7.97" />
+              <polygon class="cls-3" points="72.88 11.15 72.02 5.38 67.33 8.85 72.88 11.15" />
+              <polygon class="cls-10" points="80.55 15.92 80.83 10.1 75.56 12.59 80.55 15.92" />
+              <polygon class="cls-6" points="87.15 22.09 88.56 16.44 82.91 17.85 87.15 22.09" />
+              <polygon class="cls-10" points="92.41 29.44 94.9 24.17 89.08 24.45 92.41 29.44" />
+              <polygon class="cls-7" points="96.15 37.67 99.62 32.98 93.85 32.12 96.15 37.67" />
+              <polygon class="cls-5" points="98.2 46.47 102.52 42.55 97.03 40.58 98.2 46.47" />
+              <polygon class="cls-11" points="45.5 10.5 52.5 17.5 59.5 10.5 45.5 10.5" />
+              <polygon class="cls-12" points="90.28 32.86 85.79 41.68 94.61 46.18 90.28 32.86" />
+              <polygon class="cls-4" points="82.85 82.36 73.07 80.82 71.52 90.59 82.85 82.36" />
+              <polygon class="cls-4" points="33.48 90.59 31.93 80.82 22.15 82.36 33.48 90.59" />
+              <polygon class="cls-12" points="10.39 46.18 19.21 41.68 14.72 32.86 10.39 46.18" />
+            </g>
+          </g>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>
+<text x="749.17" y="412.14" font-family="Arial, Helvetica, sans-serif" font-size="13" text-anchor="middle" fill="#232F3E" font-weight="normal">
+<tspan x="749.17" dy="0"></tspan>
+</text>
+</g>
+<text x="761.02" y="301.2" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="middle" fill="#232F3E" font-weight="normal">
+<tspan x="761.02" dy="0">SigV4</tspan>
+</text>
+</svg>

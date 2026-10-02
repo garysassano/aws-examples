@@ -1,4 +1,4 @@
-use aws_sdk_kinesis::Client as KinesisClient;
+use aws_sdk_eventbridgev2::Client as EventBridgeClient;
 use lambda_extension::{
     Error, Extension, LambdaEvent, LambdaTelemetry, LambdaTelemetryRecord, LogBuffering, NextEvent,
     SharedService, service_fn, tracing,
@@ -25,15 +25,15 @@ use tokio::io::{AsyncBufReadExt, BufReader};
 
 mod aggregation;
 mod config;
+mod eventbus;
 mod events;
-mod kinesis;
 mod otlp_parsing;
 mod types;
 
 use aggregation::SpanAggregator;
 use config::Config;
+use eventbus::{EventBusBatch, MAX_ENTRIES_PER_REQUEST};
 use events::{ParsedPlatformEvent, PlatformEventData, TelemetrySpan};
-use kinesis::KinesisBatch;
 use types::ProcessorInput;
 
 use chrono::{Duration, Utc};
@@ -43,9 +43,9 @@ const PIPE_PATH: &str = "/tmp/otlp-stdout-span-exporter.pipe";
 
 // Application state
 struct AppState {
-    kinesis_client: KinesisClient,
-    stream_name: Option<String>,
-    batch: Mutex<KinesisBatch>,
+    eventbridge_client: EventBridgeClient,
+    event_bus_arn: Option<String>,
+    batch: Mutex<EventBusBatch>,
     aggregations: Mutex<HashMap<String, SpanAggregator>>,
     exporter: OtlpStdoutSpanExporter,
     internal_exporter_buffer: Arc<BufferOutput>,
@@ -55,19 +55,18 @@ struct AppState {
 }
 impl AppState {
     async fn flush_batch(&self) -> Result<(), Error> {
-        if self.stream_name.is_none() {
-            tracing::debug!("Kinesis stream not configured, skipping flush.");
+        let Some(event_bus_arn) = self.event_bus_arn.as_ref() else {
+            tracing::debug!("Event bus not configured, skipping flush.");
             let mut batch = self.batch.lock().await;
             if !batch.is_empty() {
                 tracing::warn!(
-                    "Clearing {} records from Kinesis batch because Kinesis is disabled.",
-                    batch.records.len()
+                    "Clearing {} events from the batch because the event bus is disabled.",
+                    batch.entries.len()
                 );
                 batch.clear();
             }
             return Ok(());
-        }
-        let stream_name = self.stream_name.as_ref().unwrap();
+        };
 
         let mut batch = self.batch.lock().await;
         if batch.is_empty() {
@@ -75,42 +74,40 @@ impl AppState {
         }
 
         tracing::debug!(
-            "Sending batch of {} records to Kinesis stream {}",
-            batch.records.len(),
-            stream_name
+            "Sending batch of {} events to event bus {}",
+            batch.entries.len(),
+            event_bus_arn
         );
 
-        let result = self
-            .kinesis_client
-            .put_records()
-            .stream_name(stream_name)
-            .set_records(Some(batch.records.clone()))
-            .send()
-            .await
-            .map_err(|e| {
-                tracing::error!("Kinesis batch error: {}", e);
-                Error::from(format!("Failed to send records to Kinesis: {}", e))
-            })?;
+        for chunk in batch.entries.chunks(MAX_ENTRIES_PER_REQUEST) {
+            let result = self
+                .eventbridge_client
+                .put_raw_events()
+                .event_bus_arn(event_bus_arn)
+                .set_entries(Some(chunk.to_vec()))
+                .send()
+                .await
+                .map_err(|e| {
+                    tracing::error!("Event bus batch error: {}", e);
+                    Error::from(format!("Failed to send events to the event bus: {}", e))
+                })?;
 
-        let failed_count = result.failed_record_count.unwrap_or(0);
-        if failed_count > 0 {
-            tracing::warn!("Failed to put {} records", failed_count);
-            let records = result.records();
-            for (i, record) in records.iter().enumerate() {
-                if let Some(error_code) = &record.error_code {
-                    tracing::warn!(
-                        "Record {} failed with error: {} - {}",
-                        i,
-                        error_code,
-                        record
-                            .error_message
-                            .as_deref()
-                            .unwrap_or("No error message")
-                    );
+            let failed_count = result.failed_entry_count();
+            if failed_count > 0 {
+                tracing::warn!("Failed to put {} events", failed_count);
+                for (i, entry) in result.entries().iter().enumerate() {
+                    if let Some(error_code) = entry.error_code() {
+                        tracing::warn!(
+                            "Event {} failed with error: {} - {}",
+                            i,
+                            error_code,
+                            entry.error_message().unwrap_or("No error message")
+                        );
+                    }
                 }
+            } else {
+                tracing::debug!("Successfully sent all events to the event bus");
             }
-        } else {
-            tracing::debug!("Successfully sent all records to Kinesis");
         }
 
         batch.clear();
@@ -271,7 +268,7 @@ async fn telemetry_handler(
 #[tokio::main]
 async fn main() -> Result<(), Error> {
     tracing::init_default_subscriber();
-    tracing::debug!("Starting OTLP Stdout Kinesis Extension");
+    tracing::debug!("Starting OTLP Stdout Event Bus Extension");
 
     // Create Named Pipe
     let pipe_path = Path::new(PIPE_PATH);
@@ -300,7 +297,7 @@ async fn main() -> Result<(), Error> {
     let config = Config::from_env()?;
 
     let aws_config = aws_config::from_env().load().await;
-    let kinesis_client = KinesisClient::new(&aws_config);
+    let eventbridge_client = EventBridgeClient::new(&aws_config);
 
     // Create Channel for Platform Telemetry
     let (telemetry_tx, telemetry_rx) = mpsc::channel::<ProcessorInput>(2048);
@@ -318,9 +315,9 @@ async fn main() -> Result<(), Error> {
     let init_start_time = Mutex::new(None::<SystemTime>);
 
     let app_state = Arc::new(AppState {
-        kinesis_client,
-        stream_name: config.kinesis_stream_name.clone(),
-        batch: Mutex::new(KinesisBatch::default()),
+        eventbridge_client,
+        event_bus_arn: config.event_bus_arn.clone(),
+        batch: Mutex::new(EventBusBatch::default()),
         aggregations,
         exporter,
         internal_exporter_buffer: internal_exporter_buffer.clone(),
@@ -337,7 +334,8 @@ async fn main() -> Result<(), Error> {
 
     let processor_state = app_state.clone();
 
-    // How long an aggregation may stay open before it is flushed.
+    // Define timeout duration (e.g., 30 minutes)
+    // TODO: Make this configurable?
     let aggregation_timeout = Duration::try_minutes(30).unwrap_or(Duration::MAX);
 
     let events_processor = service_fn(move |event: LambdaEvent| {
@@ -392,13 +390,13 @@ async fn main() -> Result<(), Error> {
                                                 }
                                             }
 
-                                            // Kinesis or stdout forwarding
-                                            if state.stream_name.is_some() {
-                                                let mut kinesis_batch = state.batch.lock().await;
+                                            // Existing event bus/stdout forwarding logic
+                                            if state.event_bus_arn.is_some() {
+                                                let mut eventbus_batch = state.batch.lock().await;
                                                 if let Err(e) =
-                                                    kinesis_batch.add_record(line.to_string())
+                                                    eventbus_batch.add_record(line.to_string())
                                                 {
-                                                    tracing::error!(error = %e, "Failed to add record to Kinesis batch");
+                                                    tracing::error!(error = %e, "Failed to add record to event bus batch");
                                                 }
                                             } else {
                                                 // For simplicity, using println! which is blocking but often acceptable in Lambda extensions for low volume.
@@ -521,19 +519,19 @@ async fn main() -> Result<(), Error> {
                                                     "Processing {} line(s) from internal exporter buffer",
                                                     aggregated_lines.len()
                                                 );
-                                                if state.stream_name.is_some() {
-                                                    // Add to Kinesis batch if Kinesis is enabled
-                                                    let mut kinesis_batch =
+                                                if state.event_bus_arn.is_some() {
+                                                    // Add to the event bus batch if the event bus is enabled
+                                                    let mut eventbus_batch =
                                                         state.batch.lock().await;
                                                     for line in aggregated_lines {
                                                         // Iterate over the Vec<String>
                                                         if let Err(e) =
-                                                            kinesis_batch.add_record(line)
+                                                            eventbus_batch.add_record(line)
                                                         {
-                                                            tracing::error!(error = %e, "Failed to add aggregated span record to Kinesis batch");
+                                                            tracing::error!(error = %e, "Failed to add aggregated span record to event bus batch");
                                                         }
                                                     }
-                                                    drop(kinesis_batch);
+                                                    drop(eventbus_batch);
                                                 } else {
                                                     // Otherwise, print to stdout (CloudWatch Logs)
                                                     for line in aggregated_lines {
@@ -642,14 +640,14 @@ async fn main() -> Result<(), Error> {
                         }
                     }
 
-                    // Flush Kinesis batch
+                    // Flush event bus batch
                     if let Err(e) = state.flush_batch().await {
-                        tracing::error!("Error flushing Kinesis batch on INVOKE: {}", e);
+                        tracing::error!("Error flushing event bus batch on INVOKE: {}", e);
                     }
                 }
                 NextEvent::Shutdown(_) => {
                     tracing::debug!(
-                        "Received SHUTDOWN event, flushing final aggregations and Kinesis batch"
+                        "Received SHUTDOWN event, flushing final aggregations and event bus batch"
                     );
 
                     // Final Aggregation Flush
@@ -713,9 +711,9 @@ async fn main() -> Result<(), Error> {
                         }
                     }
 
-                    // Final Kinesis flush
+                    // Final event bus flush
                     if let Err(e) = state.flush_batch().await {
-                        tracing::error!("Error flushing Kinesis batch on SHUTDOWN: {}", e);
+                        tracing::error!("Error flushing event bus batch on SHUTDOWN: {}", e);
                     }
                 }
             }

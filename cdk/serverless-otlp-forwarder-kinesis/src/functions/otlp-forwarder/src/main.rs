@@ -1,4 +1,5 @@
 use anyhow::Result;
+use aws_config::BehaviorVersion;
 use aws_lambda_events::event::kinesis::KinesisEvent;
 use lambda_otel_lite::{
     LambdaSpanProcessor, OtelTracingLayer, SpanAttributes, SpanAttributesExtractor,
@@ -7,6 +8,7 @@ use lambda_otel_lite::{
 use lambda_runtime::{Error as LambdaError, LambdaEvent, Runtime, tower::ServiceBuilder};
 use opentelemetry::Value as OtelValue;
 use opentelemetry_otlp::{Protocol, WithExportConfig};
+use otlp_stdout_span_exporter::OtlpStdoutSpanExporter;
 use reqwest::Client as ReqwestClient;
 use reqwest_middleware::ClientBuilder;
 use reqwest_tracing::TracingMiddleware;
@@ -15,11 +17,14 @@ use serverless_otlp_forwarder_core::{
     InstrumentedHttpClient, processor::process_event_batch, span_compactor::SpanCompactionConfig,
 };
 use std::collections::HashMap;
+use std::env;
 use std::sync::Arc;
 
 // The specific parser for this Lambda
 mod parser;
+mod sigv4;
 use parser::KinesisOtlpStdoutParser;
+use sigv4::{ForwarderClient, SigV4HttpClient};
 
 // Wrapper for KinesisEvent to implement SpanAttributesExtractor
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -75,7 +80,7 @@ impl SpanAttributesExtractor for KinesisEventProcessorWrapper {
 
 async fn function_handler(
     event: LambdaEvent<KinesisEventProcessorWrapper>,
-    http_client: Arc<InstrumentedHttpClient>,
+    http_client: Arc<ForwarderClient>,
 ) -> Result<(), LambdaError> {
     tracing::debug!("Processing Kinesis batch.");
 
@@ -112,33 +117,67 @@ async fn function_handler(
 
 #[tokio::main]
 async fn main() -> Result<(), LambdaError> {
-    let otlp_http_exporter = opentelemetry_otlp::SpanExporter::builder()
-        .with_http()
-        .with_protocol(Protocol::HttpBinary)
-        .build()?;
+    // Set to the endpoint's signing name, `xray`, for the CloudWatch OTLP endpoint, which
+    // takes SigV4 instead of static headers.
+    let sigv4_service = env::var("OTLP_SIGV4_SERVICE").ok();
 
-    let (_, completion_handler) = init_telemetry(
-        TelemetryConfig::builder()
-            .with_span_processor(
-                LambdaSpanProcessor::builder()
-                    .exporter(otlp_http_exporter)
-                    .build(),
-            )
-            .build(),
-    )
-    .await?;
-    tracing::info!("lambda-otel-lite initialized with OTLP HTTP exporter.");
+    // The forwarder's own spans go to the same endpoint, except when it must sign: the
+    // SDK exporter cannot, so they stay in the forwarder's log group instead.
+    let (_, completion_handler) = if sigv4_service.is_some() {
+        init_telemetry(
+            TelemetryConfig::builder()
+                .with_span_processor(
+                    LambdaSpanProcessor::builder()
+                        .exporter(OtlpStdoutSpanExporter::default())
+                        .build(),
+                )
+                .build(),
+        )
+        .await?
+    } else {
+        // Endpoint and headers come from the OTEL_EXPORTER_OTLP_* variables.
+        let otlp_http_exporter = opentelemetry_otlp::SpanExporter::builder()
+            .with_http()
+            .with_protocol(Protocol::HttpBinary)
+            .build()?;
+        init_telemetry(
+            TelemetryConfig::builder()
+                .with_span_processor(
+                    LambdaSpanProcessor::builder()
+                        .exporter(otlp_http_exporter)
+                        .build(),
+                )
+                .build(),
+        )
+        .await?
+    };
+    tracing::info!("lambda-otel-lite initialized.");
 
-    let base_reqwest_client = ReqwestClient::new();
-    // Wrap it with tracing middleware
-    let client_with_middleware = ClientBuilder::new(base_reqwest_client)
+    let client_with_middleware = ClientBuilder::new(ReqwestClient::new())
         .with(TracingMiddleware::default())
         .build();
-    // Wrap the ClientWithMiddleware in our newtype
     let instrumented_client = InstrumentedHttpClient::new(client_with_middleware);
-    let http_client_for_forwarding = Arc::new(instrumented_client); // Now Arc<InstrumentedHttpClient>
 
-    tracing::info!("Instrumented HTTP client for data forwarding initialized.");
+    let http_client_for_forwarding = Arc::new(match sigv4_service {
+        Some(service) => {
+            let aws_config = aws_config::load_defaults(BehaviorVersion::latest()).await;
+            let credentials = aws_config
+                .credentials_provider()
+                .ok_or("No credentials provider for SigV4 signing")?;
+            let region = aws_config
+                .region()
+                .ok_or("No region for SigV4 signing")?
+                .to_string();
+            tracing::info!(service = %service, "Signing OTLP requests with SigV4.");
+            ForwarderClient::Signed(SigV4HttpClient::new(
+                instrumented_client,
+                credentials,
+                region,
+                service,
+            ))
+        }
+        None => ForwarderClient::Plain(instrumented_client),
+    });
 
     let service = ServiceBuilder::new()
         .layer(OtelTracingLayer::new(completion_handler))

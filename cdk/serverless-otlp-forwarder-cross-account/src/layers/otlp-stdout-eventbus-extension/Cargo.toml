@@ -1,0 +1,25 @@
+[package]
+name = "otlp-stdout-eventbus-extension"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+anyhow = { workspace = true }
+aws-config = { workspace = true }
+aws-sdk-eventbridgev2 = { workspace = true }
+base64 = { workspace = true }
+chrono = { workspace = true }
+flate2 = { workspace = true }
+lambda-extension = { workspace = true }
+lambda-otel-lite = { workspace = true }
+nix = { workspace = true }
+opentelemetry = { workspace = true }
+opentelemetry-proto = { workspace = true }
+opentelemetry_sdk = { workspace = true }
+otlp-stdout-span-exporter = { workspace = true }
+prost = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tokio = { workspace = true, features = ["fs", "io-util", "sync"] }
+tracing = { workspace = true }
