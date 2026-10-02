@@ -170,7 +170,7 @@ The data charges scale with the bytes of spans and the extension's duration with
 
 Costs that every transport shares are left out: span ingestion into Transaction Search, `hello`'s own invocations, the forwarder, which took about 52ms per batch with every transport, and log storage in the source account.
 
-### Pricing
+### List prices
 
 The list prices used, all in `eu-central-1`:
 
