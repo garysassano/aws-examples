@@ -105,6 +105,8 @@ export class OtlpReceiverStack extends Stack {
       policy: AwsCustomResourcePolicy.fromSdkCalls({
         resources: AwsCustomResourcePolicy.ANY_RESOURCE,
       }),
+      // The Lambda runtime's bundled SDK already includes the Organizations client.
+      installLatestAwsSdk: false,
     });
     const orgId = organization.getResponseField("Organization.Id");
     const orgArn = organization.getResponseField("Organization.Arn");
