@@ -81,10 +81,10 @@ Between them, the single-account and cross-account apps cover five transports:
 | App | Transport | What carries the spans |
 | --- | --- | --- |
 | single-account | `logs-subscription` | subscription filter → forwarder, same account |
-| single-account | `kinesis` | extension → Kinesis → forwarder |
+| single-account | `kinesis` | Lambda extension → Kinesis → forwarder |
 | cross-account | `logs-destination` | subscription filter → destination → Kinesis in the target account |
 | cross-account | `logs-centralization` | centralization copy → subscription filter in the target account |
-| cross-account | `event-bus` | extension → shared bus → forwarder |
+| cross-account | `event-bus` | Lambda extension → shared Custom Event Bus → forwarder |
 
 Each transport wraps the same gzipped OTLP protobuf in its own layers, which the forwarder peels off in order.
 
