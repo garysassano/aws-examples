@@ -112,6 +112,20 @@ pnpm destroy --all -c transport=logs-destination
 
 With `logs-centralization`, CloudWatch Logs creates the centralized log groups in the target account itself, so they remain after the stacks are destroyed. Delete the log groups under `/centralized/` in the target account to remove them.
 
+## Transport Diagrams
+
+### `logs-destination`
+
+![CloudWatch Logs destination transport](./src/assets/logs-destination-diagram.svg)
+
+### `logs-centralization`
+
+![CloudWatch Logs centralization transport](./src/assets/logs-centralization-diagram.svg)
+
+### `event-bus`
+
+![Shared event bus transport](./src/assets/event-bus-diagram.svg)
+
 ## Comparison
 
 ### Delivery latency
@@ -170,17 +184,3 @@ The list prices used, all in `eu-central-1`:
 | EventBridge enhanced custom event bus | Ingress, first 5,000 GB | \$0.2351 per GB |
 | EventBridge enhanced custom event bus | Egress, per subscriber | \$0.0711 per GB |
 | Lambda | Duration on Arm | \$0.0000133334 per GB-second |
-
-## Transport Diagrams
-
-### `logs-destination`
-
-![CloudWatch Logs destination transport](./src/assets/logs-destination-diagram.svg)
-
-### `logs-centralization`
-
-![CloudWatch Logs centralization transport](./src/assets/logs-centralization-diagram.svg)
-
-### `event-bus`
-
-![Shared event bus transport](./src/assets/event-bus-diagram.svg)
