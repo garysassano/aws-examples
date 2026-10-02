@@ -1,43 +1,18 @@
 # cdk-serverless-otlp-forwarder-cross-account
 
-CDK app comparing three ways to send OpenTelemetry traces from Lambda functions across an AWS organization to one target account that collects them: a CloudWatch Logs destination, CloudWatch Logs centralization, and a shared EventBridge event bus.
+CDK app comparing three ways to send OpenTelemetry traces from Lambda functions across an AWS organization to one target account that collects them: a CloudWatch Logs destination, CloudWatch Logs centralization, and a shared EventBridge Custom Event Bus.
 
-The `span-producer` function in the source account runs every minute and produces spans, and the `otlp-forwarder` function in the target account sends them to the target account's [CloudWatch OTLP endpoint](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch-OTLPEndpoint.html), signing each request with SigV4, so they appear in its Transaction Search. The `transport` context value picks how the spans cross between the two accounts:
-
-| Transport | How the spans reach the target account |
-| --- | --- |
-| `logs-destination` | The function writes its spans to stdout. An account-level subscription filter in the source account sends them to a [CloudWatch Logs destination](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/CrossAccountSubscriptions-Kinesis-Account.html) in the target account, which writes them to Kinesis Data Streams. |
-| `logs-centralization` | The function writes its spans to stdout. A [centralization rule](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/CloudWatchLogs_Centralization.html) copies the source account's Lambda log groups into the target account, where an account-level subscription filter sends them to the forwarder. |
-| `event-bus` | The `otlp-stdout-eventbus-extension` layer reads the spans from a pipe and publishes them with `PutRawEvents` to an [enhanced custom event bus](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-custom-bus-sharing.html) the target account shares through AWS RAM. A subscriber delivers them to the forwarder. |
-
-Each transport wraps the same gzipped OTLP protobuf in its own layers, which the forwarder peels off in order:
-
-| Transport | What the forwarder unwraps |
-| --- | --- |
-| `logs-destination` | Kinesis record → gzip → CloudWatch Logs batch → log line → base64 → gzip → protobuf |
-| `logs-centralization` | `awslogs.data` → base64 → gzip → CloudWatch Logs batch → log line → base64 → gzip → protobuf |
-| `event-bus` | event data → base64 → gzip → protobuf |
-
-Each transport admits every account in the organization, so the comparison that matters most at scale is what a new source account has to deploy before its spans arrive:
-
-| Transport | Scoped to the organization by | Each new source account deploys |
-| --- | --- | --- |
-| `logs-destination` | An `aws:PrincipalOrgID` condition on the destination's access policy | An account-level subscription filter, and the IAM role CloudWatch Logs assumes to check the account's organization |
-| `logs-centralization` | The centralization rule's `OrganizationId` scope | Nothing: the rule copies the log groups of every account in the organization |
-| `event-bus` | An AWS RAM share with the organization | The extension layer and the bus ARN on every function that sends spans |
-
-The [Comparison](#comparison) section has the measured latency and cost of each transport.
+The `span-producer` function in the source account runs every minute and produces spans, and the `otlp-forwarder` function in the target account sends them to the target account's [CloudWatch OTLP endpoint](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch-OTLPEndpoint.html), signing each request with SigV4, so they appear in its Transaction Search. The `transport` context value picks how the spans cross between the two accounts, as described in [Transports](#transports).
 
 ### Related Apps
 
-- [cdk/serverless-otlp-forwarder-cwl](../serverless-otlp-forwarder-cwl) - Uses CloudWatch Logs as OTLP transport layer within a single account instead of across accounts.
-- [cdk/serverless-otlp-forwarder-kinesis](../serverless-otlp-forwarder-kinesis) - Uses Kinesis Data Streams as OTLP transport layer within a single account instead of across accounts.
+- [cdk/serverless-otlp-forwarder-single-account](../serverless-otlp-forwarder-single-account) - Uses a forwarder in the same account instead of another account, comparing two single-account transports.
 
 ## Prerequisites
 
 - **_AWS:_**
   - Must have completed the steps detailed in the [Configuration](#configuration) section.
-  - Must deploy to a Region where the [enhanced custom event bus](https://aws.amazon.com/about-aws/whats-new/2026/09/eventbridge-relaunches-custom-event-buses/) and CloudWatch Logs centralization are available.
+  - Must deploy to a Region where the [Custom Event Bus](https://aws.amazon.com/about-aws/whats-new/2026/09/eventbridge-relaunches-custom-event-buses/) and CloudWatch Logs centralization are available.
   - Must not already have an account-level subscription filter in the source account (`logs-destination`) or the target account (`logs-centralization`), since CloudWatch Logs allows only one per account.
 - **_AWS Organizations:_**
   - Both accounts must belong to the same organization.
@@ -112,19 +87,53 @@ pnpm destroy --all -c transport=logs-destination
 
 With `logs-centralization`, CloudWatch Logs creates the centralized log groups in the target account itself, so they remain after the stacks are destroyed. Delete the log groups under `/centralized/` in the target account to remove them.
 
-## Transport Diagrams
+## Transports
+
+Between them, the single-account and cross-account apps cover five transports:
+
+| App | Transport | What carries the spans |
+| --- | --- | --- |
+| single-account | `logs-subscription` | subscription filter → forwarder, same account |
+| single-account | `kinesis` | extension → Kinesis → forwarder |
+| cross-account | `logs-destination` | subscription filter → destination → Kinesis in the target account |
+| cross-account | `logs-centralization` | centralization copy → subscription filter in the target account |
+| cross-account | `event-bus` | extension → shared bus → forwarder |
+
+Each transport wraps the same gzipped OTLP protobuf in its own layers, which the forwarder peels off in order.
 
 ### `logs-destination`
 
+The function writes its spans to stdout. An account-level subscription filter in the source account sends them to a [CloudWatch Logs destination](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/CrossAccountSubscriptions-Kinesis-Account.html) in the target account, which writes them to Kinesis Data Streams.
+
 ![CloudWatch Logs destination transport](./src/assets/logs-destination-diagram.svg)
+
+The forwarder unwraps Kinesis record → gzip → CloudWatch Logs batch → log line → base64 → gzip → protobuf.
 
 ### `logs-centralization`
 
+The function writes its spans to stdout. A [centralization rule](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/CloudWatchLogs_Centralization.html) copies the source account's Lambda log groups into the target account, where an account-level subscription filter sends them to the forwarder.
+
 ![CloudWatch Logs centralization transport](./src/assets/logs-centralization-diagram.svg)
+
+The forwarder unwraps `awslogs.data` → base64 → gzip → CloudWatch Logs batch → log line → base64 → gzip → protobuf.
 
 ### `event-bus`
 
-![Shared event bus transport](./src/assets/event-bus-diagram.svg)
+The `otlp-stdout-eventbus-extension` layer reads the spans from a pipe and publishes them with `PutRawEvents` to a [Custom Event Bus](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-custom-bus-sharing.html) the target account shares through AWS RAM. A subscriber delivers them to the forwarder.
+
+![Shared Custom Event Bus transport](./src/assets/event-bus-diagram.svg)
+
+The forwarder unwraps event data → base64 → gzip → protobuf.
+
+### Onboarding a source account
+
+Each transport admits every account in the organization, so the comparison that matters most at scale is what a new source account has to deploy before its spans arrive:
+
+| Transport | Scoped to the organization by | Each new source account deploys |
+| --- | --- | --- |
+| `logs-destination` | An `aws:PrincipalOrgID` condition on the destination's access policy | An account-level subscription filter, and the IAM role CloudWatch Logs assumes to check the account's organization |
+| `logs-centralization` | The centralization rule's `OrganizationId` scope | Nothing: the rule copies the log groups of every account in the organization |
+| `event-bus` | An AWS RAM share with the organization | The extension layer and the bus ARN on every function that sends spans |
 
 ## Comparison
 
@@ -183,6 +192,6 @@ Prices for `eu-central-1` from the [AWS Price List API](https://docs.aws.amazon.
 | CloudWatch Logs | Log storage | \$0.0324 per GB-month |
 | Kinesis Data Streams | Provisioned shard | \$0.018 per shard-hour |
 | Kinesis Data Streams | PUT payload units of 25 KB | \$0.0175 per million |
-| EventBridge enhanced custom event bus | Ingress, first 5,000 GB | \$0.2351 per GB |
-| EventBridge enhanced custom event bus | Egress, per subscriber | \$0.0711 per GB |
+| EventBridge Custom Event Bus | Ingress, first 5,000 GB | \$0.2351 per GB |
+| EventBridge Custom Event Bus | Egress, per subscriber | \$0.0711 per GB |
 | Lambda | Duration on Arm | \$0.0000133334 per GB-second |
