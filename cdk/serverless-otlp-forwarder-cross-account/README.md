@@ -130,15 +130,23 @@ None of the transports lost or duplicated spans: across about four hours of test
 
 ### Cost
 
-Each `hello` invocation produces about 293 bytes of gzipped OTLP protobuf. On stdout it becomes a 493-byte JSON log line, so the two CloudWatch Logs transports ingest 1.68 times the span bytes; the event bus carries the bytes as they are, but bills each event as at least 1 KB. The extension also publishes inside the invocation, which raised `hello`'s billed duration from 3ms to 62ms. With `eu-central-1` list prices, a month with one million `hello` invocations costs:
+Measured over a 30-minute window per transport, each covering 28 `hello` invocations, from the bytes and durations that CloudWatch metered: the log group's `IncomingBytes`, the bus's `PublishEventsIngressBytes` and `EgressBytes`, the stream's incoming records, and Lambda's billed durations. Each `hello` invocation produces 586 bytes of gzipped OTLP protobuf:
+
+| Transport | What carries the spans | Size per invocation |
+| --- | --- | --- |
+| `logs-destination`, `logs-centralization` | A JSON log line holding the base64 payload | 1,012 bytes of CloudWatch Logs ingestion |
+| `event-bus` | An event holding the base64 payload and its metadata | 1,454 bytes in and 1,057 bytes out, each billed as 2 KB, since the bus rounds every event up to whole kilobytes |
+
+The extension publishes inside the invocation, which adds 57ms to `hello`'s billed duration at 1,024 MB and 89ms at 256 MB, where the function has less CPU. With `eu-central-1` list prices, a month with one million `hello` invocations costs:
 
 | Transport | Data charges | Extension duration | Fixed charges | Total |
 | --- | --- | --- | --- | --- |
-| `logs-centralization` | \$0.31 of CloudWatch Logs ingestion; the first copy is free | None | None | \$0.31 |
-| `event-bus` | \$0.31 of bus ingress and egress | \$0.76 for 57ms at 1,024 MB | None | \$1.07 |
-| `logs-destination` | \$0.31 of CloudWatch Logs ingestion | None | \$13.14 for the Kinesis shard | \$13.45 |
+| `logs-centralization` | \$0.59 of CloudWatch Logs ingestion; the first copy is free, and storing it costs \$0.05 for each month it is kept | None | None | \$0.59 |
+| `event-bus`, `hello` at 256 MB | \$0.64 of bus ingress and egress, and of the larger REPORT lines the extension adds | \$0.30 | None | \$0.94 |
+| `event-bus`, `hello` at 1,024 MB | \$0.64, as above | \$0.75 | None | \$1.39 |
+| `logs-destination` | \$0.59 of CloudWatch Logs ingestion and \$0.02 of Kinesis PUT payload units | None | \$13.14 for the Kinesis shard | \$13.75 |
 
-The data charges scale with the bytes of spans, and the extension's duration with the number of invocations. For small spans like these, the extension's duration outweighs what the bus saves. Once invocations emit 1 KB of spans or more, so that the bus's 1 KB minimum no longer applies, the data charges come to about \$0.31 per GB of spans for `event-bus` against about \$1.06 for the two CloudWatch Logs transports, plus storage for the copy with `logs-centralization`. That saving covers the extension's duration from roughly 1 to 1.5 KB of gzipped spans per invocation at 1,024 MB, and a smaller function memory lowers the extension's share proportionally. Costs that every transport shares, such as span ingestion into Transaction Search, both functions' invocations, and log storage in the source account, are left out.
+The data charges scale with the bytes of spans and the extension's duration with the number of invocations. Base64 and the per-event metadata make the bus carry more bytes than the log line for spans this small, but its per-GB prices are lower: at 100 KB of gzipped spans per invocation, the data charges come to \$0.41 per GB of spans for `event-bus` against \$0.84 for the CloudWatch Logs transports. The bus becomes the cheaper transport from roughly 2.4 KB of gzipped spans per invocation at 1,024 MB, or 1 KB at 256 MB. Costs that every transport shares are left out: span ingestion into Transaction Search, `hello`'s own invocations, the forwarder, which took about 52ms per batch with every transport, and log storage in the source account.
 
 ### Pricing
 

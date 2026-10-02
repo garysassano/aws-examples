@@ -36,8 +36,7 @@ export class OtlpSenderStack extends Stack {
       entry: join(import.meta.dirname, "../functions/hello", "index.ts"),
       runtime: Runtime.NODEJS_24_X,
       architecture: Architecture.ARM_64,
-      // TEMPORARY for the cost measurements: -c helloMemory=<MB>.
-      memorySize: Number(this.node.tryGetContext("helloMemory") ?? 1024),
+      memorySize: 1024,
       timeout: Duration.minutes(1),
       loggingFormat: LoggingFormat.JSON,
     });
