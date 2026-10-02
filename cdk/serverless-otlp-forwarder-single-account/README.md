@@ -104,6 +104,15 @@ Every function except the forwarder carries the `otlp-stdout-kinesis-extension` 
 
 The forwarder unwraps Kinesis record → JSON line → base64 → gzip → protobuf.
 
-## Sample Application Diagram
+## Sample Application
+
+Every function exports its spans the same way, so each one shows a different side of the instrumentation instead:
+
+- `app-frontend`: a Function URL that renders an HTML page of recent quotes, which it reads from `app-backend` through API Gateway, so its traces span both functions and DynamoDB.
+- `app-backend`: the API Gateway backend that stores and reads the quotes in DynamoDB, with a span for each DynamoDB call.
+- `client-node`: runs every 5 minutes, fetches a random quote and posts it to `app-backend`, with spans from the OpenTelemetry HTTP and undici auto-instrumentations.
+- `client-python`: does the same as `client-node` with spans created by hand through the tracer's decorator.
+- `client-rust`: a Function URL that records span events and, on `/error`, randomly fails with an expected or unexpected error, to show span status.
+- `client-rust-wide`: a Function URL that copies the attributes of every span in a trace onto its root span before export, since the forwarder has no collector to do that.
 
 ![Sample Application Diagram](./src/assets/app-diagram.svg)
