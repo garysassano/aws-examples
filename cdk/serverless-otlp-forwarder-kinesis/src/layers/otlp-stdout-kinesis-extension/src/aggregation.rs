@@ -309,7 +309,7 @@ impl SpanAggregator {
             name: INIT_PHASE_NAME.into(),
             start_time,
             end_time,
-            attributes: vec![], // TODO: Could add lambda.init_type attribute later
+            attributes: vec![],
             events: SpanEvents::default(),
             links: SpanLinks::default(),
             status: OtelStatus::Ok, // Assume OK if we got this far

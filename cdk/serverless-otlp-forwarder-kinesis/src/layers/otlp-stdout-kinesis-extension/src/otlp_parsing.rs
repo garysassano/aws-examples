@@ -21,7 +21,7 @@ struct OtlpStdoutJsonLine {
     content_encoding: String,
     #[serde(rename = "content-type", default)]
     content_type: String,
-    // Other fields like source, endpoint, version are ignored for now
+    // Other fields, such as source, endpoint and version, are ignored
 }
 
 /// Parses an OTLP/stdout JSON line, decodes/decompresses the payload,
@@ -183,8 +183,6 @@ mod tests {
         });
         serde_json::to_string(&json_data).unwrap()
     }
-
-    // --- Test Cases ---
 
     #[test]
     fn test_valid_root_span() {

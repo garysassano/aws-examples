@@ -8,7 +8,7 @@ use std::collections::HashMap;
 #[derive(Debug, Clone)]
 pub enum PlatformEventData {
     InitStart {},
-    // --- Invoke Phase ---
+    // Invoke Phase
     Start {
         version: Option<String>,
     },

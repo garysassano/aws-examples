@@ -42,8 +42,7 @@ impl EventParser for CloudWatchLogsOtlpStdoutParser {
                 record.version
             );
 
-            // TelemetryData::from_log_record is now part of the core library
-            // and handles the conversion from ExporterOutput to the core TelemetryData format.
+            // TelemetryData::from_log_record converts ExporterOutput to the core TelemetryData format.
             match TelemetryData::from_log_record(record) {
                 Ok(telemetry_data) => telemetry_items.push(telemetry_data),
                 Err(e) => {

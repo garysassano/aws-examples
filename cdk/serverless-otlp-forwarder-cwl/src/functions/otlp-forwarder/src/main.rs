@@ -80,7 +80,7 @@ impl SpanAttributesExtractor for LogsEventProcessorWrapper {
     }
 }
 
-// Main Lambda function handler - simplified to use the core library
+// Lambda function handler: parses the batch and forwards it with the core library.
 async fn function_handler(
     event: LambdaEvent<LogsEventProcessorWrapper>,
     http_client: Arc<ForwarderClient>,

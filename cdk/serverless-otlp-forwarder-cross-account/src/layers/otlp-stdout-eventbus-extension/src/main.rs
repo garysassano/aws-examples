@@ -385,9 +385,7 @@ async fn main() -> Result<(), Error> {
                                                     Err(e) => {
                                                         // Parsing/decoding error, log it but don't stop processing lines
                                                         tracing::warn!(error = %e, request_id = %current_request_id, "Error extracting trace info from line");
-                                                        // Potentially mark found_trace_info_for_invoke = true here too,
-                                                        // if we want to stop trying after the first error?
-                                                        // For now, let's keep trying on subsequent lines just in case.
+                                                        // Later lines are still tried, in case one of them carries the trace context.
                                                     }
                                                 }
                                             }
