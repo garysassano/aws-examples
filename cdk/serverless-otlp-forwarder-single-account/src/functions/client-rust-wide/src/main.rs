@@ -29,7 +29,7 @@ use tracing_opentelemetry::OpenTelemetrySpanExt;
 ///
 /// ## How it works:
 /// 1. **Buffer Phase**: All completed spans are held in memory (not forwarded yet)
-/// 2. **Detection Phase**: Root spans are identified (spans with no parent)
+/// 2. **Detection Phase**: The local root span is identified (no parent, or a remote one)
 /// 3. **Aggregation Phase**: When root span completes, collect all attributes from all spans
 /// 4. **Enrichment Phase**: Replace root span's attributes with the aggregated set
 /// 5. **Forward Phase**: Send the enriched root span + all child spans to next processor
@@ -45,7 +45,7 @@ pub struct WideEventsSpanProcessor {
 struct TraceData {
     /// All spans that belong to this trace, held until root span completes
     spans: Vec<SpanData>,
-    /// The span ID of the root span (the one with no parent), if we've seen it
+    /// The span ID of the local root span, if we've seen it
     root_span_id: Option<SpanId>,
 }
 
@@ -72,23 +72,25 @@ impl SpanProcessor for WideEventsSpanProcessor {
     ///
     /// ## Step-by-step process:
     /// 1. **Store the span**: Add this completed span to our trace buffer
-    /// 2. **Check if root**: If this span has no parent, mark it as the root span
+    /// 2. **Check if root**: If this span is the local root, mark it as the root span
     /// 3. **Check for completion**: If we now have the root span, trigger aggregation
     /// 4. **Aggregate attributes**: Collect attributes from ALL spans in the trace
     /// 5. **Enrich root span**: Replace root span's attributes with the aggregated set
     /// 6. **Forward everything**: Send enriched root + all child spans to next processor
     /// 7. **Clean up**: Remove this trace from our buffer (it's done)
     fn on_end(&self, span: SpanData) {
-        // Step 1: Identify this span and its trace
+        // Step 1: Identify this span and its trace. The root is this function's local
+        // root: a span with no parent, or with a parent in the caller's process, as when
+        // the caller sends its trace context.
         let trace_id = span.span_context.trace_id();
-        let is_root = span.parent_span_id == SpanId::INVALID; // Root = no parent
+        let is_root = span.parent_span_id == SpanId::INVALID || span.parent_span_is_remote;
         let mut traces = self.traces.lock().unwrap();
 
         // Step 2: Add this span to the buffer for its trace
         let trace_data = traces.entry(trace_id).or_default();
         trace_data.spans.push(span);
 
-        // Step 3: If this is the root span, remember its ID
+        // Step 3: If this is the local root span, remember its ID
         if is_root {
             trace_data.root_span_id = Some(trace_data.spans.last().unwrap().span_context.span_id());
         }

@@ -15,52 +15,35 @@ use lambda_runtime::{Error as LambdaError, LambdaEvent, Runtime, service_fn, tra
 use opentelemetry::{Array, Value as OtelValue};
 use tracing_opentelemetry::OpenTelemetrySpanExt;
 
-/// Sets DynamoDB-specific attributes on a tracing span
-///
-/// # Arguments
-/// * `span` - The span to set attributes on
-/// * `table_name` - The DynamoDB table name
-/// * `operation` - The DynamoDB operation name (e.g., "PutItem", "GetItem")
+/// Sets the attributes of a DynamoDB client span: the OpenTelemetry database and RPC
+/// conventions, plus the `aws.remote.*` attributes that CloudWatch Application Signals
+/// uses to show the table as a dependency. The region and provider are resource
+/// attributes, so the spans do not repeat them.
 fn set_dynamodb_span_attributes(
     span: &tracing::Span,
     table_name: &'static str,
     operation: &'static str,
 ) {
-    let region = std::env::var("AWS_REGION").unwrap_or_else(|_| "us-east-1".to_string());
-    let endpoint = format!("dynamodb.{}.amazonaws.com", &region);
+    span.record("otel.name", format!("DynamoDB.{operation}"));
 
-    // Basic span attributes
-    span.record("otel.kind", "client");
-    span.record("otel.name", format!("DynamoDB.{}", operation));
-
-    // Standard OpenTelemetry attributes
+    let region = env::var("AWS_REGION").unwrap_or_default();
     span.set_attribute("db.system", "dynamodb");
     span.set_attribute("db.operation", operation);
-    span.set_attribute("net.peer.name", endpoint);
-    span.set_attribute("net.peer.port", 443);
+    span.set_attribute("server.address", format!("dynamodb.{region}.amazonaws.com"));
+    span.set_attribute("server.port", 443);
 
-    // AWS-specific attributes
-    span.set_attribute("aws.region", region.clone());
-    span.set_attribute("cloud.provider", "aws");
-    span.set_attribute("cloud.region", region);
-    span.set_attribute("otel.name", format!("DynamoDB.{}", operation));
-
-    // RPC attributes
     span.set_attribute("rpc.system", "aws-api");
     span.set_attribute("rpc.service", "DynamoDB");
     span.set_attribute("rpc.method", operation);
+    let table_names = OtelValue::Array(Array::String(vec![table_name.to_string().into()]));
+    span.set_attribute("aws.dynamodb.table_names", table_names);
 
-    // AWS semantic conventions
     span.set_attribute("aws.remote.service", "AWS::DynamoDB");
     span.set_attribute("aws.remote.operation", operation);
     span.set_attribute("aws.remote.resource.type", "AWS::DynamoDB::Table");
     span.set_attribute("aws.remote.resource.identifier", table_name);
     span.set_attribute("aws.remote.resource.cfn.primary.identifier", table_name);
     span.set_attribute("aws.span.kind", "CLIENT");
-
-    // Set table names as array
-    let table_name_array = OtelValue::Array(Array::String(vec![table_name.to_string().into()]));
-    span.set_attribute("aws.dynamodb.table_names", table_name_array);
 }
 
 /// Creates a DynamoDB span with standard attributes
@@ -167,7 +150,7 @@ async fn write_item(
     timestamp: &str,
     payload: &Option<Value>,
     state: &AppState,
-) -> Result<(), anyhow::Error> {
+) -> Result<(), LambdaError> {
     let mut request = state
         .dynamodb_client
         .put_item()
@@ -180,7 +163,8 @@ async fn write_item(
         .item("timestamp", AttributeValue::S(timestamp.to_string()));
 
     if let Some(payload_value) = payload {
-        let attribute_value = to_attribute_value(payload_value)?;
+        let attribute_value = to_attribute_value(payload_value)
+            .map_err(|e| LambdaError::from(format!("Failed to serialize payload: {}", e)))?;
         request = request.item("payload", attribute_value);
     }
 
@@ -189,7 +173,7 @@ async fn write_item(
         .instrument(dynamodb_span!(TABLE_NAME.as_str(), "PutItem"))
         .await
         .map(|_| ())
-        .map_err(anyhow::Error::from)
+        .map_err(|e| LambdaError::from(format!("Failed to put item into DynamoDB: {}", e)))
 }
 
 #[instrument(skip(state))]

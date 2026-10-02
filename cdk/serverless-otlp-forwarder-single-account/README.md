@@ -110,8 +110,8 @@ Every function exports its spans the same way, so each one shows a different sid
 
 - `app-frontend`: a Function URL that renders an HTML page of recent quotes, which it reads from `app-backend` through API Gateway, so its traces span both functions and DynamoDB.
 - `app-backend`: the API Gateway backend that stores and reads the quotes in DynamoDB, with a span for each DynamoDB call.
-- `client-node`: runs every 5 minutes, fetches a random quote and posts it to `app-backend`, with spans from the OpenTelemetry HTTP and undici auto-instrumentations.
-- `client-python`: does the same as `client-node` with spans created by hand through the tracer's decorator.
+- `client-node`: runs every 5 minutes, fetches a random quote and posts it to `app-backend`. The OpenTelemetry undici instrumentation traces its `fetch` calls and sends the trace context, so the backend's spans join its trace.
+- `client-python`: does the same as `client-node`, with its steps as decorated spans and its HTTP calls traced by the OpenTelemetry `requests` instrumentation.
 - `client-rust`: a Function URL that records span events and, on `/error`, randomly fails with an expected or unexpected error, to show span status.
 - `client-rust-wide`: a Function URL that copies the attributes of every span in a trace onto its root span before export, since the forwarder has no collector to do that.
 

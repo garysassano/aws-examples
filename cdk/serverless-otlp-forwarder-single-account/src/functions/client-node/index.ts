@@ -6,14 +6,8 @@ import {
 } from "@dev7a/lambda-otel-lite";
 import { SpanKind, SpanStatusCode, trace } from "@opentelemetry/api";
 import { registerInstrumentations } from "@opentelemetry/instrumentation";
-import { AwsInstrumentation } from "@opentelemetry/instrumentation-aws-sdk";
-import { HttpInstrumentation } from "@opentelemetry/instrumentation-http";
 import { UndiciInstrumentation } from "@opentelemetry/instrumentation-undici";
-import type {
-  APIGatewayProxyStructuredResultV2,
-  Context as LambdaContext,
-  ScheduledEvent,
-} from "aws-lambda";
+import type { Context as LambdaContext, ScheduledEvent } from "aws-lambda";
 import { z } from "zod";
 import { validateEnv } from "../../utils/validate-env.js";
 
@@ -21,26 +15,19 @@ import { validateEnv } from "../../utils/validate-env.js";
 // LAMBDA INITIALIZATION (COLD START)
 //==============================================================================
 
-// Initialize telemetry with default configuration
-// The service name will be automatically set from OTEL_SERVICE_NAME
-// or AWS_LAMBDA_FUNCTION_NAME environment variables
+// The service name comes from OTEL_SERVICE_NAME or AWS_LAMBDA_FUNCTION_NAME.
 const { tracer, completionHandler } = initTelemetry();
 
-// Register instrumentations
+// fetch runs on undici, so this traces every request and sends the trace context,
+// which lets app-backend join this trace.
 registerInstrumentations({
   tracerProvider: trace.getTracerProvider(),
-  instrumentations: [
-    new AwsInstrumentation(),
-    new HttpInstrumentation(),
-    new UndiciInstrumentation(),
-  ],
+  instrumentations: [new UndiciInstrumentation()],
 });
 
-// Define API endpoints
 const QUOTES_URL = "https://dummyjson.com/quotes/random";
 const { TARGET_URL } = validateEnv(["TARGET_URL"]);
 
-// Define the schema for quote validation
 const QuoteSchema = z.object({
   id: z.number(),
   quote: z.string(),
@@ -52,96 +39,42 @@ type Quote = z.infer<typeof QuoteSchema>;
 // LAMBDA HANDLER
 //==============================================================================
 
-async function lambdaHandler(
-  _event: ScheduledEvent,
-  _context: LambdaContext,
-): Promise<APIGatewayProxyStructuredResultV2> {
-  const currentSpan = trace.getActiveSpan();
-
-  try {
-    const quote = await getRandomQuote();
-    currentSpan?.addEvent("Quote Fetched Successfully", { quote_id: quote.id });
-
-    const savedResponse = await saveQuote(quote);
-    currentSpan?.addEvent("Quote Saved Successfully", { quote_id: quote.id });
-
-    return {
-      statusCode: 200,
-      body: JSON.stringify({
-        message: "Quote Processed Successfully",
-        quote,
-        savedResponse,
-      }),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    };
-  } catch (error) {
-    currentSpan?.recordException(error as Error);
-    currentSpan?.setStatus({ code: SpanStatusCode.ERROR });
-
-    return {
-      statusCode: 500,
-      body: JSON.stringify({
-        message: "Error processing quote",
-        error: (error as Error).message,
-      }),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    };
-  }
+// A failed call throws out of the handler, and the traced handler records the
+// exception on the invocation span and marks the span as failed.
+async function lambdaHandler(_event: ScheduledEvent, _context: LambdaContext) {
+  const quote = await getRandomQuote();
+  await saveQuote(quote);
+  trace.getActiveSpan()?.addEvent("Quote Saved", { "quote.id": quote.id });
+  return { quote_id: quote.id };
 }
 
-// Extract attributes for EventBridge Scheduler events.
-export function scheduledEventExtractor(event: unknown, context: LambdaContext) {
-  const baseAttributes = defaultExtractor(event, context);
-
+// Names the invocation span and marks it as triggered by the schedule.
+function scheduledEventExtractor(event: unknown, context: LambdaContext) {
   return {
+    ...defaultExtractor(event, context),
     kind: SpanKind.SERVER,
-    ...baseAttributes,
     trigger: TriggerType.Timer,
     spanName: "generate-quotes",
   };
 }
 
-// Create the traced handler
 const traced = createTracedHandler<ScheduledEvent>(
   "quotes-function",
   completionHandler,
   scheduledEventExtractor,
 );
 
-// The handler accepts ScheduledEvent inputs and uses the lambdaHandler function
 export const handler = traced(lambdaHandler);
 
 //==============================================================================
 // HELPER FUNCTIONS
 //==============================================================================
 
-/**
- * Fetches a random quote from the external API and validates its structure.
- *
- * @returns A validated Quote object
- * @throws Error if the API request fails or if the response doesn't match the schema
- */
-async function getRandomQuote(): Promise<Quote> {
-  return tracer.startActiveSpan("get_random_quote", async (span) => {
+// Runs fn in a child span that fails, with the exception recorded, when fn throws.
+async function inSpan<T>(name: string, fn: () => Promise<T>): Promise<T> {
+  return tracer.startActiveSpan(name, async (span) => {
     try {
-      const response = await fetch(QUOTES_URL);
-
-      span.setAttributes({
-        "http.url": QUOTES_URL,
-        "http.method": "GET",
-        "http.status_code": response.status,
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      return QuoteSchema.parse(data);
+      return await fn();
     } catch (error) {
       span.recordException(error as Error);
       span.setStatus({ code: SpanStatusCode.ERROR });
@@ -152,40 +85,26 @@ async function getRandomQuote(): Promise<Quote> {
   });
 }
 
-/**
- * Saves a quote to the target endpoint with proper telemetry tracking.
- *
- * @param quote - The quote object to save
- * @returns The response from the target endpoint
- * @throws Error if the save operation fails
- */
-async function saveQuote(quote: Quote): Promise<unknown> {
-  return tracer.startActiveSpan("save_quote", async (span) => {
-    try {
-      const response = await fetch(TARGET_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(quote),
-      });
-
-      span.setAttributes({
-        "http.url": TARGET_URL,
-        "http.method": "POST",
-        "http.status_code": response.status,
-        "quote.id": quote.id,
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      return await response.json();
-    } catch (error) {
-      span.recordException(error as Error);
-      span.setStatus({ code: SpanStatusCode.ERROR });
-      throw error;
-    } finally {
-      span.end();
+async function getRandomQuote(): Promise<Quote> {
+  return inSpan("get_random_quote", async () => {
+    const response = await fetch(QUOTES_URL);
+    if (!response.ok) {
+      throw new Error(`GET ${QUOTES_URL} failed with status ${response.status}`);
     }
+    return QuoteSchema.parse(await response.json());
+  });
+}
+
+async function saveQuote(quote: Quote): Promise<unknown> {
+  return inSpan("save_quote", async () => {
+    const response = await fetch(TARGET_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(quote),
+    });
+    if (!response.ok) {
+      throw new Error(`POST ${TARGET_URL} failed with status ${response.status}`);
+    }
+    return response.json();
   });
 }
