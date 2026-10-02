@@ -7,7 +7,7 @@ use std::borrow::Cow;
 use std::fmt::{self, Display};
 use tracing::instrument;
 use tracing_opentelemetry::OpenTelemetrySpanExt;
-// Define error type as a simple enum
+
 #[derive(Debug)]
 enum ErrorType {
     Expected,
@@ -20,7 +20,7 @@ impl Display for ErrorType {
     }
 }
 
-/// Simple nested function that creates its own span.
+/// A nested function with its own span, which fails at random on `/error`.
 #[instrument(skip(event), level = "info", err)]
 async fn nested_function(event: &ApiGatewayV2httpRequest) -> Result<String, ErrorType> {
     tracing::event!(
@@ -31,7 +31,6 @@ async fn nested_function(event: &ApiGatewayV2httpRequest) -> Result<String, Erro
         "event.severity_number" = 9
     );
 
-    // Simulate random errors if the path is /error
     if event.raw_path.as_deref() == Some("/error") {
         let r: f64 = rand::random();
         if r < 0.25 {
@@ -52,21 +51,14 @@ fn response(status_code: i64, body: impl Into<Body>) -> ApiGatewayV2httpResponse
     response
 }
 
-/// Simple Hello World Lambda function using lambda-otel-lite.
-///
-/// This example demonstrates basic OpenTelemetry setup with lambda-otel-lite.
-/// It creates spans for each invocation and logs the event payload using span events.
+/// Records the request as a span event, then answers 200, or on `/error` sometimes 400
+/// for an expected error or a failed invocation for an unexpected one.
 async fn handler(
     event: LambdaEvent<ApiGatewayV2httpRequest>,
 ) -> Result<ApiGatewayV2httpResponse, Error> {
-    // Extract request ID from the event for correlation
     let request_id = &event.context.request_id;
     let current_span = tracing::Span::current();
 
-    // Set request ID as span attribute
-    current_span.set_attribute("request.id", request_id.to_string());
-
-    // Log the full event payload like in Python version
     tracing::event!(
         name: "example.info",
         tracing::Level::INFO,
@@ -75,41 +67,31 @@ async fn handler(
         "event.severity_number" = 9
     );
 
-    // Call the nested function and handle potential errors
     match nested_function(&event.payload).await {
-        Ok(_) => {
-            // Return a successful response
-            Ok(response(200, format!("Hello from request {request_id}")))
-        }
+        Ok(_) => Ok(response(200, format!("Hello from request {request_id}"))),
         Err(ErrorType::Expected) => {
-            // Log the error and return a 400 Bad Request
+            // A client error: lambda-otel-lite fails a span only on a 5xx response or an
+            // error, so this one keeps an OK status.
             tracing::event!(
               name:"example.error",
               tracing::Level::ERROR,
               "event.body" = "This is an expected error",
               "event.severity_text" = "error",
-              "event.severity_number" = 10,
+              "event.severity_number" = 17,
             );
-
-            // Return a 400 Bad Request for expected errors
             Ok(response(400, r#"{"message": "This is an expected error"}"#))
         }
         Err(ErrorType::Unexpected) => {
-            // For other errors, propagate them up
             tracing::event!(
               name:"example.error",
               tracing::Level::ERROR,
               "event.body" = "This is an unexpected error",
               "event.severity_text" = "error",
-              "event.severity_number" = 10,
+              "event.severity_number" = 17,
             );
-
-            // Set span status to ERROR like in Python version
             current_span.set_status(Status::Error {
                 description: Cow::Borrowed("Unexpected error occurred"),
             });
-
-            // propagate the error
             Err(Error::from("Unexpected error occurred"))
         }
     }
@@ -117,15 +99,12 @@ async fn handler(
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
-    // Initialize telemetry with default configuration
     let (_, completion_handler) = init_telemetry(TelemetryConfig::default()).await?;
 
-    // Build service with OpenTelemetry tracing middleware
+    // The tower layer is the alternative to create_traced_handler that app-backend uses.
     let service = ServiceBuilder::new()
         .layer(OtelTracingLayer::new(completion_handler).with_name("tower-handler"))
         .service_fn(handler);
 
-    // Create and run the Lambda runtime
-    let runtime = Runtime::new(service);
-    runtime.run().await
+    Runtime::new(service).run().await
 }

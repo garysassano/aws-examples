@@ -133,8 +133,11 @@ export class MyStack extends Stack {
       memorySize: 1024,
       timeout: Duration.minutes(1),
       loggingFormat: LoggingFormat.JSON,
+      // Sync mode: spans are exported before the invocation ends. Async mode would only
+      // let a caller have its response sooner, and a schedule waits for none. On the
+      // Node.js runtime it also needs lambda-otel-lite's extension preloaded, whose
+      // registration loses the race with the runtime's first event request.
       environment: {
-        LAMBDA_EXTENSION_SPAN_PROCESSOR_MODE: "async",
         TARGET_URL: `${backendApi.url}quotes`,
       },
     });

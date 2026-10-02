@@ -1,15 +1,15 @@
-import json
 import os
 
 import requests
 from lambda_otel_lite import create_traced_handler, init_telemetry
 from opentelemetry import trace
-from opentelemetry.trace import StatusCode
+from opentelemetry.instrumentation.requests import RequestsInstrumentor
 
-# Initialize telemetry once at module load
+# Initialize telemetry once at module load, then trace every requests call. The
+# instrumentation also sends the trace context, so app-backend joins this trace.
 tracer, completion_handler = init_telemetry()
+RequestsInstrumentor().instrument()
 
-# Create a sessions object for requests
 http_session = requests.Session()
 target_url = os.environ["TARGET_URL"]
 quotes_url = "https://dummyjson.com/quotes/random"
@@ -25,64 +25,28 @@ def get_random_quote():
 
 @tracer.start_as_current_span("save_quote")
 def save_quote(quote: dict):
-    """Save the quote to the target URL."""
-    response = http_session.post(
-        target_url,
-        json=quote,
-        headers={
-            "content-type": "application/json",
-        },
-    )
+    """Save the quote to app-backend."""
+    response = http_session.post(target_url, json=quote)
     response.raise_for_status()
     return response.json()
 
 
-# Create a traced handler
 traced = create_traced_handler(
-    name="lambda-handler",
+    name="quotes-function",
     completion_handler=completion_handler,
 )
 
 
 @traced
 def handler(event, context):
-    """Lambda handler function.
+    """Fetches a random quote and saves it to app-backend.
 
-    This handler retrieves a random quote and saves it to the target URL.
+    A failed call raises out of the handler, and the traced handler records the
+    exception on the invocation span and marks the span as failed.
     """
-    current_span = trace.get_current_span()
-    current_span.add_event(
-        "Lambda Invocation Started",
-        attributes={
-            "event": json.dumps(event),
-        },
+    quote = get_random_quote()
+    save_quote(quote)
+    trace.get_current_span().add_event(
+        "Quote Saved", attributes={"quote.id": quote["id"]}
     )
-
-    try:
-        quote = get_random_quote()
-        response = save_quote(quote)
-
-        current_span.add_event(
-            "Quote Saved",
-            attributes={
-                "quote": quote["quote"],
-            },
-        )
-
-        current_span.add_event("Lambda Execution Completed")
-
-        return {
-            "statusCode": 200,
-            "body": json.dumps(
-                {
-                    "message": "Hello from Lambda!",
-                    "input": event,
-                    "quote": quote,
-                    "response": response,
-                }
-            ),
-        }
-    except Exception as e:
-        current_span.record_exception(e)
-        current_span.set_status(StatusCode.ERROR, str(e))
-        raise
+    return {"quote_id": quote["id"]}

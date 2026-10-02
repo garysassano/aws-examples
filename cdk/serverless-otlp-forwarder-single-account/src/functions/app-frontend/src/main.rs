@@ -2,7 +2,7 @@ use aws_lambda_events::apigw::ApiGatewayV2httpRequest;
 use chrono::{DateTime, Duration, FixedOffset, Utc};
 use lambda_lw_http_router::{define_router, route};
 use lambda_otel_lite::{TelemetryConfig, create_traced_handler, init_telemetry};
-use lambda_runtime::{Error as LambdaError, LambdaEvent, Runtime, service_fn};
+use lambda_runtime::{Error as LambdaError, Runtime, service_fn};
 use reqwest::Client;
 use reqwest_middleware::ClientBuilder;
 use reqwest_middleware::ClientWithMiddleware;
@@ -347,20 +347,12 @@ async fn main() -> Result<(), LambdaError> {
     // Create a traced handler with the captured router and state
     let traced_handler =
         create_traced_handler("frontend-handler", completion_handler, move |event| {
-            handle_lambda_event(event, router.clone(), state.clone())
+            let (router, state) = (router.clone(), state.clone());
+            async move { router.handle_request(event, state).await }
         });
 
     // Run the Lambda runtime with our traced handler
     Runtime::new(service_fn(traced_handler)).run().await
-}
-
-// Extracted handler function for better testing
-async fn handle_lambda_event(
-    event: LambdaEvent<ApiGatewayV2httpRequest>,
-    router: Arc<Router>,
-    state: Arc<AppState>,
-) -> Result<Value, LambdaError> {
-    router.handle_request(event, state).await
 }
 
 #[cfg(test)]
