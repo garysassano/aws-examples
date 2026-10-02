@@ -146,7 +146,15 @@ The extension publishes inside the invocation, which adds 57ms to `hello`'s bill
 | `event-bus`, `hello` at 1,024 MB | \$0.64, as above | \$0.75 | None | \$1.39 |
 | `logs-destination` | \$0.59 of CloudWatch Logs ingestion and \$0.02 of Kinesis PUT payload units | None | \$13.14 for the Kinesis shard | \$13.75 |
 
-The data charges scale with the bytes of spans and the extension's duration with the number of invocations. Base64 and the per-event metadata make the bus carry more bytes than the log line for spans this small, but its per-GB prices are lower: at 100 KB of gzipped spans per invocation, the data charges come to \$0.41 per GB of spans for `event-bus` against \$0.84 for the CloudWatch Logs transports. The bus becomes the cheaper transport from roughly 2.4 KB of gzipped spans per invocation at 1,024 MB, or 1 KB at 256 MB. Costs that every transport shares are left out: span ingestion into Transaction Search, `hello`'s own invocations, the forwarder, which took about 52ms per batch with every transport, and log storage in the source account.
+With fixed charges included, the Kinesis shard dominates `logs-destination` below about a million invocations a month. Above that its cost converges on `logs-centralization`'s, and it becomes cheaper than `event-bus` from about 17 million invocations a month at 1,024 MB, or 40 million at 256 MB:
+
+![Monthly cost by invocation volume](./src/assets/cost-by-volume.svg)
+
+The data charges scale with the bytes of spans and the extension's duration with the number of invocations. Base64 and the per-event metadata make the bus carry more bytes than the log line for spans this small, but its per-GB prices are lower: at 100 KB of gzipped spans per invocation, the data charges come to \$0.41 per GB of spans for `event-bus` against \$0.84 for the CloudWatch Logs transports. Because the bus bills whole kilobytes, its cost rises in steps and crosses the CloudWatch Logs line more than once; it stays the cheaper transport from about 2.6 KB of gzipped spans per invocation at 1,024 MB, or 1.4 KB at 256 MB:
+
+![Cost per million invocations by span size](./src/assets/cost-by-span-size.svg)
+
+Costs that every transport shares are left out: span ingestion into Transaction Search, `hello`'s own invocations, the forwarder, which took about 52ms per batch with every transport, and log storage in the source account.
 
 ### Pricing
 
