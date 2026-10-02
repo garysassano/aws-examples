@@ -168,6 +168,8 @@ The data charges scale with the bytes of spans and the extension's duration with
 
 ![Cost per million invocations by span size](./src/assets/cost-by-span-size.svg)
 
+`logs-destination` has no line of its own here: per invocation it costs what `logs-centralization` does plus \$0.02 per million in Kinesis PUT payload units, so its line would lie on top of that one. Its difference is the shard's fixed monthly charge, which the first chart shows.
+
 Costs that every transport shares are left out: span ingestion into Transaction Search, `hello`'s own invocations, the forwarder, which took about 52ms per batch with every transport, and log storage in the source account.
 
 ### Price list
