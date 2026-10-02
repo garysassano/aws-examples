@@ -6,7 +6,7 @@ use lambda_extension::{
 use opentelemetry::{Value as OtelValue, trace::SpanId};
 use opentelemetry_sdk::trace::{SpanData, SpanExporter};
 
-// Add nix for mkfifo (Re-add these)
+// mkfifo creates the named pipe the function's exporter writes to.
 use nix::errno::Errno;
 use nix::sys::stat::Mode;
 use nix::unistd::mkfifo;
@@ -20,11 +20,9 @@ use std::sync::Arc;
 use std::time::{Instant, SystemTime};
 use tokio::sync::{Mutex, mpsc};
 
-// Import for pipe reading
 use tokio::fs::File;
 use tokio::io::{AsyncBufReadExt, BufReader};
 
-// Add the modules
 mod aggregation;
 mod config;
 mod eventbus;
@@ -32,14 +30,12 @@ mod events;
 mod otlp_parsing;
 mod types;
 
-// Use the types from the modules
 use aggregation::SpanAggregator;
 use config::Config;
 use eventbus::{EventBusBatch, MAX_ENTRIES_PER_REQUEST};
 use events::{ParsedPlatformEvent, PlatformEventData, TelemetrySpan};
 use types::ProcessorInput;
 
-// Re-add chrono for timeout logic
 use chrono::{Duration, Utc};
 
 // Define the pipe path constant
@@ -127,23 +123,21 @@ async fn telemetry_handler(
         let timestamp = event.time;
         tracing::debug!("Received event: {:?}", event);
         let parsed_event_opt = match event.record {
-            // --- Add Case for PlatformInitStart --- START ---
+            // PlatformInitStart
             LambdaTelemetryRecord::PlatformInitStart {
-                initialization_type:_, // Ignore initialization_type for now
-                phase:_, // Ignore phase for now
-                .. // Ignore other fields like runtime_version for now
+                initialization_type:_, // Not used
+                phase:_, // Not used
+                .. // Nor are the other fields, such as runtime_version
             } => {
-                // TODO removed - InitStart variant needs no fields currently
                 Some(ParsedPlatformEvent {
                     timestamp,
-                    // PlatformInitStart doesn't have a request_id, use an empty string for now.
+                    // PlatformInitStart has no request_id, so the event carries an empty one.
                     request_id: "".to_string(),
                     data: PlatformEventData::InitStart {
                         // No fields needed
                      },
                 })
             }
-            // --- Add Case for PlatformInitStart --- END ---
             LambdaTelemetryRecord::PlatformStart {
                 request_id,
                 version,
@@ -276,7 +270,7 @@ async fn main() -> Result<(), Error> {
     tracing::init_default_subscriber();
     tracing::debug!("Starting OTLP Stdout Event Bus Extension");
 
-    // --- Create Named Pipe ---
+    // Create Named Pipe
     let pipe_path = Path::new(PIPE_PATH);
     if !pipe_path.exists() {
         let pipe_path_str = PIPE_PATH.to_string();
@@ -299,16 +293,14 @@ async fn main() -> Result<(), Error> {
     } else {
         tracing::debug!("Named pipe already exists: {}", PIPE_PATH);
     }
-    // --- Create Named Pipe --- END ---
 
     let config = Config::from_env()?;
 
     let aws_config = aws_config::from_env().load().await;
     let eventbridge_client = EventBridgeClient::new(&aws_config);
 
-    // --- Create Channel for Platform Telemetry ---
+    // Create Channel for Platform Telemetry
     let (telemetry_tx, telemetry_rx) = mpsc::channel::<ProcessorInput>(2048);
-    // --- Create Channel for Platform Telemetry --- END ---
 
     // Create the buffer for the internal exporter
     let internal_exporter_buffer = Arc::new(BufferOutput::new());
@@ -355,7 +347,7 @@ async fn main() -> Result<(), Error> {
                     let current_request_id = invoke_event.request_id.clone(); // Get request_id
                     tracing::debug!(request_id = %current_request_id, "Received INVOKE event, processing pipe data and platform telemetry");
 
-                    // --- Read from pipe until EOF --- START ---
+                    // Read from pipe until EOF
                     let mut found_trace_info_for_invoke = false; // Flag to parse only once
                     match File::open(PIPE_PATH).await {
                         Ok(pipe_file) => {
@@ -376,7 +368,7 @@ async fn main() -> Result<(), Error> {
                                     Ok(_) => {
                                         let line = line_buffer.trim_end();
                                         if !line.is_empty() {
-                                            // --- Attempt to extract trace info ONCE per invoke --- START ---
+                                            // Attempt to extract trace info ONCE per invoke
                                             if !found_trace_info_for_invoke {
                                                 match otlp_parsing::extract_trace_info_from_json_line(line) {
                                                     Ok(Some((trace_id, span_id))) => {
@@ -399,7 +391,6 @@ async fn main() -> Result<(), Error> {
                                                     }
                                                 }
                                             }
-                                            // --- Attempt to extract trace info ONCE per invoke --- END ---
 
                                             // Existing event bus/stdout forwarding logic
                                             if state.event_bus_arn.is_some() {
@@ -410,7 +401,6 @@ async fn main() -> Result<(), Error> {
                                                     tracing::error!(error = %e, "Failed to add record to event bus batch");
                                                 }
                                             } else {
-                                                // Maybe use tokio::io::stdout().write_all(line.as_bytes()).await? Careful with async in sync context if not.
                                                 // For simplicity, using println! which is blocking but often acceptable in Lambda extensions for low volume.
                                                 println!("{}", line);
                                             }
@@ -428,9 +418,8 @@ async fn main() -> Result<(), Error> {
                             tracing::error!(error = %e, path = PIPE_PATH, "Failed to open named pipe for reading");
                         }
                     }
-                    // --- Read from pipe until EOF --- END ---
 
-                    // --- Process any platform telemetry that was received --- START ---
+                    // Process any platform telemetry that was received
                     // Drain the platform telemetry channel (non-blocking)
                     loop {
                         let mut receiver_guard = state.processor_input_rx.lock().await;
@@ -438,7 +427,7 @@ async fn main() -> Result<(), Error> {
                             Ok(ProcessorInput::PlatformTelemetry(parsed_event)) => {
                                 drop(receiver_guard); // Drop lock ASAP
 
-                                // --- Handle InitStart Event --- START ---
+                                // Handle InitStart Event
                                 if let PlatformEventData::InitStart { .. } = parsed_event.data {
                                     tracing::debug!(
                                         "Received InitStart platform event, storing start time."
@@ -449,14 +438,13 @@ async fn main() -> Result<(), Error> {
                                     // Don't process InitStart further in aggregation
                                     continue;
                                 }
-                                // --- Handle InitStart Event --- END ---
 
                                 tracing::debug!(
                                     "Processing platform telemetry for request_id: {}",
                                     parsed_event.request_id
                                 );
 
-                                // --- Correlation Logic --- START ---
+                                // Correlation Logic
                                 // Always attempt to look up trace info for this request_id
                                 let map = state.execution_trace_map.lock().await;
                                 let trace_info = map.get(&parsed_event.request_id).cloned();
@@ -503,7 +491,7 @@ async fn main() -> Result<(), Error> {
                                 }
                                 drop(aggregations_map); // Drop lock before await
 
-                                // --- Export and Buffer Handling --- START ---
+                                // Export and Buffer Handling
                                 if !completed_spans.is_empty() {
                                     let span_count = completed_spans.len();
                                     tracing::debug!(
@@ -523,7 +511,7 @@ async fn main() -> Result<(), Error> {
                                         }
                                     }
 
-                                    // --- Process aggregated spans from the internal exporter's buffer --- START ---
+                                    // Process aggregated spans from the internal exporter's buffer
                                     match state.internal_exporter_buffer.take_lines() {
                                         // Get lines & clear buffer
                                         Ok(aggregated_lines) => {
@@ -562,11 +550,9 @@ async fn main() -> Result<(), Error> {
                                             );
                                         }
                                     }
-                                    // --- Process aggregated spans from the internal exporter's buffer --- END ---
                                 }
-                                // --- Export and Buffer Handling --- END ---
                             }
-                            // --- Add Case for InitDataAvailable --- START ---
+                            // InitDataAvailable
                             Ok(ProcessorInput::InitDataAvailable {
                                 request_id,
                                 init_duration_ms,
@@ -588,7 +574,6 @@ async fn main() -> Result<(), Error> {
                                     tracing::warn!(request_id = %request_id, "Received InitDataAvailable but init_start_time was None.");
                                 }
                             }
-                            // --- Add Case for InitDataAvailable --- END ---
                             Err(tokio::sync::mpsc::error::TryRecvError::Empty) => {
                                 // No more telemetry to process
                                 drop(receiver_guard);
@@ -602,9 +587,8 @@ async fn main() -> Result<(), Error> {
                             }
                         }
                     }
-                    // --- Process platform telemetry --- END ---
 
-                    // --- Handle Aggregation Timeouts --- START ---
+                    // Handle Aggregation Timeouts
                     let mut timed_out_spans: Vec<SpanData> = Vec::new();
                     let mut timed_out_req_ids: Vec<String> = Vec::new(); // To clean up map later
                     {
@@ -626,7 +610,7 @@ async fn main() -> Result<(), Error> {
                         });
                     } // Aggregation map lock released
 
-                    // --- TTL Eviction for Execution Trace Map --- START ---
+                    // TTL Eviction for Execution Trace Map
                     {
                         let mut map = state.execution_trace_map.lock().await;
                         let cutoff = Instant::now()
@@ -648,7 +632,6 @@ async fn main() -> Result<(), Error> {
                             );
                         }
                     }
-                    // --- TTL Eviction for Execution Trace Map --- END ---
 
                     // Export timed-out spans (if any)
                     if !timed_out_spans.is_empty() {
@@ -658,7 +641,6 @@ async fn main() -> Result<(), Error> {
                             Err(e) => tracing::error!("Failed to export timed-out spans: {:?}", e),
                         }
                     }
-                    // --- Handle Aggregation Timeouts --- END ---
 
                     // Flush event bus batch
                     if let Err(e) = state.flush_batch().await {
@@ -670,7 +652,7 @@ async fn main() -> Result<(), Error> {
                         "Received SHUTDOWN event, flushing final aggregations and event bus batch"
                     );
 
-                    // --- Final Aggregation Flush --- START ---
+                    // Final Aggregation Flush
                     let mut final_spans_to_export: Vec<SpanData> = Vec::new();
                     {
                         let mut aggregations_map = state.aggregations.lock().await;
@@ -706,9 +688,8 @@ async fn main() -> Result<(), Error> {
                             }
                         }
                     }
-                    // --- Final Aggregation Flush --- END ---
 
-                    // --- Clear Execution Trace Map on Shutdown --- START ---
+                    // Clear Execution Trace Map on Shutdown
                     {
                         let mut map = state.execution_trace_map.lock().await;
                         let count = map.len();
@@ -720,9 +701,8 @@ async fn main() -> Result<(), Error> {
                             map.clear();
                         }
                     }
-                    // --- Clear Execution Trace Map on Shutdown --- END ---
 
-                    // --- Clear Init Start Time on Shutdown --- START ---
+                    // Clear Init Start Time on Shutdown
                     {
                         let mut init_start_opt = state.init_start_time.lock().await;
                         if init_start_opt.is_some() {
@@ -732,7 +712,6 @@ async fn main() -> Result<(), Error> {
                             *init_start_opt = None;
                         }
                     }
-                    // --- Clear Init Start Time on Shutdown --- END ---
 
                     // Final event bus flush
                     if let Err(e) = state.flush_batch().await {

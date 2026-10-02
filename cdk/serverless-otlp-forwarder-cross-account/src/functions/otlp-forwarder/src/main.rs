@@ -216,7 +216,7 @@ async fn main() -> Result<(), LambdaError> {
     ));
 
     // Labels the delivery latency metric with the transport the stack deployed.
-    let transport = Arc::new(env::var("TRANSPORT").unwrap_or_else(|_| "unknown".to_string()));
+    let transport = Arc::new(env::var("OTLP_TRANSPORT").unwrap_or_else(|_| "unknown".to_string()));
 
     let service = ServiceBuilder::new()
         .layer(OtelTracingLayer::new(completion_handler))

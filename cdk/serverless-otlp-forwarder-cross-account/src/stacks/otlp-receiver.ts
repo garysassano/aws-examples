@@ -71,7 +71,7 @@ export class OtlpReceiverStack extends Stack {
         LAMBDA_EXTENSION_SPAN_PROCESSOR_MODE: "async",
         LAMBDA_TRACING_ENABLE_FMT_LAYER: "true",
         // Labels the forwarder's delivery latency metric
-        TRANSPORT: transport,
+        OTLP_TRANSPORT: transport,
       },
     });
 
