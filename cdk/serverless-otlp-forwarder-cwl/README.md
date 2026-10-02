@@ -1,8 +1,8 @@
 # cdk-serverless-otlp-forwarder-cwl
 
-CDK app showcasing a serverless approach to send OpenTelemetry traces from Lambda functions to an OTLP endpoint or to ClickHouse, using CloudWatch Logs and Lambda.
+CDK app showcasing a serverless approach to send OpenTelemetry traces from Lambda functions to an OTLP endpoint, to ClickHouse, or to CloudWatch, using CloudWatch Logs and Lambda.
 
-The sample functions write their spans to stdout as gzipped OTLP protobuf in JSON log records. An account-level CloudWatch Logs subscription filter delivers those log lines to the `otlp-forwarder` function, which sends them to the OTLP endpoint in your environment or, through the [ROTel Lambda extension](https://github.com/rotel-dev/rotel-lambda-extension), to ClickHouse.
+The sample functions write their spans to stdout as gzipped OTLP protobuf in JSON log records. An account-level CloudWatch Logs subscription filter delivers those log lines to the `otlp-forwarder` function, which sends them to the OTLP endpoint in your environment or, through the [ROTel Lambda extension](https://github.com/rotel-dev/rotel-lambda-extension), to ClickHouse, or, signing each request with SigV4, to the account's [CloudWatch OTLP endpoint](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch-OTLPEndpoint.html).
 
 ### Related Apps
 
@@ -28,6 +28,8 @@ The sample functions write their spans to stdout as gzipped OTLP protobuf in JSO
     ```
 
   - Must deploy to a Region where the [ROTel extension layer](https://github.com/rotel-dev/rotel-lambda-extension/releases) is published.
+- **_CloudWatch exporter:_**
+  - Must have enabled [Transaction Search](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Enable-TransactionSearch.html) in the target account, so that it accepts spans on its OTLP endpoint.
 - **_mise:_**
   - [Install mise](https://mise.jdx.dev/installing-mise.html), which manages the required toolchain.
 - **_Docker:_**
@@ -46,13 +48,14 @@ pnpm install
 pnpm run deploy
 ```
 
-The forwarder sends the traces to the OTLP endpoint by default. To send them to ClickHouse instead, pass the `exporter` context value:
+The forwarder sends the traces to the OTLP endpoint by default. To send them to ClickHouse or CloudWatch instead, pass the `exporter` context value:
 
 ```sh
 pnpm run deploy -c exporter=clickhouse
+pnpm run deploy -c exporter=cloudwatch
 ```
 
-With ClickHouse, the ROTel extension also exports the forwarder's own logs, and reads the ClickHouse credentials from the `clickhouse-config` secret when the forwarder starts.
+With ClickHouse, the ROTel extension also exports the forwarder's own logs, and reads the ClickHouse credentials from the `clickhouse-config` secret when the forwarder starts. With CloudWatch, the spans appear in the account's Transaction Search, and the forwarder writes its own spans to its log group, since the OpenTelemetry SDK exporter it uses for them cannot sign requests.
 
 ## Cleanup
 

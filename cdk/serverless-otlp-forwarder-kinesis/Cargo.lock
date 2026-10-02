@@ -2181,7 +2181,12 @@ name = "otlp-forwarder"
 version = "1.0.0"
 dependencies = [
  "anyhow",
+ "async-trait",
+ "aws-config",
+ "aws-credential-types",
+ "aws-sigv4",
  "aws_lambda_events",
+ "bytes",
  "lambda-otel-lite",
  "lambda_runtime",
  "opentelemetry",
@@ -2195,6 +2200,7 @@ dependencies = [
  "serverless-otlp-forwarder-core",
  "tokio",
  "tracing",
+ "url",
 ]
 
 [[package]]

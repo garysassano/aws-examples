@@ -1,7 +1,7 @@
 import { join } from "node:path";
 import { EndpointType, LambdaIntegration, RestApi } from "aws-cdk-lib/aws-apigateway";
 import { AttributeType, TableV2 } from "aws-cdk-lib/aws-dynamodb";
-import { PolicyStatement, ServicePrincipal } from "aws-cdk-lib/aws-iam";
+import { ManagedPolicy, PolicyStatement, ServicePrincipal } from "aws-cdk-lib/aws-iam";
 import {
   ApplicationLogLevel,
   Architecture,
@@ -228,7 +228,18 @@ export class MyStack extends Stack {
     // OTLP EXPORTER
     //==============================================================================
 
-    if (exporter === "otlp") {
+    if (exporter === "cloudwatch") {
+      // The forwarder signs its requests with SigV4, which the CloudWatch OTLP endpoint
+      // requires, and the spans land in this account's Transaction Search.
+      otlpForwarder.addEnvironment(
+        "OTEL_EXPORTER_OTLP_TRACES_ENDPOINT",
+        `https://xray.${this.region}.amazonaws.com/v1/traces`,
+      );
+      otlpForwarder.addEnvironment("OTLP_SIGV4_SERVICE", "xray");
+      otlpForwarder.role?.addManagedPolicy(
+        ManagedPolicy.fromAwsManagedPolicyName("AWSXrayWriteOnlyAccess"),
+      );
+    } else if (exporter === "otlp") {
       // The forwarder sends the spans, and its own, to the OTLP endpoint.
       const env = validateEnv(["OTEL_EXPORTER_OTLP_ENDPOINT", "OTEL_EXPORTER_OTLP_HEADERS"]);
       otlpForwarder.addEnvironment("OTEL_EXPORTER_OTLP_ENDPOINT", env.OTEL_EXPORTER_OTLP_ENDPOINT);

@@ -1,9 +1,10 @@
-const EXPORTERS = ["otlp", "clickhouse"] as const;
+const EXPORTERS = ["otlp", "clickhouse", "cloudwatch"] as const;
 
 export type Exporter = (typeof EXPORTERS)[number];
 
 // Pass `-c exporter=clickhouse` to send the spans to ClickHouse through the ROTel Lambda
-// extension; otherwise the forwarder sends them to the OTLP endpoint in your environment.
+// extension, or `-c exporter=cloudwatch` to send them to this account's CloudWatch OTLP
+// endpoint; otherwise the forwarder sends them to the OTLP endpoint in your environment.
 export function getExporter(input: unknown): Exporter {
   if (input === undefined) {
     return "otlp";
