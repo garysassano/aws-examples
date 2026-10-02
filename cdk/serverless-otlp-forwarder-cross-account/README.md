@@ -30,8 +30,8 @@ The [Comparison](#comparison) section has the measured latency and cost of each 
 
 ### Related Apps
 
-- [cdk/serverless-otlp-forwarder-cwl](../serverless-otlp-forwarder-cwl) - The single-account version of the two CloudWatch Logs transports: the same stdout spans and account-level subscription filter, with the forwarder in the same account.
-- [cdk/serverless-otlp-forwarder-kinesis](../serverless-otlp-forwarder-kinesis) - The single-account counterpart of `event-bus`: its extension publishes the spans to Kinesis Data Streams, and this app's extension is a port of it.
+- [cdk/serverless-otlp-forwarder-cwl](../serverless-otlp-forwarder-cwl) - Uses CloudWatch Logs as OTLP transport layer within a single account instead of across accounts.
+- [cdk/serverless-otlp-forwarder-kinesis](../serverless-otlp-forwarder-kinesis) - Uses Kinesis Data Streams as OTLP transport layer within a single account instead of across accounts.
 
 ## Prerequisites
 
