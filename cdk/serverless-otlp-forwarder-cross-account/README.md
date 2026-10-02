@@ -2,7 +2,7 @@
 
 CDK app comparing three ways to send OpenTelemetry traces from Lambda functions across an AWS organization to one target account that collects them: a CloudWatch Logs destination, CloudWatch Logs centralization, and a shared EventBridge event bus.
 
-The `hello` function in the source account runs every minute and produces spans, and the `otlp-forwarder` function in the target account sends them to the target account's [CloudWatch OTLP endpoint](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch-OTLPEndpoint.html), signing each request with SigV4, so they appear in its Transaction Search. The `transport` context value picks how the spans cross between the two accounts:
+The `span-producer` function in the source account runs every minute and produces spans, and the `otlp-forwarder` function in the target account sends them to the target account's [CloudWatch OTLP endpoint](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch-OTLPEndpoint.html), signing each request with SigV4, so they appear in its Transaction Search. The `transport` context value picks how the spans cross between the two accounts:
 
 | Transport | How the spans reach the target account |
 | --- | --- |
@@ -130,7 +130,7 @@ With `logs-centralization`, CloudWatch Logs creates the centralized log groups i
 
 ### Delivery latency
 
-Measured in `eu-central-1` on 2 October 2026, with `hello` running once a minute and each transport deployed for its own 15-minute window. Delivery latency is the forwarder's `DeliveryLatency` metric: the time from the latest span end in a batch to the batch reaching the forwarder. These are figures from one small function over short windows, so treat them as orders of magnitude rather than benchmarks.
+Measured in `eu-central-1` on 2 October 2026, with `span-producer` running once a minute and each transport deployed for its own 15-minute window. Delivery latency is the forwarder's `DeliveryLatency` metric: the time from the latest span end in a batch to the batch reaching the forwarder. These are figures from one small function over short windows, so treat them as orders of magnitude rather than benchmarks.
 
 Part of each latency is a batching window this app configures, which trades latency for fewer forwarder invocations and can be lowered to zero. The rest is added by the services themselves. At one span batch a minute, a batch never fills before its window ends, so each window adds its full length:
 
@@ -140,24 +140,24 @@ Part of each latency is a batching window this app configures, which trades late
 | `logs-destination` | 5s, the Kinesis event source mapping's `maxBatchingWindow` | 5.4s (4.4s to 10.2s): CloudWatch Logs subscription buffering and the write to Kinesis | 10.4s (9.4s to 15.2s) |
 | `logs-centralization` | None: a subscription filter that invokes Lambda has no window to set | 21.3s (10.1s to 33.4s): the copy into the target account, then subscription buffering there | 21.3s (10.1s to 33.4s) |
 
-None of the transports lost or duplicated spans: across about four hours of testing, all 240 `hello` invocations reached Transaction Search exactly once.
+None of the transports lost or duplicated spans: across about four hours of testing, all 240 `span-producer` invocations reached Transaction Search exactly once.
 
 ### Cost
 
-Measured over a 30-minute window per transport, each covering 28 `hello` invocations, from the bytes and durations that CloudWatch metered: the log group's `IncomingBytes`, the bus's `PublishEventsIngressBytes` and `EgressBytes`, the stream's incoming records, and Lambda's billed durations. Each `hello` invocation produces 586 bytes of gzipped OTLP protobuf:
+Measured over a 30-minute window per transport, each covering 28 `span-producer` invocations, from the bytes and durations that CloudWatch metered: the log group's `IncomingBytes`, the bus's `PublishEventsIngressBytes` and `EgressBytes`, the stream's incoming records, and Lambda's billed durations. Each `span-producer` invocation produces 586 bytes of gzipped OTLP protobuf:
 
 | Transport | What carries the spans | Size per invocation |
 | --- | --- | --- |
 | `logs-destination`, `logs-centralization` | A JSON log line holding the base64 payload | 1,012 bytes of CloudWatch Logs ingestion |
 | `event-bus` | An event holding the base64 payload and its metadata | 1,454 bytes in and 1,057 bytes out, each billed as 2 KB, since the bus rounds every event up to whole kilobytes |
 
-The extension publishes inside the invocation, which adds 57ms to `hello`'s billed duration at 1,024 MB and 89ms at 256 MB, where the function has less CPU. With `eu-central-1` list prices, a month with one million `hello` invocations costs:
+The extension publishes inside the invocation, which adds 57ms to `span-producer`'s billed duration at 1,024 MB and 89ms at 256 MB, where the function has less CPU. With `eu-central-1` list prices, a month with one million `span-producer` invocations costs:
 
 | Transport | Data charges | Extension duration | Fixed charges | Total |
 | --- | --- | --- | --- | --- |
 | `logs-centralization` | \$0.59 of CloudWatch Logs ingestion; the first copy is free, and storing it costs \$0.05 for each month it is kept | None | None | \$0.59 |
-| `event-bus`, `hello` at 256 MB | \$0.64 of bus ingress and egress, and of the larger REPORT lines the extension adds | \$0.30 | None | \$0.94 |
-| `event-bus`, `hello` at 1,024 MB | \$0.64, as above | \$0.75 | None | \$1.39 |
+| `event-bus`, `span-producer` at 256 MB | \$0.64 of bus ingress and egress, and of the larger REPORT lines the extension adds | \$0.30 | None | \$0.94 |
+| `event-bus`, `span-producer` at 1,024 MB | \$0.64, as above | \$0.75 | None | \$1.39 |
 | `logs-destination` | \$0.59 of CloudWatch Logs ingestion and \$0.02 of Kinesis PUT payload units | None | \$13.14 for the Kinesis shard | \$13.75 |
 
 With fixed charges included, the Kinesis shard dominates `logs-destination` below about a million invocations a month. Above that its cost converges on `logs-centralization`'s, and it becomes cheaper than `event-bus` from about 17 million invocations a month at 1,024 MB, or 40 million at 256 MB:
@@ -170,7 +170,7 @@ The data charges scale with the bytes of spans and the extension's duration with
 
 `logs-destination` has no line of its own here: per invocation it costs what `logs-centralization` does plus \$0.02 per million in Kinesis PUT payload units, so its line would lie on top of that one. Its difference is the shard's fixed monthly charge, which the first chart shows.
 
-Costs that every transport shares are left out: span ingestion into Transaction Search, `hello`'s own invocations, the forwarder, which took about 52ms per batch with every transport, and log storage in the source account.
+Costs that every transport shares are left out: span ingestion into Transaction Search, `span-producer`'s own invocations, the forwarder, which took about 52ms per batch with every transport, and log storage in the source account.
 
 ### Price list
 

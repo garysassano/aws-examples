@@ -28,12 +28,12 @@ export class OtlpSenderStack extends Stack {
     const { transport, targetAccount } = props;
 
     //==============================================================================
-    // HELLO FUNCTION (LAMBDA)
+    // SPAN PRODUCER (LAMBDA)
     //==============================================================================
 
-    const hello = new NodejsFunction(this, "Hello", {
-      functionName: "hello",
-      entry: join(import.meta.dirname, "../functions/hello", "index.ts"),
+    const spanProducer = new NodejsFunction(this, "SpanProducer", {
+      functionName: "span-producer",
+      entry: join(import.meta.dirname, "../functions/span-producer", "index.ts"),
       runtime: Runtime.NODEJS_24_X,
       architecture: Architecture.ARM_64,
       memorySize: 1024,
@@ -41,11 +41,11 @@ export class OtlpSenderStack extends Stack {
       loggingFormat: LoggingFormat.JSON,
     });
 
-    new Schedule(this, "HelloSchedule", {
-      scheduleName: "hello-schedule",
-      description: `Trigger ${hello.functionName} every minute`,
+    new Schedule(this, "SpanProducerSchedule", {
+      scheduleName: "span-producer-schedule",
+      description: `Trigger ${spanProducer.functionName} every minute`,
       schedule: ScheduleExpression.rate(Duration.minutes(1)),
-      target: new LambdaInvoke(hello),
+      target: new LambdaInvoke(spanProducer),
     });
 
     //==============================================================================
@@ -120,14 +120,14 @@ export class OtlpSenderStack extends Stack {
           bundling: { cargoLambdaFlags: ["--quiet"] },
         });
 
-        hello.addLayers(otlpStdoutEventBusExtension);
-        hello.addToRolePolicy(
+        spanProducer.addLayers(otlpStdoutEventBusExtension);
+        spanProducer.addToRolePolicy(
           new PolicyStatement({ actions: ["events:PutRawEvents"], resources: [eventBusArn] }),
         );
-        hello.addEnvironment("OTEL_LITE_EXTENSION_EVENT_BUS_ARN", eventBusArn);
+        spanProducer.addEnvironment("OTEL_LITE_EXTENSION_EVENT_BUS_ARN", eventBusArn);
         // Platform telemetry stays off, so the bus carries the same spans as the two
         // CloudWatch Logs transports and their delivery latency compares like for like.
-        hello.addEnvironment("OTLP_STDOUT_SPAN_EXPORTER_OUTPUT_TYPE", "pipe");
+        spanProducer.addEnvironment("OTLP_STDOUT_SPAN_EXPORTER_OUTPUT_TYPE", "pipe");
         break;
       }
     }

@@ -17,12 +17,12 @@ function scheduledEventExtractor(event: unknown, context: LambdaContext) {
     ...defaultExtractor(event, context),
     kind: SpanKind.SERVER,
     trigger: TriggerType.Timer,
-    spanName: "hello-schedule",
+    spanName: "span-producer-schedule",
   };
 }
 
 const traced = createTracedHandler<ScheduledEvent>(
-  "hello",
+  "span-producer",
   completionHandler,
   scheduledEventExtractor,
 );

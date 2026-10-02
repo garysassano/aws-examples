@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="760" height="400" viewBox="0 0 760 400" role="img" aria-labelledby="t d" font-family="Helvetica, Arial, sans-serif">
 <title id="t">Monthly cost by invocation volume</title>
-<desc id="d">Monthly cost of each transport, fixed charges included, from 100 thousand to 1 billion hello invocations a month, at the measured 586 bytes of gzipped spans per invocation. logs-destination starts at the Kinesis shard's 13.14 dollars a month and becomes cheaper than event-bus from about 17 million invocations a month at 1,024 MB and 40 million at 256 MB; logs-centralization is the cheapest throughout.</desc>
+<desc id="d">Monthly cost of each transport, fixed charges included, from 100 thousand to 1 billion span-producer invocations a month, at the measured 586 bytes of gzipped spans per invocation. logs-destination starts at the Kinesis shard's 13.14 dollars a month and becomes cheaper than event-bus from about 17 million invocations a month at 1,024 MB and 40 million at 256 MB; logs-centralization is the cheapest throughout.</desc>
 <rect width="760" height="400" fill="#FFFFFF"/>
 <line x1="74" y1="315.7" x2="592" y2="315.7" stroke="#e6e5e1" stroke-width="1"/>
 <text x="66" y="319.7" text-anchor="end" font-size="12" fill="#52514e">$0.10</text>

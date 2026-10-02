@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="760" height="400" viewBox="0 0 760 400" role="img" aria-labelledby="t d" font-family="Helvetica, Arial, sans-serif">
 <title id="t">Cost per million invocations by span size</title>
-<desc id="d">Cost per million hello invocations as each invocation emits more gzipped spans, without fixed charges. logs-destination adds 0.02 dollars of Kinesis PUT units per million and its 13.14-dollar monthly shard. event-bus becomes cheaper than the CloudWatch Logs transports from about 1 KB of gzipped spans per invocation at 256 MB and 2.4 KB at 1,024 MB.</desc>
+<desc id="d">Cost per million span-producer invocations as each invocation emits more gzipped spans, without fixed charges. logs-destination adds 0.02 dollars of Kinesis PUT units per million and its 13.14-dollar monthly shard. event-bus stays cheaper than the CloudWatch Logs transports from about 1.4 KB of gzipped spans per invocation at 256 MB and 2.6 KB at 1,024 MB.</desc>
 <rect width="760" height="400" fill="#FFFFFF"/>
 <line x1="74" y1="346.0" x2="592" y2="346.0" stroke="#e6e5e1" stroke-width="1"/>
 <text x="66" y="350.0" text-anchor="end" font-size="12" fill="#52514e">$0</text>
