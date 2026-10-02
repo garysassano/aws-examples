@@ -1,5 +1,0 @@
-# The Rust Lambdas are cross-compiled with cargo-lambda, which uses Zig as the linker.
-[tools]
-"cargo:cargo-lambda" = "1"
-rust = "stable"
-zig = "0.16"
