@@ -7,6 +7,7 @@ The sample functions write their spans to stdout as gzipped OTLP protobuf in JSO
 ### Related Apps
 
 - [cdk/serverless-otlp-forwarder-kinesis](../serverless-otlp-forwarder-kinesis) - Uses Kinesis Data Streams as OTLP transport layer instead of CloudWatch Logs.
+- [cdk/serverless-otlp-forwarder-cross-account](../serverless-otlp-forwarder-cross-account) - Uses a forwarder in another account instead of the same account, comparing three cross-account transports.
 
 ## Prerequisites
 

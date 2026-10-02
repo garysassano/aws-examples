@@ -7,6 +7,7 @@ Every sample function carries the `otlp-stdout-kinesis-extension` layer, which p
 ### Related Apps
 
 - [cdk/serverless-otlp-forwarder-cwl](../serverless-otlp-forwarder-cwl) - Uses CloudWatch Logs as OTLP transport layer instead of Kinesis Data Streams.
+- [cdk/serverless-otlp-forwarder-cross-account](../serverless-otlp-forwarder-cross-account) - Uses a forwarder in another account instead of the same account, comparing three cross-account transports.
 
 ## Prerequisites
 
