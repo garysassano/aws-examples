@@ -170,9 +170,9 @@ The data charges scale with the bytes of spans and the extension's duration with
 
 Costs that every transport shares are left out: span ingestion into Transaction Search, `hello`'s own invocations, the forwarder, which took about 52ms per batch with every transport, and log storage in the source account.
 
-### List prices
+### Price list
 
-Prices for `eu-central-1`, as published on 2 October 2026:
+Prices for `eu-central-1` from the [AWS Price List API](https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/price-changes.html), as of 2 October 2026:
 
 | Service | Item | Price |
 | --- | --- | --- |
