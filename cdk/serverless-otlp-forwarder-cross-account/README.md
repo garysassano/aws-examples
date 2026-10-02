@@ -172,7 +172,7 @@ Costs that every transport shares are left out: span ingestion into Transaction 
 
 ### List prices
 
-The list prices used, all in `eu-central-1`:
+Prices for `eu-central-1`, as published on 2 October 2026:
 
 | Service | Item | Price |
 | --- | --- | --- |
