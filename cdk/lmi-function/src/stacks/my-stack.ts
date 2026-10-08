@@ -1,5 +1,4 @@
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { join } from "node:path";
 import {
   InstanceClass,
   InstanceSize,
@@ -18,8 +17,6 @@ import {
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import { Duration, Stack, type StackProps } from "aws-cdk-lib/core";
 import type { Construct } from "constructs";
-
-const stackDir = dirname(fileURLToPath(import.meta.url));
 
 export class MyStack extends Stack {
   constructor(scope: Construct, id: string, props: StackProps = {}) {
@@ -44,7 +41,7 @@ export class MyStack extends Stack {
 
     const lmiFunction = new NodejsFunction(this, "LMIFunction", {
       functionName: "lmi-function",
-      entry: join(stackDir, "../functions/hello/index.ts"),
+      entry: join(import.meta.dirname, "../functions/hello/index.ts"),
       runtime: Runtime.NODEJS_24_X,
       architecture: Architecture.ARM_64,
       memorySize: 2048,

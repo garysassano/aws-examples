@@ -1,5 +1,4 @@
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { join } from "node:path";
 import { Fn, TerraformOutput, TerraformStack } from "cdktn";
 import type { Construct } from "constructs";
 import { DataAwsEcrAuthorizationToken } from "../../.gen/providers/aws/data-aws-ecr-authorization-token/index.js";
@@ -19,7 +18,7 @@ import { validateEnv } from "../utils/validate-env.js";
 
 const env = validateEnv(["UPSTASH_EMAIL", "UPSTASH_API_KEY"]);
 
-const functionsDir = join(dirname(fileURLToPath(import.meta.url)), "../functions");
+const functionsDir = join(import.meta.dirname, "../functions");
 
 export class MyStack extends TerraformStack {
   constructor(scope: Construct, id: string) {
