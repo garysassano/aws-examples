@@ -3,7 +3,8 @@ import { MyStack } from "./stacks/my-stack.js";
 
 const devEnv = {
   account: process.env.CDK_DEFAULT_ACCOUNT,
-  region: "eu-west-1",
+  // Pinned: c9g (Graviton5) instances are offered in only a few Regions
+  region: "eu-central-1",
 };
 
 const app = new App();
