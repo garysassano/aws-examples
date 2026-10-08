@@ -685,9 +685,6 @@ importers:
 
   cdk/hybrid-esm-lambda:
     dependencies:
-      '@aws-lambda-powertools/logger':
-        specifier: 'catalog:'
-        version: 2.35.0(@aws-lambda-powertools/jmespath@2.35.0)(@middy/core@7.9.2)
       '@aws-sdk/client-dynamodb':
         specifier: 'catalog:'
         version: 3.1138.0
@@ -706,15 +703,6 @@ importers:
       '@aws-sdk/lib-dynamodb':
         specifier: 'catalog:'
         version: 3.1138.0(@aws-sdk/client-dynamodb@3.1138.0)
-      '@middy/core':
-        specifier: 'catalog:'
-        version: 7.9.2
-      '@middy/http-error-handler':
-        specifier: 'catalog:'
-        version: 7.9.2
-      '@types/aws-lambda':
-        specifier: 'catalog:'
-        version: 8.10.163
       aws-cdk-lib:
         specifier: 'catalog:'
         version: 2.270.0(constructs@10.7.2)
@@ -725,6 +713,9 @@ importers:
       '@biomejs/biome':
         specifier: 'catalog:'
         version: 2.5.14
+      '@types/aws-lambda':
+        specifier: 'catalog:'
+        version: 8.10.163
       '@types/node':
         specifier: 'catalog:'
         version: 26.6.2
