@@ -1,5 +1,5 @@
 {
-  "name": "cdk-ecs-mi-services",
+  "name": "cdk-ecs-managed-instances",
   "private": true,
   "version": "0.0.0",
   "license": "MIT",

@@ -436,7 +436,7 @@ importers:
         specifier: 'catalog:'
         version: 4.6.5
 
-  cdk/ecs-mi-services:
+  cdk/ecs-managed-instances:
     dependencies:
       aws-cdk-lib:
         specifier: 'catalog:'
