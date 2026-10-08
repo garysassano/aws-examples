@@ -1,12 +1,5 @@
 import { join } from "node:path";
-import {
-  InstanceClass,
-  InstanceSize,
-  InstanceType,
-  SecurityGroup,
-  SubnetType,
-  Vpc,
-} from "aws-cdk-lib/aws-ec2";
+import { InstanceType, SecurityGroup, SubnetType, Vpc } from "aws-cdk-lib/aws-ec2";
 import {
   Architecture,
   CapacityProvider,
@@ -33,9 +26,8 @@ export class MyStack extends Stack {
       subnets: defaultVpc.selectSubnets({ subnetType: SubnetType.PUBLIC }).subnets,
       securityGroups: [defaultSg],
       architectures: [Architecture.ARM_64],
-      instanceTypeFilter: InstanceTypeFilter.allow([
-        InstanceType.of(InstanceClass.C8G, InstanceSize.XLARGE),
-      ]),
+      // aws-cdk-lib has no InstanceClass for Graviton5 (C9G) yet
+      instanceTypeFilter: InstanceTypeFilter.allow([new InstanceType("c9g.xlarge")]),
       maxVCpuCount: 64,
     });
 
