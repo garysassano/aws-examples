@@ -1,34 +1,45 @@
 # cdk-hybrid-esm-lambda
 
-CDK app that deploys a Lambda function from a hybrid ESM bundle.
+CDK app that deploys the same Node.js Lambda handler twice, once bundled the default CommonJS (CJS) way and once as an ES module (ESM) bundle, so you can compare package size and cold start.
 
-## Optimizing Node.js Lambda: A Hybrid ESM Approach
+## Why ESM bundles are smaller
 
-This repository demonstrates a hybrid approach to optimize Node.js Lambda functions by leveraging the advantages of ES modules (ESM) for size and performance improvements, while maintaining compatibility with existing CommonJS (CJS) codebases.
+Most packages ship two builds: a CJS build under `main` and an ESM build under `module`. With `platform=node`, esbuild resolves `main` first, so a default `NodejsFunction` bundles the CJS builds. Those builds are often pre-bundled per package, which leaves esbuild little to tree-shake.
 
-**The Dilemma:** Transitioning a CDK project entirely to ESM can be a daunting task, often hindered by dependencies on older CJS libraries and the complexities of updating project configurations. This typically involves modifications to `tsconfig.json`, `package.json`, and `cdk.json` files, which can be time-consuming and error-prone.
+Setting `mainFields: ["module", "main"]` makes esbuild pick the ESM build whenever a package has one and fall back to CJS when it does not. esbuild can then drop every export the handler never reaches. This option alone accounts for the whole size reduction: `format: ESM` without it produces a bundle as large as the CJS one.
 
-**The Hybrid Approach:** By leveraging the AWS CDK's [NodejsFunction](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda_nodejs.NodejsFunction.html) construct and its built-in `esbuild` bundling capabilities, we can create Lambda functions that prioritize ESM modules while gracefully falling back to CJS when needed. This enables us to achieve the following benefits::
+The ESM function also sets `format: OutputFormat.ESM`. Once you resolve ESM builds, some of them may use ESM-only syntax such as top-level await, which esbuild cannot convert to CJS output (`Top-level await is currently not supported with the "cjs" output format`). ESM output avoids that.
 
-- **Significant Size Reduction:** Witness dramatic reductions in package size compared to traditional CJS bundling, thanks to ESM features like tree-shaking, which eliminates unused code. For instance, in the provided example, a CJS bundle reduces [from 2.9 MB to 1.3 MB](./src/assets/cjs-bundle.png), while the hybrid ESM approach achieves an even more impressive reduction [from 2.5 MB to a mere 585 KB](./src/assets/esm-bundle.png).
-- **Faster Cold Starts:** Smaller package size directly translates to faster Lambda initialization and significantly reduced cold start latency, improving the responsiveness and efficiency of your serverless applications.
-- **Enhanced Runtime Efficiency:** ESM, with its support for top-level await and asynchronous module loading, can improve how your code executes and utilizes resources during runtime compared to CJS.
+The CJS function uses the defaults, plus `minify` and `bundleAwsSDK`, which both functions share so that only module resolution differs.
 
-**Key Benefits:**
+## Results
 
-- **Minimal Effort:** No need to refactor your existing CJS codebase, saving you time and effort.
-- **Reduced Complexity:** Avoid the intricacies of configuring your project for full ESM adoption.
-- **Optimized Lambda Functions:** Achieve smaller package sizes and faster cold starts without sacrificing compatibility.
+Measured on 2026-10-08 in `eu-central-1` with `aws-cdk-lib` 2.270.0, esbuild 0.28.2, AWS SDK for JavaScript 3.1138.0, `nodejs24.x`, 1024 MB, and 15 interleaved cold starts per function:
 
-**Implementation Details:**
+| Function | Bundle | Deployed package | Init duration (median) | First invoke (median) | Cold total (median) | Max memory |
+| --- | --- | --- | --- | --- | --- | --- |
+| `cjs-lambda` | 1.0 MB | 269 KB | 422 ms | 266 ms | 686 ms | 125 MB |
+| `esm-lambda` | 611 KB | 162 KB | 356 ms | 280 ms | 635 ms | 112 MB |
 
-The provided example showcases how to configure the CDK's `NodejsFunction` construct with specific bundling options to achieve this hybrid approach. Key properties include:
+The ESM bundle is 40% smaller and initializes about 66 ms faster. Its first invocation is about 14 ms slower, so the end-to-end cold start gain is about 50 ms (7%).
 
-- `format`: Sets the output format to ESM for optimal bundling.
-- `mainFields`: Specifies the order in which module formats are resolved, prioritizing ESM.
-- `banner`: Includes a code snippet to ensure seamless compatibility with CJS modules.
+## When this matters
 
-**This hybrid solution offers the best of both worlds: it unlocks ESM's size and performance benefits for your Lambda functions, while ensuring seamless integration with your existing CJS codebase, all without requiring a full migration.**
+The gain comes almost entirely from the AWS SDK. `bundleAwsSDK: true` puts the SDK in the bundle, which pins its version instead of relying on the copy in the Lambda runtime. Without it, `NodejsFunction` leaves `@aws-sdk/*` out, and both bundles of this handler shrink to about 29 KB, with no meaningful difference between them.
+
+## Bundling CJS-only dependencies
+
+CJS-only packages still bundle into ESM output: esbuild wraps them, and their `require` calls between bundled modules keep working. The exception is a CJS package that requires a module esbuild leaves out of the bundle, such as a Node.js built-in. That call fails at load time with `Dynamic require of "node:os" is not supported`. If you hit that error, add a banner that defines `require`:
+
+```ts
+bundling: {
+  format: OutputFormat.ESM,
+  mainFields: ["module", "main"],
+  banner: "const require = (await import('node:module')).createRequire(import.meta.url);",
+},
+```
+
+The handler in this project does not need it: its ESM bundle contains no `require` calls.
 
 ## Prerequisites
 
@@ -51,11 +62,19 @@ pnpm install
 pnpm run deploy
 ```
 
+Invoke either function to run the handler against every service:
+
+```sh
+aws lambda invoke --function-name esm-lambda /dev/stdout
+```
+
 ## Cleanup
 
 ```sh
 pnpm destroy
 ```
+
+This removes every stack resource, including the bucket and table with their data. Lambda creates the functions' CloudWatch log groups outside the stack, so `/aws/lambda/cjs-lambda`, `/aws/lambda/esm-lambda`, and the bucket auto-delete function's log group remain until you delete them.
 
 ## Architecture Diagram
 
