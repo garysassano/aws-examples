@@ -1,5 +1,4 @@
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { join } from "node:path";
 import { AttributeType, BillingMode, type CfnTable, Table } from "aws-cdk-lib/aws-dynamodb";
 import {
   Effect,
@@ -29,8 +28,6 @@ import {
 import type { Construct } from "constructs";
 import { getMaintenanceWindow } from "../utils/maintenance-window.js";
 
-const stackDir = dirname(fileURLToPath(import.meta.url));
-
 // Public preview runtime; aws-cdk-lib has no Runtime.PYTHON_3_15 constant yet.
 const PYTHON_3_15 = new Runtime("python3.15", RuntimeFamily.PYTHON);
 
@@ -59,7 +56,7 @@ export class MyStack extends Stack {
     const maintenanceWindowLambdaLayer = new LayerVersion(this, "MaintenanceWindowLambdaLayer", {
       layerVersionName: "maintenance-window-layer",
       description: "Wrapper script + maintenance-window handler gate",
-      code: Code.fromAsset(join(stackDir, "../layers/maintenance-window"), {
+      code: Code.fromAsset(join(import.meta.dirname, "../layers/maintenance-window"), {
         exclude: ["**/__pycache__"],
       }),
       compatibleRuntimes: [PYTHON_3_15],
@@ -103,7 +100,7 @@ export class MyStack extends Stack {
     new Function(this, "CurrentTimeFunction", {
       functionName: "current-time",
       description: "Returns the current time, behind the maintenance-window gate",
-      code: Code.fromAsset(join(stackDir, "../functions/current-time")),
+      code: Code.fromAsset(join(import.meta.dirname, "../functions/current-time")),
       handler: "index.handler",
       runtime: PYTHON_3_15,
       role: currentTimeRole,

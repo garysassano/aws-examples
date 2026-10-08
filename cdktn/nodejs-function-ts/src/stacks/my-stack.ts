@@ -1,5 +1,4 @@
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { join } from "node:path";
 import { TerraformStack } from "cdktn";
 import type { Construct } from "constructs";
 import { IamRole } from "../../.gen/providers/aws/iam-role/index.js";
@@ -9,7 +8,7 @@ import { AwsProvider } from "../../.gen/providers/aws/provider/index.js";
 import { DataNodeLambdaPackagerPackage } from "../../.gen/providers/node-lambda-packager/data-node-lambda-packager-package/index.js";
 import { NodeLambdaPackagerProvider } from "../../.gen/providers/node-lambda-packager/provider/index.js";
 
-const functionDir = join(dirname(fileURLToPath(import.meta.url)), "../functions/sample");
+const functionDir = join(import.meta.dirname, "../functions/sample");
 
 export class MyStack extends TerraformStack {
   constructor(scope: Construct, id: string) {
