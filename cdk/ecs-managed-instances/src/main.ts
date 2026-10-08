@@ -3,7 +3,7 @@ import { MyStack } from "./stacks/my-stack.js";
 
 const app = new App();
 
-new MyStack(app, "cdk-ecs-mi-services-dev", {
+new MyStack(app, "cdk-ecs-managed-instances-dev", {
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
     region: process.env.CDK_DEFAULT_REGION,

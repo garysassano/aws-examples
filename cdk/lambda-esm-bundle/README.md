@@ -1,4 +1,4 @@
-# cdk-hybrid-esm-lambda
+# cdk-lambda-esm-bundle
 
 CDK app that deploys the same Node.js Lambda handler twice, once bundled the default CommonJS (CJS) way and once as an ES module (ESM) bundle, so you can compare package size and cold start.
 

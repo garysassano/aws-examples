@@ -1,6 +1,6 @@
-# cdk-lmi-function
+# cdk-ecs-managed-instances
 
-CDK app that deploys a Lambda function with an LMI (Lambda Managed Instances) capacity provider. This repository is intended to demonstrate [AWS Lambda Managed Instances](https://aws.amazon.com/about-aws/whats-new/2025/11/aws-lambda-managed-instances/).
+CDK app that deploys two ECS web services with an ECS Managed Instances (ECS MI) capacity provider. This repository demonstrates [Amazon ECS Managed Instances](https://aws.amazon.com/about-aws/whats-new/2025/09/amazon-ecs-managed-instances/).
 
 ## Prerequisites
 

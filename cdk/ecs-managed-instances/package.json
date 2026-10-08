@@ -1,5 +1,5 @@
 {
-  "name": "cdk-cron-function",
+  "name": "cdk-ecs-managed-instances",
   "private": true,
   "version": "0.0.0",
   "license": "MIT",
@@ -17,10 +17,6 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@aws-lambda-powertools/logger": "catalog:",
-    "@middy/core": "catalog:",
-    "@middy/http-error-handler": "catalog:",
-    "@types/aws-lambda": "catalog:",
     "aws-cdk-lib": "catalog:",
     "constructs": "catalog:"
   },
@@ -28,8 +24,8 @@
     "@biomejs/biome": "catalog:",
     "@types/node": "catalog:",
     "aws-cdk": "catalog:",
-    "esbuild": "catalog:",
     "tsx": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "zod": "catalog:"
   }
 }

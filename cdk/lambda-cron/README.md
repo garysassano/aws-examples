@@ -1,4 +1,4 @@
-# cdk-cron-function
+# cdk-lambda-cron
 
 CDK app that triggers a Lambda function at a specified regular interval.
 

@@ -1,4 +1,4 @@
-# cdk-cross-account-lambda
+# cdk-sfn-cross-account-lambda
 
 CDK app that deploys a Lambda function that gets invoked by a Step Functions state machine in another AWS account. The repository is intended to demonstrate [cross‑account access for AWS Step Functions](https://aws.amazon.com/about-aws/whats-new/2022/11/simplify-cross-account-access-aws-services-step-functions/).
 

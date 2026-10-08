@@ -1,5 +1,5 @@
 {
-  "name": "cdk-hybrid-esm-lambda",
+  "name": "cdk-lambda-managed-instances",
   "private": true,
   "version": "0.0.0",
   "license": "MIT",
@@ -17,22 +17,16 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@aws-sdk/client-dynamodb": "catalog:",
-    "@aws-sdk/client-s3": "catalog:",
-    "@aws-sdk/client-sns": "catalog:",
-    "@aws-sdk/client-sqs": "catalog:",
-    "@aws-sdk/client-ssm": "catalog:",
-    "@aws-sdk/lib-dynamodb": "catalog:",
     "aws-cdk-lib": "catalog:",
     "constructs": "catalog:"
   },
   "devDependencies": {
     "@biomejs/biome": "catalog:",
-    "@types/aws-lambda": "catalog:",
     "@types/node": "catalog:",
     "aws-cdk": "catalog:",
     "esbuild": "catalog:",
     "tsx": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "zod": "catalog:"
   }
 }
