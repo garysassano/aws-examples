@@ -28,3 +28,7 @@ pnpm run deploy
 ```sh
 pnpm destroy
 ```
+
+## Architecture Diagram
+
+![Architecture Diagram](./src/assets/arch.svg)
