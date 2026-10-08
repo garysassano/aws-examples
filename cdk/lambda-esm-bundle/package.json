@@ -1,5 +1,5 @@
 {
-  "name": "cdk-hybrid-esm-lambda",
+  "name": "cdk-lambda-esm-bundle",
   "private": true,
   "version": "0.0.0",
   "license": "MIT",

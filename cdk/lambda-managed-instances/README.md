@@ -1,4 +1,4 @@
-# cdk-lmi-function
+# cdk-lambda-managed-instances
 
 CDK app that deploys a Lambda function with an LMI (Lambda Managed Instances) capacity provider. This repository is intended to demonstrate [AWS Lambda Managed Instances](https://aws.amazon.com/about-aws/whats-new/2025/11/aws-lambda-managed-instances/).
 

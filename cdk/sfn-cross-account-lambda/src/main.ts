@@ -16,10 +16,10 @@ const trgEnv: Environment = {
 
 const app = new App();
 
-new StepfunctionsStack(app, "cdk-cross-account-lambda-src", {
+new StepfunctionsStack(app, "cdk-sfn-cross-account-lambda-src", {
   env: srcEnv,
 });
-new LambdaStack(app, "cdk-cross-account-lambda-trg", {
+new LambdaStack(app, "cdk-sfn-cross-account-lambda-trg", {
   env: trgEnv,
 });
 

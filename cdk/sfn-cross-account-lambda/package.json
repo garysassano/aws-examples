@@ -1,5 +1,5 @@
 {
-  "name": "cdk-cross-account-lambda",
+  "name": "cdk-sfn-cross-account-lambda",
   "private": true,
   "version": "0.0.0",
   "license": "MIT",
