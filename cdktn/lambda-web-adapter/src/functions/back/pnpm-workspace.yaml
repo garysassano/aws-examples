@@ -1,0 +1,10 @@
+# This Lambda app is built on its own inside Docker, so it is its own pnpm root.
+packages:
+  - "."
+
+allowBuilds:
+  esbuild: true
+
+# Matches the repository root: skip releases younger than three days.
+minimumReleaseAge: 4320
+minimumReleaseAgeStrict: true
