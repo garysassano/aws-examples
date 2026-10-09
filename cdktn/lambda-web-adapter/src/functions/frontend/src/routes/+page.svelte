@@ -54,7 +54,7 @@ function removeLater(id: number) {
 }
 
 function sendPacket() {
-  if (prefersReducedMotion.current || packets.length >= MAX_PACKETS) return;
+  if (packets.length >= MAX_PACKETS) return;
   const id = nextPacket++;
   packets.push(id);
   removeLater(id);
@@ -542,19 +542,56 @@ const count: SubmitFunction<Counter> = () => {
       animation-duration: 2s;
     }
 
-    .packet,
-    .head .flash {
+    /* Without motion, a packet is each line glowing in turn and fading back, and the
+       head lighting up in place: the same path and timing, made only of fades. */
+    .packet {
+      left: 0;
+      width: 100%;
+      height: 2.5px;
+      margin-top: -1.25px;
+      background: var(--accent);
+      box-shadow: 0 0 8px 1px color-mix(in srgb, var(--accent) 55%, transparent);
+      animation-name: glow;
+    }
+
+    .packet::after {
       display: none;
     }
 
+    .head .flash {
+      animation-name: glow-head;
+    }
+
+    @keyframes glow {
+      40%,
+      65% {
+        opacity: 1;
+      }
+    }
+
+    @keyframes glow-head {
+      60% {
+        opacity: 0;
+      }
+      85% {
+        opacity: 1;
+      }
+    }
+
+    /* The "+1" appears in the gap above the button and fades there; on the button's
+       edge it would vanish against the orange. */
     .bump {
-      animation-duration: 400ms;
+      animation-duration: 700ms;
     }
 
     @keyframes bump {
+      from {
+        opacity: 1;
+        translate: -50% -24px;
+      }
       to {
         opacity: 0;
-        translate: -50% 0;
+        translate: -50% -24px;
       }
     }
   }
