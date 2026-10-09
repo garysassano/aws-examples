@@ -1,13 +1,18 @@
 <script lang="ts">
 import { prefersReducedMotion } from "svelte/motion";
-import { scale } from "svelte/transition";
+import { fly } from "svelte/transition";
 import { type SubmitFunction, enhance } from "$app/forms";
+import hono from "../assets/hono.svg";
+import svelte from "../assets/svelte.svg";
+import upstashRedis from "../assets/upstash-redis.svg";
 import type { PageProps } from "./$types";
 
 let { data, form }: PageProps = $props();
 
 // After a click, the action's result; on page load, the load function's.
 const counter = $derived(form ?? data);
+
+const ICONS: Record<string, string> = { SvelteKit: svelte, Hono: hono, Redis: upstashRedis };
 
 // Most clicks finish before the indicator would appear, so they never flash it;
 // once it appears, it stays long enough to read.
@@ -17,6 +22,10 @@ const SHOW_AT_LEAST_MS = 400;
 let submitting = $state(false);
 let busy = $state(false);
 
+// One floating "+1" per successful click, removed when its animation ends.
+let bumps = $state<number[]>([]);
+let nextBump = 0;
+
 const count: SubmitFunction = () => {
   submitting = true;
   let shownAt = 0;
@@ -25,9 +34,10 @@ const count: SubmitFunction = () => {
     shownAt = performance.now();
   }, SHOW_AFTER_MS);
 
-  return async ({ update }) => {
+  return async ({ result, update }) => {
     // The action returns the new count, so skip rerunning `load`.
     await update({ refreshAll: false });
+    if (result.type === "success") bumps.push(nextBump++);
     clearTimeout(timer);
     if (busy) {
       const left = SHOW_AT_LEAST_MS - (performance.now() - shownAt);
@@ -40,11 +50,16 @@ const count: SubmitFunction = () => {
 </script>
 
 <main class="card">
-  <p class="eyebrow">Click counter</p>
+  <header>
+    <p class="eyebrow">Click counter</p>
+    {#if data.region}
+      <p class="chip"><span class="dot" aria-hidden="true"></span>{data.region}</p>
+    {/if}
+  </header>
 
   <div class="count" aria-live="polite">
     {#key counter.clicks}
-      <span in:scale={{ start: 0.85, duration: prefersReducedMotion.current ? 0 : 220 }}>
+      <span in:fly={{ y: 14, duration: prefersReducedMotion.current ? 0 : 260 }}>
         {counter.clicks.toLocaleString("en")}
       </span>
     {/key}
@@ -52,69 +67,132 @@ const count: SubmitFunction = () => {
   <p class="label">{counter.clicks === 1 ? "click" : "clicks"} so far</p>
 
   <form method="POST" use:enhance={count}>
-    <!-- Disabled at once against double submits, but styled as busy only once `busy`. -->
-    <button type="submit" disabled={submitting} aria-busy={busy}>
-      {#if busy}
-        <span class="spinner" aria-hidden="true"></span>
-        Counting…
-      {:else}
-        Add your click
-      {/if}
-    </button>
+    <div class="action">
+      {#each bumps as id (id)}
+        <span
+          class="bump"
+          aria-hidden="true"
+          onanimationend={() => (bumps = bumps.filter((bump) => bump !== id))}>+1</span
+        >
+      {/each}
+      <!-- Disabled at once against double submits, but styled as busy only once `busy`. -->
+      <button type="submit" disabled={submitting} aria-busy={busy}>
+        {#if busy}
+          <span class="spinner" aria-hidden="true"></span>
+          Counting…
+        {:else}
+          <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+            <path d="M8 3v10M3 8h10" />
+          </svg>
+          Add your click
+        {/if}
+      </button>
+    </div>
   </form>
 
   <footer>
     <ol class="path" aria-label="Request path, with each hop's time on the last request">
-      <li class="node">SvelteKit</li>
-      {#each counter.hops as hop (hop.to)}
-        <li class="hop"><span class="ms">{hop.ms} ms</span></li>
-        <li class="node">
-          {#if hop.vendor}<span class="vendor">{hop.vendor}&nbsp;</span>{/if}{hop.to}
+      {@render node("SvelteKit")}
+      {#each counter.hops as hop, i (hop.to)}
+        <li class="hop" style:--i={i}>
+          <span class="ms">{hop.ms} ms</span>
+          <span class="line">
+            <!-- A new result replays the pulse, which travels each hop in turn. -->
+            {#key counter}<span class="pulse" aria-hidden="true"></span>{/key}
+          </span>
+          <svg class="head" width="7" height="10" viewBox="0 0 7 10" aria-hidden="true">
+            <path d="M1.25 1.25 5.75 5 1.25 8.75" />
+          </svg>
         </li>
+        {@render node(hop.to, hop.vendor)}
       {/each}
     </ol>
-    <p class="meta">
-      Time per hop on the last request{#if data.region}&nbsp;· <span class="nowrap">{data.region}</span>{/if}
-    </p>
+    <p class="meta">Time per hop on the last request</p>
   </footer>
 </main>
 
+{#snippet node(name: string, vendor?: string)}
+  <li class="node">
+    {#if ICONS[name]}<img class="logo" src={ICONS[name]} alt="" width="12" height="12" />{/if}
+    {#if vendor}<span class="vendor">{vendor}</span>{/if}{name}
+  </li>
+{/snippet}
+
 <style>
   .card {
-    padding: 40px clamp(20px, 6vw, 32px) 28px;
+    position: relative;
+    padding: 28px clamp(20px, 6vw, 32px) 24px;
     text-align: center;
     background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    box-shadow: var(--shadow);
+    border-radius: 24px;
+    box-shadow:
+      inset 0 1px 0 var(--highlight),
+      var(--shadow);
+    backdrop-filter: blur(18px) saturate(1.4);
+  }
+
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
   }
 
   .eyebrow {
     margin: 0;
-    font-size: 0.8125rem;
+    font-size: 0.75rem;
     font-weight: 600;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--muted);
   }
 
-  .count {
-    margin-top: 12px;
-    font-size: 5rem;
-    font-weight: 700;
-    line-height: 1;
-    letter-spacing: -0.04em;
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    padding: 3px 9px;
+    font-size: 0.6875rem;
     font-variant-numeric: tabular-nums;
-    color: var(--accent);
+    color: var(--muted);
+    background: var(--surface-solid);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+  }
+
+  .dot {
+    width: 6px;
+    height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
+  }
+
+  .count {
+    margin-top: 28px;
+    font-size: clamp(4rem, 18vw, 5.5rem);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.05em;
+    font-variant-numeric: tabular-nums;
   }
 
   .count > span {
     display: inline-block;
+    padding: 0 0.04em 0.06em;
+    color: transparent;
+    background: linear-gradient(180deg, var(--count-from), var(--count-to));
+    background-clip: text;
   }
 
   .label {
     margin: 8px 0 28px;
     color: var(--muted);
+  }
+
+  .action {
+    position: relative;
   }
 
   button {
@@ -127,31 +205,46 @@ const count: SubmitFunction = () => {
     font: inherit;
     font-weight: 600;
     color: var(--button-text);
-    background: var(--button);
+    background: linear-gradient(180deg, var(--button-from), var(--button-to));
     border: none;
-    border-radius: 12px;
+    border-radius: 14px;
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.25),
+      0 10px 24px -10px var(--glow);
     cursor: pointer;
     transition:
-      background-color 150ms ease,
-      transform 100ms ease;
+      transform 150ms ease,
+      box-shadow 150ms ease,
+      filter 150ms ease;
+  }
+
+  button svg path {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
   }
 
   button:hover:not([aria-busy="true"]) {
-    background: var(--button-hover);
+    transform: translateY(-1px);
+    filter: brightness(1.06);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.25),
+      0 14px 30px -10px var(--glow);
   }
 
   button:active:not([aria-busy="true"]) {
-    transform: scale(0.98);
+    transform: translateY(0) scale(0.98);
   }
 
   button:focus-visible {
-    outline: 2px solid var(--button);
+    outline: 2px solid var(--accent);
     outline-offset: 3px;
   }
 
   button[aria-busy="true"] {
     cursor: progress;
-    opacity: 0.75;
+    opacity: 0.8;
   }
 
   .spinner {
@@ -169,20 +262,33 @@ const count: SubmitFunction = () => {
     }
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .spinner {
-      animation-duration: 2s;
-    }
+  /* A "+1" that rises from the button and fades out. */
+  .bump {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    z-index: 1;
+    font-weight: 800;
+    color: var(--accent);
+    pointer-events: none;
+    animation: bump 700ms ease-out forwards;
+  }
 
-    button {
-      transition: none;
+  @keyframes bump {
+    from {
+      opacity: 1;
+      translate: -50% 0;
+    }
+    to {
+      opacity: 0;
+      translate: -50% -36px;
     }
   }
 
   footer {
     container-type: inline-size;
-    margin-top: 28px;
-    padding-top: 20px;
+    margin-top: 24px;
+    padding-top: 18px;
     border-top: 1px solid var(--border);
   }
 
@@ -197,39 +303,79 @@ const count: SubmitFunction = () => {
   }
 
   .node {
+    display: inline-flex;
     flex: none;
-    padding: 3px 7px;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 8px;
     white-space: nowrap;
-    background: var(--bg);
+    background: var(--surface-solid);
     border: 1px solid var(--border);
     border-radius: 999px;
   }
 
-  /* An arrow drawn as a line with a chevron head, its time centered above it. */
-  .hop {
-    position: relative;
-    flex: 1 1 0;
-    min-width: 30px;
-    height: 1px;
-    margin: 0 4px;
-    background: var(--muted);
+  .logo {
+    display: block;
+    width: 12px;
+    height: 12px;
+    object-fit: contain;
   }
 
-  .hop::after {
-    content: "";
+  /* An arrow: a line that fades in from its source and a chevron head, with the
+     hop's time centered above it. */
+  .hop {
+    position: relative;
+    display: flex;
+    flex: 1 1 0;
+    align-items: center;
+    min-width: 30px;
+    margin: 0 4px;
+    color: var(--muted);
+  }
+
+  .line {
+    position: relative;
+    flex: 1;
+    height: 1.5px;
+    overflow: hidden;
+    border-radius: 1px;
+    background: linear-gradient(to right, transparent, currentColor 70%);
+  }
+
+  .head {
+    flex: none;
+    margin-left: -1px;
+  }
+
+  .head path {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* A short accent highlight that sweeps from source to target, one hop after
+     another. */
+  .pulse {
     position: absolute;
-    top: -3px;
-    right: 0;
-    width: 6px;
-    height: 6px;
-    border-top: 1px solid var(--muted);
-    border-right: 1px solid var(--muted);
-    transform: rotate(45deg);
+    inset: 0;
+    background: linear-gradient(to right, transparent, var(--accent), transparent) no-repeat;
+    background-size: 45% 100%;
+    background-position: -80% 0;
+    animation: travel 500ms ease-in-out calc(var(--i) * 350ms) both;
+  }
+
+  @keyframes travel {
+    to {
+      background-position: 180% 0;
+    }
   }
 
   .ms {
     position: absolute;
-    bottom: 5px;
+    /* 6px clear of the line, which runs through the arrow's middle. */
+    bottom: calc(50% + 6px);
     left: 50%;
     translate: -50% 0;
     font-size: 0.625rem;
@@ -238,20 +384,50 @@ const count: SubmitFunction = () => {
     color: var(--muted);
   }
 
-  /* On the narrowest phones, "Upstash Redis" becomes "Redis" to keep one line. */
+  /* Narrow cards drop the logos, then shorten "Upstash Redis" to "Redis", to keep
+     the path on one line. */
+  @container (width < 340px) {
+    .logo {
+      display: none;
+    }
+
+    .node {
+      padding: 3px 7px;
+    }
+  }
+
   @container (width < 270px) {
     .vendor {
       display: none;
     }
   }
 
-  .nowrap {
-    white-space: nowrap;
-  }
-
   .meta {
-    margin: 14px 0 0;
+    margin: 12px 0 0;
     font-size: 0.75rem;
     color: var(--muted);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    button,
+    .spinner {
+      transition: none;
+      animation-duration: 2s;
+    }
+
+    .pulse {
+      display: none;
+    }
+
+    .bump {
+      animation-duration: 400ms;
+    }
+
+    @keyframes bump {
+      to {
+        opacity: 0;
+        translate: -50% 0;
+      }
+    }
   }
 </style>

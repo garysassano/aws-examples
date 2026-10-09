@@ -1,33 +1,51 @@
 :root {
   color-scheme: light dark;
 
-  --bg: #f6f5f2;
-  --bg-glow: #ffe3cc;
-  --surface: #ffffff;
-  --border: #e7e3dc;
+  --bg: #faf8f5;
+  --surface: rgb(255 255 255 / 0.72);
+  --surface-solid: #ffffff;
+  --border: rgb(28 26 23 / 0.09);
+  --highlight: rgb(255 255 255 / 0.9);
   --text: #1c1a17;
   --muted: #6d665c;
+  --dot: rgb(28 26 23 / 0.08);
+  --mesh-1: rgb(255 91 17 / 0.2);
+  --mesh-2: rgb(255 176 32 / 0.18);
+  --mesh-3: rgb(124 58 237 / 0.1);
   /* The count is large text (3:1); the button label needs 4.5:1. */
   --accent: #ff5b11;
-  --button: #c94100;
-  --button-hover: #ad3800;
+  --count-from: #f2620f;
+  --count-to: #e2410a;
+  --button-from: #c94a0a;
+  --button-to: #b23a00;
   --button-text: #ffffff;
-  --shadow: 0 1px 2px rgb(28 26 23 / 0.04), 0 12px 32px -8px rgb(28 26 23 / 0.12);
+  --glow: rgb(226 65 10 / 0.35);
+  --shadow:
+    0 1px 2px rgb(28 26 23 / 0.04), 0 24px 48px -16px rgb(28 26 23 / 0.18), 0 0 0 1px var(--border);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #12110f;
-    --bg-glow: #3a1c0b;
-    --surface: #1c1a17;
-    --border: #2f2b26;
+    --bg: #0e0d0c;
+    --surface: rgb(28 26 23 / 0.66);
+    --surface-solid: #1c1a17;
+    --border: rgb(255 255 255 / 0.08);
+    --highlight: rgb(255 255 255 / 0.06);
     --text: #f4f1ec;
     --muted: #a39b8f;
+    --dot: rgb(255 255 255 / 0.06);
+    --mesh-1: rgb(255 91 17 / 0.22);
+    --mesh-2: rgb(255 140 32 / 0.1);
+    --mesh-3: rgb(124 58 237 / 0.16);
     --accent: #ff6a24;
-    --button: #ff6a24;
-    --button-hover: #ff8547;
+    --count-from: #ffa060;
+    --count-to: #ff5b11;
+    --button-from: #ff7a33;
+    --button-to: #f25a14;
     --button-text: #1c1a17;
-    --shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 12px 32px -8px rgb(0 0 0 / 0.5);
+    --glow: rgb(255 106 36 / 0.35);
+    --shadow:
+      0 1px 2px rgb(0 0 0 / 0.3), 0 24px 48px -16px rgb(0 0 0 / 0.6), 0 0 0 1px var(--border);
   }
 }
 
@@ -40,11 +58,26 @@ body {
   min-height: 100dvh;
   display: grid;
   /* A column that never grows past the card, so wide content cannot widen the page. */
-  grid-template-columns: minmax(0, 380px);
+  grid-template-columns: minmax(0, 420px);
   place-content: center;
   padding: 24px 16px;
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   color: var(--text);
-  background: radial-gradient(60rem 30rem at 50% -10%, var(--bg-glow), transparent 70%), var(--bg);
+  background:
+    radial-gradient(40rem 28rem at 15% 0%, var(--mesh-1), transparent 70%),
+    radial-gradient(36rem 26rem at 90% 10%, var(--mesh-2), transparent 70%),
+    radial-gradient(44rem 30rem at 50% 110%, var(--mesh-3), transparent 70%), var(--bg);
   -webkit-font-smoothing: antialiased;
+}
+
+/* A dot grid that fades out toward the edges of the viewport. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-image: radial-gradient(var(--dot) 1px, transparent 1px);
+  background-size: 22px 22px;
+  mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+  pointer-events: none;
 }

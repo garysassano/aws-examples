@@ -7,6 +7,7 @@
       "src/**",
       "!src/assets",
       "!src/functions/*/static",
+      "!src/functions/*/src/assets",
       "test/**",
       "package.json",
       "cdktf.json",

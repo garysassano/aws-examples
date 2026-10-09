@@ -59,6 +59,7 @@ Each function shares its name with the ECR repository that holds its image.
     - `BACKEND_URL` - Function URL of `hono-backend`, declared and validated in `src/env.ts`
   - Endpoints:
     - `GET /` - Click counter, rendered on the server, with the time of each hop on the last request
+    - The request path shows the Svelte, Hono, and Upstash Redis logos, copied unchanged from [sveltejs/branding](https://github.com/sveltejs/branding), [honojs/hono](https://github.com/honojs/hono), and [upstash/docs](https://github.com/upstash/docs) into `src/assets`
     - `POST /` - Form action that increments the counter through the backend; it is the page's default action, because function URLs reject the `/` in a named action's `?/name` query string
     - `GET /ping` - Returns `pong`; the Lambda Web Adapter's readiness check
 
