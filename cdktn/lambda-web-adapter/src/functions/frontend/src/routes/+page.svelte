@@ -64,6 +64,16 @@ onMount(() => {
   if (packets.length) removeLater(0);
 });
 
+// Switching tabs fires both visibilitychange and focus; one refresh is enough.
+let lastRefresh = 0;
+
+function refresh() {
+  const now = performance.now();
+  if (now - lastRefresh < 1000) return;
+  lastRefresh = now;
+  refreshAll();
+}
+
 const count: SubmitFunction<Counter> = () => {
   submitting = true;
   let shownAt = 0;
@@ -93,12 +103,14 @@ const count: SubmitFunction<Counter> = () => {
 };
 </script>
 
-<!-- Counts made in other tabs or by other people appear when this tab is shown again. -->
+<!-- Counts made elsewhere appear when the page comes back: when its tab is shown
+     again, or when the browser window regains focus after another app. -->
 <svelte:document
   onvisibilitychange={() => {
-    if (document.visibilityState === "visible") refreshAll();
+    if (document.visibilityState === "visible") refresh();
   }}
 />
+<svelte:window onfocus={refresh} />
 
 <main class="card">
   <header>
