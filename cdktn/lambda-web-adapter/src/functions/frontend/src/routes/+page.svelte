@@ -1,11 +1,38 @@
 <script lang="ts">
 import { prefersReducedMotion } from "svelte/motion";
 import { scale } from "svelte/transition";
-import { enhance } from "$app/forms";
+import { type SubmitFunction, enhance } from "$app/forms";
 import type { PageProps } from "./$types";
 
 let { data }: PageProps = $props();
-let pending = $state(false);
+
+// Most clicks finish before the indicator would appear, so they never flash it;
+// once it appears, it stays long enough to read.
+const SHOW_AFTER_MS = 300;
+const SHOW_AT_LEAST_MS = 400;
+
+let submitting = $state(false);
+let busy = $state(false);
+
+const count: SubmitFunction = () => {
+  submitting = true;
+  let shownAt = 0;
+  const timer = setTimeout(() => {
+    busy = true;
+    shownAt = performance.now();
+  }, SHOW_AFTER_MS);
+
+  return async ({ update }) => {
+    await update();
+    clearTimeout(timer);
+    if (busy) {
+      const left = SHOW_AT_LEAST_MS - (performance.now() - shownAt);
+      if (left > 0) await new Promise((resolve) => setTimeout(resolve, left));
+    }
+    busy = false;
+    submitting = false;
+  };
+};
 
 const path = ["SvelteKit", "Hono", "Upstash Redis"];
 </script>
@@ -22,18 +49,10 @@ const path = ["SvelteKit", "Hono", "Upstash Redis"];
   </div>
   <p class="label">{data.clicks === 1 ? "click" : "clicks"} so far</p>
 
-  <form
-    method="POST"
-    use:enhance={() => {
-      pending = true;
-      return async ({ update }) => {
-        await update();
-        pending = false;
-      };
-    }}
-  >
-    <button type="submit" disabled={pending}>
-      {#if pending}
+  <form method="POST" use:enhance={count}>
+    <!-- Disabled at once against double submits, but styled as busy only once `busy`. -->
+    <button type="submit" disabled={submitting} aria-busy={busy}>
+      {#if busy}
         <span class="spinner" aria-hidden="true"></span>
         Counting…
       {:else}
@@ -114,11 +133,11 @@ const path = ["SvelteKit", "Hono", "Upstash Redis"];
       transform 100ms ease;
   }
 
-  button:hover:not(:disabled) {
+  button:hover:not([aria-busy="true"]) {
     background: var(--button-hover);
   }
 
-  button:active:not(:disabled) {
+  button:active:not([aria-busy="true"]) {
     transform: scale(0.98);
   }
 
@@ -127,7 +146,7 @@ const path = ["SvelteKit", "Hono", "Upstash Redis"];
     outline-offset: 3px;
   }
 
-  button:disabled {
+  button[aria-busy="true"] {
     cursor: progress;
     opacity: 0.75;
   }
