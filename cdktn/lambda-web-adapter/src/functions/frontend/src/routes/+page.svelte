@@ -1,4 +1,5 @@
 <script lang="ts">
+import { onMount } from "svelte";
 import { prefersReducedMotion } from "svelte/motion";
 import { fly } from "svelte/transition";
 import { type SubmitFunction, enhance } from "$app/forms";
@@ -26,6 +27,47 @@ let busy = $state(false);
 let bumps = $state<number[]>([]);
 let nextBump = 0;
 
+// The light along the arrows always finishes both hops. Results that arrive while
+// it runs are coalesced into one more pass, so a burst of clicks ends with a full
+// pass instead of restarting it midway. The first pass plays as the page loads.
+// A timer ends each pass rather than `animationend`, which fires before hydration
+// when the page is slow to load.
+const PULSE_MS = 520;
+const PULSE_GAP_MS = 380;
+// A pause after each pass, so it finishes before the next and back-to-back passes
+// read as separate.
+const PASS_REST_MS = 200;
+
+let pass = $state(0);
+let passing = true;
+let owed = false;
+
+const passMs = () => PULSE_MS + PULSE_GAP_MS * (counter.hops.length - 1) + PASS_REST_MS;
+
+function pulse() {
+  if (prefersReducedMotion.current) return;
+  if (passing) {
+    owed = true;
+    return;
+  }
+  passing = true;
+  pass++;
+  setTimeout(passEnded, passMs());
+}
+
+function passEnded() {
+  passing = false;
+  if (owed) {
+    owed = false;
+    pulse();
+  }
+}
+
+onMount(() => {
+  const timer = setTimeout(passEnded, passMs());
+  return () => clearTimeout(timer);
+});
+
 const count: SubmitFunction = () => {
   submitting = true;
   let shownAt = 0;
@@ -37,7 +79,10 @@ const count: SubmitFunction = () => {
   return async ({ result, update }) => {
     // The action returns the new count, so skip rerunning `load`.
     await update({ refreshAll: false });
-    if (result.type === "success") bumps.push(nextBump++);
+    if (result.type === "success") {
+      bumps.push(nextBump++);
+      pulse();
+    }
     clearTimeout(timer);
     if (busy) {
       const left = SHOW_AT_LEAST_MS - (performance.now() - shownAt);
@@ -91,18 +136,24 @@ const count: SubmitFunction = () => {
   </form>
 
   <footer>
-    <ol class="path" aria-label="Request path, with each hop's time on the last request">
+    <ol
+      class="path"
+      aria-label="Request path, with each hop's time on the last request"
+      style:--pulse="{PULSE_MS}ms"
+      style:--pulse-gap="{PULSE_GAP_MS}ms"
+    >
       {@render node("SvelteKit")}
       {#each counter.hops as hop, i (hop.to)}
         <li class="hop" style:--i={i}>
           <span class="ms">{hop.ms} ms</span>
-          <span class="line">
-            <!-- A new result replays the pulse, which travels each hop in turn. -->
-            {#key counter}<span class="pulse" aria-hidden="true"></span>{/key}
-          </span>
-          <svg class="head" width="7" height="10" viewBox="0 0 7 10" aria-hidden="true">
-            <path d="M1.25 1.25 5.75 5 1.25 8.75" />
-          </svg>
+          <!-- Each pass replays the pulse, which travels each hop in turn and lights
+               the head as it arrives. -->
+          {#key pass}
+            <span class="line"><span class="pulse" aria-hidden="true"></span></span>
+            <svg class="head" width="7" height="10" viewBox="0 0 7 10" aria-hidden="true">
+              <path d="M1.25 1.25 5.75 5 1.25 8.75" />
+            </svg>
+          {/key}
         </li>
         {@render node(hop.to, hop.vendor)}
       {/each}
@@ -355,20 +406,62 @@ const count: SubmitFunction = () => {
     stroke-linejoin: round;
   }
 
-  /* A short accent highlight that sweeps from source to target, one hop after
-     another. */
+  /* A short accent highlight sweeps from source to target, one hop after another,
+     and the head flashes as it arrives. Both share one duration and delay, so their
+     keyframes line up: at 70% the highlight, 45% of the line wide, is centered on the
+     line's end (0.55 x 141% + 0.225 = 1). */
   .pulse {
     position: absolute;
     inset: 0;
     background: linear-gradient(to right, transparent, var(--accent), transparent) no-repeat;
     background-size: 45% 100%;
     background-position: -80% 0;
-    animation: travel 500ms ease-in-out calc(var(--i) * 350ms) both;
+    animation: travel var(--pulse) calc(var(--i) * var(--pulse-gap)) both;
   }
 
   @keyframes travel {
+    from {
+      background-position: -80% 0;
+      animation-timing-function: ease-in;
+    }
+    70% {
+      background-position: 141% 0;
+      animation-timing-function: linear;
+    }
     to {
       background-position: 180% 0;
+    }
+  }
+
+  .head path {
+    animation: arrive var(--pulse) calc(var(--i) * var(--pulse-gap)) both;
+  }
+
+  .head {
+    animation: nudge var(--pulse) calc(var(--i) * var(--pulse-gap)) both;
+  }
+
+  @keyframes arrive {
+    55% {
+      stroke: currentColor;
+    }
+    72% {
+      stroke: var(--accent);
+    }
+    to {
+      stroke: currentColor;
+    }
+  }
+
+  @keyframes nudge {
+    55% {
+      translate: 0;
+    }
+    72% {
+      translate: 1.5px 0;
+    }
+    to {
+      translate: 0;
     }
   }
 
@@ -417,6 +510,11 @@ const count: SubmitFunction = () => {
 
     .pulse {
       display: none;
+    }
+
+    .head,
+    .head path {
+      animation: none;
     }
 
     .bump {
