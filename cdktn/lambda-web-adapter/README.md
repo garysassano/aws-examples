@@ -58,7 +58,7 @@ Each function shares its name with the ECR repository that holds its image.
     - `BACKEND_URL` - Function URL of `hono-backend`, declared and validated in `src/env.ts`
   - Endpoints:
     - `GET /` - Click counter, rendered on the server
-    - `POST /?/increment` - Form action that increments the counter through the backend
+    - `POST /` - Form action that increments the counter through the backend; it is the page's default action, because function URLs reject the `/` in a named action's `?/name` query string
     - `GET /ping` - Returns `pong`; the Lambda Web Adapter's readiness check
 
 Both servers listen on port 3000, which the images pass to the adapter as `AWS_LWA_PORT`.

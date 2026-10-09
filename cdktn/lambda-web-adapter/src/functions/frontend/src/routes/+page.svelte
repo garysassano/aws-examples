@@ -11,7 +11,7 @@ let { data }: PageProps = $props();
     <span class="count">{data.clicks}</span>
     <span class="label">clicks</span>
   </div>
-  <form method="POST" action="?/increment" use:enhance>
+  <form method="POST" use:enhance>
     <button type="submit">Add Your Click!</button>
   </form>
 </div>

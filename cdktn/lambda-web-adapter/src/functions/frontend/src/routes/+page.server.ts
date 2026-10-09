@@ -18,8 +18,10 @@ export const load: PageServerLoad = async ({ fetch }) => ({
 });
 
 export const actions: Actions = {
-  // `use:enhance` reruns `load` after the action, so the page shows the new count.
-  increment: async ({ fetch }) => {
+  // A named action posts to `?/name`, and Lambda function URLs reject that unencoded
+  // slash with InvalidQueryStringException; the default action posts to the page itself.
+  // `use:enhance` reruns `load` after it, so the page shows the new count.
+  default: async ({ fetch }) => {
     await callCounter(fetch, "POST");
   },
 };
