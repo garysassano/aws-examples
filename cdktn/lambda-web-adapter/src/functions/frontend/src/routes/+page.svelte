@@ -131,8 +131,9 @@ const count: SubmitFunction = () => {
     >
       {@render node("SvelteKit")}
       {#each counter.hops as hop, i (hop.to)}
+        {@const from = i === 0 ? "SvelteKit" : counter.hops[i - 1].to}
         <li class="hop" style:--i={i}>
-          <span class="ms">{hop.ms} ms</span>
+          <span class="ms" title="{from} → {hop.to} on the last request">{hop.ms} ms</span>
           <span class="line">
             {#each packets as id (id)}<span class="packet" aria-hidden="true"></span>{/each}
           </span>
@@ -148,7 +149,6 @@ const count: SubmitFunction = () => {
         {@render node(hop.to, hop.vendor)}
       {/each}
     </ol>
-    <p class="meta">Time per hop on the last request</p>
   </footer>
 </main>
 
@@ -488,12 +488,6 @@ const count: SubmitFunction = () => {
     .vendor {
       display: none;
     }
-  }
-
-  .meta {
-    margin: 12px 0 0;
-    font-size: 0.75rem;
-    color: var(--muted);
   }
 
   @media (prefers-reduced-motion: reduce) {
