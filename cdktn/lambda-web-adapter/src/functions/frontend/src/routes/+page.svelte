@@ -4,7 +4,10 @@ import { scale } from "svelte/transition";
 import { type SubmitFunction, enhance } from "$app/forms";
 import type { PageProps } from "./$types";
 
-let { data }: PageProps = $props();
+let { data, form }: PageProps = $props();
+
+// After a click, the action's result; on page load, the load function's.
+const counter = $derived(form ?? data);
 
 // Most clicks finish before the indicator would appear, so they never flash it;
 // once it appears, it stays long enough to read.
@@ -23,7 +26,8 @@ const count: SubmitFunction = () => {
   }, SHOW_AFTER_MS);
 
   return async ({ update }) => {
-    await update();
+    // The action returns the new count, so skip rerunning `load`.
+    await update({ refreshAll: false });
     clearTimeout(timer);
     if (busy) {
       const left = SHOW_AT_LEAST_MS - (performance.now() - shownAt);
@@ -33,21 +37,19 @@ const count: SubmitFunction = () => {
     submitting = false;
   };
 };
-
-const path = ["SvelteKit", "Hono", "Upstash Redis"];
 </script>
 
 <main class="card">
   <p class="eyebrow">Click counter</p>
 
   <div class="count" aria-live="polite">
-    {#key data.clicks}
+    {#key counter.clicks}
       <span in:scale={{ start: 0.85, duration: prefersReducedMotion.current ? 0 : 220 }}>
-        {data.clicks.toLocaleString("en")}
+        {counter.clicks.toLocaleString("en")}
       </span>
     {/key}
   </div>
-  <p class="label">{data.clicks === 1 ? "click" : "clicks"} so far</p>
+  <p class="label">{counter.clicks === 1 ? "click" : "clicks"} so far</p>
 
   <form method="POST" use:enhance={count}>
     <!-- Disabled at once against double submits, but styled as busy only once `busy`. -->
@@ -62,14 +64,14 @@ const path = ["SvelteKit", "Hono", "Upstash Redis"];
   </form>
 
   <footer>
-    <ol class="path" aria-label="Request path">
-      {#each path as hop, i (hop)}
-        {#if i > 0}<li class="arrow" aria-hidden="true">→</li>{/if}
-        <li class="hop">{hop}</li>
+    <dl class="hops">
+      {#each counter.hops as hop (hop.to)}
+        <dt>{hop.from} <span aria-hidden="true">→</span><span class="sr-only">to</span> {hop.to}</dt>
+        <dd>{hop.ms} ms</dd>
       {/each}
-    </ol>
+    </dl>
     <p class="meta">
-      Backend round trip {data.roundTripMs} ms{#if data.region}&nbsp;· {data.region}{/if}
+      Time per hop on the last request{#if data.region}&nbsp;· {data.region}{/if}
     </p>
   </footer>
 </main>
@@ -182,32 +184,42 @@ const path = ["SvelteKit", "Hono", "Upstash Redis"];
     border-top: 1px solid var(--border);
   }
 
-  .path {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
+  .hops {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 6px 16px;
     margin: 0;
-    padding: 0;
-    list-style: none;
     font-size: 0.8125rem;
+    text-align: left;
   }
 
-  .hop {
-    padding: 3px 9px;
-    border: 1px solid var(--border);
-    border-radius: 999px;
+  .hops dt {
+    color: var(--text);
   }
 
-  .arrow {
+  .hops dt span {
     color: var(--muted);
+  }
+
+  .hops dd {
+    margin: 0;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    color: var(--muted);
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 
   .meta {
-    margin: 10px 0 0;
+    margin: 14px 0 0;
     font-size: 0.75rem;
     color: var(--muted);
-    font-variant-numeric: tabular-nums;
   }
 </style>

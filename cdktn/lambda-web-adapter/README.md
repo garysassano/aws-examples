@@ -53,11 +53,12 @@ Each function shares its name with the ECR repository that holds its image.
     - `GET /ping` - Returns `pong`; the Lambda Web Adapter's readiness check
     - `GET /api/clicks` - Returns the current click count
     - `POST /api/clicks` - Increments the click count and returns it
+    - Both `/api/clicks` routes report the Redis call's duration in a `Server-Timing: redis;dur=…` header, which the frontend uses to time each hop
 - `sveltekit-frontend`
   - Environment variables:
     - `BACKEND_URL` - Function URL of `hono-backend`, declared and validated in `src/env.ts`
   - Endpoints:
-    - `GET /` - Click counter, rendered on the server
+    - `GET /` - Click counter, rendered on the server, with the time of each hop on the last request
     - `POST /` - Form action that increments the counter through the backend; it is the page's default action, because function URLs reject the `/` in a named action's `?/name` query string
     - `GET /ping` - Returns `pong`; the Lambda Web Adapter's readiness check
 
