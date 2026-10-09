@@ -64,23 +64,24 @@ const count: SubmitFunction = () => {
   </form>
 
   <footer>
-    <dl class="hops">
+    <ol class="path" aria-label="Request path, with each hop's time on the last request">
+      <li class="node">SvelteKit</li>
       {#each counter.hops as hop (hop.to)}
-        <dt>{hop.from} <span aria-hidden="true">→</span><span class="sr-only">to</span> {hop.to}</dt>
-        <dd>{hop.ms} ms</dd>
+        <li class="hop"><span class="ms">{hop.ms} ms</span></li>
+        <li class="node">
+          {#if hop.vendor}<span class="vendor">{hop.vendor}&nbsp;</span>{/if}{hop.to}
+        </li>
       {/each}
-    </dl>
+    </ol>
     <p class="meta">
-      Time per hop on the last request{#if data.region}&nbsp;· {data.region}{/if}
+      Time per hop on the last request{#if data.region}&nbsp;· <span class="nowrap">{data.region}</span>{/if}
     </p>
   </footer>
 </main>
 
 <style>
   .card {
-    width: 100%;
-    max-width: 380px;
-    padding: 40px 32px 28px;
+    padding: 40px clamp(20px, 6vw, 32px) 28px;
     text-align: center;
     background: var(--surface);
     border: 1px solid var(--border);
@@ -179,41 +180,72 @@ const count: SubmitFunction = () => {
   }
 
   footer {
+    container-type: inline-size;
     margin-top: 28px;
     padding-top: 20px;
     border-top: 1px solid var(--border);
   }
 
-  .hops {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 6px 16px;
+  /* Nodes keep their width and the arrows share what is left. */
+  .path {
+    display: flex;
+    align-items: center;
     margin: 0;
-    font-size: 0.8125rem;
-    text-align: left;
+    padding: 14px 0 0;
+    list-style: none;
+    font-size: 0.6875rem;
   }
 
-  .hops dt {
-    color: var(--text);
+  .node {
+    flex: none;
+    padding: 3px 7px;
+    white-space: nowrap;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 999px;
   }
 
-  .hops dt span {
-    color: var(--muted);
-  }
-
-  .hops dd {
-    margin: 0;
-    font-variant-numeric: tabular-nums;
-    text-align: right;
-    color: var(--muted);
-  }
-
-  .sr-only {
-    position: absolute;
-    width: 1px;
+  /* An arrow drawn as a line with a chevron head, its time centered above it. */
+  .hop {
+    position: relative;
+    flex: 1 1 0;
+    min-width: 30px;
     height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
+    margin: 0 4px;
+    background: var(--muted);
+  }
+
+  .hop::after {
+    content: "";
+    position: absolute;
+    top: -3px;
+    right: 0;
+    width: 6px;
+    height: 6px;
+    border-top: 1px solid var(--muted);
+    border-right: 1px solid var(--muted);
+    transform: rotate(45deg);
+  }
+
+  .ms {
+    position: absolute;
+    bottom: 5px;
+    left: 50%;
+    translate: -50% 0;
+    font-size: 0.625rem;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    color: var(--muted);
+  }
+
+  /* On the narrowest phones, "Upstash Redis" becomes "Redis" to keep one line. */
+  @container (width < 270px) {
+    .vendor {
+      display: none;
+    }
+  }
+
+  .nowrap {
     white-space: nowrap;
   }
 

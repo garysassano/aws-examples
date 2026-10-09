@@ -3,8 +3,9 @@ import { AWS_REGION, BACKEND_URL } from "$app/env/private";
 import type { Actions, PageServerLoad } from "./$types";
 
 export interface Hop {
-  from: string;
   to: string;
+  /** Shown before `to` when the card is wide enough. */
+  vendor?: string;
   ms: number;
 }
 
@@ -37,8 +38,8 @@ async function callCounter(
   return {
     clicks: body.clicks,
     hops: [
-      { from: "SvelteKit", to: "Hono", ms: Math.round(roundTrip - redis) },
-      { from: "Hono", to: "Upstash Redis", ms: Math.round(redis) },
+      { to: "Hono", ms: Math.round(roundTrip - redis) },
+      { to: "Redis", vendor: "Upstash", ms: Math.round(redis) },
     ],
   };
 }
