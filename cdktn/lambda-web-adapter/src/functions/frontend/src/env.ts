@@ -12,4 +12,8 @@ export const variables = defineEnvVars({
       return new URL(value).origin;
     },
   },
+  AWS_REGION: {
+    description: "Region the function runs in, set by Lambda; unset in local development",
+    schema: (value) => value,
+  },
 });

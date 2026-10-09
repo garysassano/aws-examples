@@ -1,5 +1,5 @@
 import { error } from "@sveltejs/kit";
-import { BACKEND_URL } from "$app/env/private";
+import { AWS_REGION, BACKEND_URL } from "$app/env/private";
 import type { Actions, PageServerLoad } from "./$types";
 
 /** Calls the backend's click counter: GET reads it, POST increments it. */
@@ -13,9 +13,16 @@ async function callCounter(
   return body.clicks;
 }
 
-export const load: PageServerLoad = async ({ fetch }) => ({
-  clicks: await callCounter(fetch, "GET"),
-});
+export const load: PageServerLoad = async ({ fetch }) => {
+  const start = performance.now();
+  const clicks = await callCounter(fetch, "GET");
+  return {
+    clicks,
+    // Frontend to backend to Redis and back, as this function measured it.
+    roundTripMs: Math.round(performance.now() - start),
+    region: AWS_REGION,
+  };
+};
 
 export const actions: Actions = {
   // A named action posts to `?/name`, and Lambda function URLs reject that unencoded

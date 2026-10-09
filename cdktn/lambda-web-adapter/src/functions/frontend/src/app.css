@@ -1,4 +1,48 @@
+:root {
+  color-scheme: light dark;
+
+  --bg: #f6f5f2;
+  --bg-glow: #ffe3cc;
+  --surface: #ffffff;
+  --border: #e7e3dc;
+  --text: #1c1a17;
+  --muted: #6d665c;
+  /* The count is large text (3:1); the button label needs 4.5:1. */
+  --accent: #ff5b11;
+  --button: #c94100;
+  --button-hover: #ad3800;
+  --button-text: #ffffff;
+  --shadow: 0 1px 2px rgb(28 26 23 / 0.04), 0 12px 32px -8px rgb(28 26 23 / 0.12);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #12110f;
+    --bg-glow: #3a1c0b;
+    --surface: #1c1a17;
+    --border: #2f2b26;
+    --text: #f4f1ec;
+    --muted: #a39b8f;
+    --accent: #ff6a24;
+    --button: #ff6a24;
+    --button-hover: #ff8547;
+    --button-text: #1c1a17;
+    --shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 12px 32px -8px rgb(0 0 0 / 0.5);
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
 body {
-  font-family: "Roboto Flex Variable", Arial, sans-serif;
-  background-color: #f5f0e8;
+  margin: 0;
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 24px 16px;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color: var(--text);
+  background: radial-gradient(60rem 30rem at 50% -10%, var(--bg-glow), transparent 70%), var(--bg);
+  -webkit-font-smoothing: antialiased;
 }
