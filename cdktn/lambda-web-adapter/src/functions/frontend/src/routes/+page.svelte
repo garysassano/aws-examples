@@ -405,31 +405,46 @@ const count: SubmitFunction = () => {
     stroke-linejoin: round;
   }
 
-  /* A packet: a glowing capsule that crosses each hop in turn. */
+  /* A packet: a comet that crosses each hop in turn, its glowing head trailing a
+     streak of light half as long as the line. */
   .packet {
+    --length: 55%;
     position: absolute;
     top: 50%;
-    left: -14px;
-    width: 14px;
-    height: 4px;
-    margin-top: -2px;
+    left: calc(-1 * var(--length));
+    width: var(--length);
+    height: 3px;
+    margin-top: -1.5px;
     border-radius: 2px;
     background: linear-gradient(to right, transparent, var(--accent));
-    box-shadow: 0 0 8px 1px color-mix(in srgb, var(--accent) 55%, transparent);
     opacity: 0;
     animation: travel var(--hop) ease-in-out calc(var(--i) * var(--hop-gap)) both;
   }
 
+  .packet::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    right: -2px;
+    width: 7px;
+    height: 5px;
+    margin-top: -2.5px;
+    border-radius: 3px;
+    background: var(--accent);
+    box-shadow: 0 0 10px 2px color-mix(in srgb, var(--accent) 60%, transparent);
+  }
+
+  /* At 85% the head reaches the end of the line, where the arrowhead flashes. */
   @keyframes travel {
     15% {
       opacity: 1;
     }
     85% {
-      left: calc(100% - 12px);
+      left: calc(100% - var(--length));
       opacity: 1;
     }
     to {
-      left: calc(100% - 8px);
+      left: calc(100% - var(--length) + 4px);
       opacity: 0;
     }
   }
