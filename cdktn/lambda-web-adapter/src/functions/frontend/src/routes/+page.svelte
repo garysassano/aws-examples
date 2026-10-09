@@ -54,7 +54,7 @@ function removeLater(id: number) {
 }
 
 function sendPacket() {
-  if (packets.length >= MAX_PACKETS) return;
+  if (prefersReducedMotion.current || packets.length >= MAX_PACKETS) return;
   const id = nextPacket++;
   packets.push(id);
   removeLater(id);
@@ -86,7 +86,9 @@ const count: SubmitFunction<Counter> = () => {
     if (result.type === "success" && result.data) {
       // The action returns the new count, so it is shown without rerunning `load`.
       counter = result.data;
-      bumps.push(nextBump++);
+      // Click effects are decoration, so readers who prefer reduced motion get none;
+      // the count itself still updates.
+      if (!prefersReducedMotion.current) bumps.push(nextBump++);
       sendPacket();
     } else {
       // Errors, failures, and redirects get SvelteKit's default handling.
@@ -542,57 +544,10 @@ const count: SubmitFunction<Counter> = () => {
       animation-duration: 2s;
     }
 
-    /* Without motion, a packet is each line glowing in turn and fading back, and the
-       head lighting up in place: the same path and timing, made only of fades. */
-    .packet {
-      left: 0;
-      width: 100%;
-      height: 2.5px;
-      margin-top: -1.25px;
-      background: var(--accent);
-      box-shadow: 0 0 8px 1px color-mix(in srgb, var(--accent) 55%, transparent);
-      animation-name: glow;
-    }
-
-    .packet::after {
-      display: none;
-    }
-
-    .head .flash {
-      animation-name: glow-head;
-    }
-
-    @keyframes glow {
-      40%,
-      65% {
-        opacity: 1;
-      }
-    }
-
-    @keyframes glow-head {
-      60% {
-        opacity: 0;
-      }
-      85% {
-        opacity: 1;
-      }
-    }
-
-    /* The "+1" appears in the gap above the button and fades there; on the button's
-       edge it would vanish against the orange. */
+    .packet,
+    .head .flash,
     .bump {
-      animation-duration: 700ms;
-    }
-
-    @keyframes bump {
-      from {
-        opacity: 1;
-        translate: -50% -24px;
-      }
-      to {
-        opacity: 0;
-        translate: -50% -24px;
-      }
+      display: none;
     }
   }
 </style>
