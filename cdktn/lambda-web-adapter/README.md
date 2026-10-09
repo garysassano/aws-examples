@@ -50,7 +50,7 @@ Each function shares its name with the ECR repository that holds its image, and 
 - `hono-backend` (function URL auth: `AWS_IAM`; a direct request without a signature gets `403 Forbidden`)
   - Environment variables:
     - `UPSTASH_REDIS_REST_URL` - REST endpoint of the `click-counter` database
-    - `UPSTASH_REDIS_REST_TOKEN_PARAMETER` - Name of the SSM SecureString that holds the REST token, which the server reads once at startup; for local development, `UPSTASH_REDIS_REST_TOKEN` can hold the token itself
+    - `UPSTASH_REDIS_REST_TOKEN_PARAMETER` - Name of the SSM SecureString that holds the REST token, which the server reads once at startup
   - Endpoints:
     - `GET /` - Hello message
     - `GET /ping` - Returns `pong`; the Lambda Web Adapter's readiness check
@@ -59,7 +59,7 @@ Each function shares its name with the ECR repository that holds its image, and 
 - `sveltekit-frontend` (function URL auth: `NONE`)
   - Environment variables:
     - `BACKEND_URL` - Function URL of `hono-backend`, declared and validated in `src/env.ts`
-    - `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, and `AWS_SESSION_TOKEN` - The execution role's credentials, which Lambda sets and `src/server/backend.ts` signs backend requests with; without them, as in local development, it calls the backend unsigned
+    - `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, and `AWS_SESSION_TOKEN` - The execution role's credentials, which Lambda sets and `src/server/backend.ts` signs backend requests with
   - Endpoints:
     - `GET /` - Click counter, rendered on the server
     - `POST /` - Form action that increments the counter through the backend; it is the page's default action, because function URLs reject the `/` in a named action's `?/name` query string
