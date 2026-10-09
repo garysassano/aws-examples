@@ -66,6 +66,8 @@ onMount(() => {
 
 // Switching tabs fires both visibilitychange and focus; one refresh is enough.
 let lastRefresh = 0;
+// Whether focus left the page, for another app or another window.
+let away = false;
 
 function refresh() {
   const now = performance.now();
@@ -106,13 +108,25 @@ const count: SubmitFunction<Counter> = () => {
 </script>
 
 <!-- Counts made elsewhere appear when the page comes back: when its tab is shown
-     again, or when the browser window regains focus after another app. -->
+     again, or when the browser regains focus after another app. Focus is watched in
+     the capture phase because Firefox, unlike Chromium, fires it only on the element
+     that had focus, such as the button, and focus events do not bubble. -->
 <svelte:document
   onvisibilitychange={() => {
     if (document.visibilityState === "visible") refresh();
   }}
 />
-<svelte:window onfocus={refresh} />
+<svelte:window
+  onblurcapture={() => {
+    // Moving focus within the page keeps the document focused; leaving does not.
+    if (!document.hasFocus()) away = true;
+  }}
+  onfocuscapture={() => {
+    if (!away) return;
+    away = false;
+    refresh();
+  }}
+/>
 
 <main class="card">
   <header>
