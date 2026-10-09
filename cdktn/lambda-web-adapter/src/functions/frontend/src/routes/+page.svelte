@@ -1,5 +1,5 @@
 <script lang="ts">
-import { onMount } from "svelte";
+import { onMount, untrack } from "svelte";
 import { prefersReducedMotion } from "svelte/motion";
 import { fly } from "svelte/transition";
 import { type SubmitFunction, enhance } from "$app/forms";
@@ -30,14 +30,17 @@ let nextBump = 0;
 // Each successful click sends a packet of light along the arrows, one hop after
 // the other, lighting each head as it arrives. Packets run independently, so a burst
 // of clicks shows as a stream rather than restarting or queueing one animation.
-// A packet is removed on a timer, which also works when the first one finishes
-// before the page hydrates.
+// A packet is removed on a timer, which also works when one finishes before the page
+// hydrates.
 const HOP_MS = 420;
 const HOP_GAP_MS = 320;
 const MAX_PACKETS = 4;
 
-// The first packet plays as the page loads.
-let packets = $state<number[]>([0]);
+// A page load sends nothing, so it plays no packet, unless the page is itself the
+// result of an increment: a form submission without JavaScript, where `form` holds
+// the action's result.
+// Only the initial value matters; later results send their own packets.
+let packets = $state<number[]>(untrack(() => form) ? [0] : []);
 let nextPacket = 1;
 
 const packetMs = () => HOP_MS + HOP_GAP_MS * (counter.hops.length - 1) + 50;
@@ -53,7 +56,9 @@ function sendPacket() {
   removeLater(id);
 }
 
-onMount(() => removeLater(0));
+onMount(() => {
+  if (packets.length) removeLater(0);
+});
 
 const count: SubmitFunction = () => {
   submitting = true;
