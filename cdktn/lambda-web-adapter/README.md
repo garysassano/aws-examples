@@ -79,5 +79,3 @@ The SecureString uses the AWS managed key `aws/ssm`, which any principal in the 
 ## Architecture Diagram
 
 ![Architecture Diagram](./src/assets/arch-diagram.svg)
-
-Upstash runs the database in its own AWS account in the same Region; the backend reaches it over HTTPS through Upstash's REST API, not through your account's network.
