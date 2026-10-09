@@ -200,7 +200,6 @@ const count: SubmitFunction = () => {
     margin: 0;
     padding: 3px 9px;
     font-size: 0.6875rem;
-    font-variant-numeric: tabular-nums;
     color: var(--muted);
     background: var(--surface-solid);
     border: 1px solid var(--border);
