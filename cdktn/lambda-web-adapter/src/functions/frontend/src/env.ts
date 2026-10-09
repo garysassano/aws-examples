@@ -16,4 +16,10 @@ export const variables = defineEnvVars({
     description: "Region the function runs in, set by Lambda; unset in local development",
     schema: (value) => value,
   },
+  // The execution role's temporary credentials, which Lambda sets for every function.
+  // The frontend signs its calls to the backend's AWS_IAM function URL with them;
+  // without them, as in local development, it calls the backend unsigned.
+  AWS_ACCESS_KEY_ID: { schema: (value) => value },
+  AWS_SECRET_ACCESS_KEY: { schema: (value) => value },
+  AWS_SESSION_TOKEN: { schema: (value) => value },
 });

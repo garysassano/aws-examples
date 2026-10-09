@@ -86,7 +86,7 @@ describe("MyStack", () => {
     );
   });
 
-  it("passes the Redis REST endpoint to the backend and the backend URL to the frontend", () => {
+  it("passes the Redis REST URL and the token's parameter name, never the token", () => {
     const back = inApp("aws_lambda_function", "Backend").environment.variables;
     const front = inApp("aws_lambda_function", "Frontend").environment.variables;
     const backUrl = inApp("aws_lambda_function_url", "Backend");
@@ -94,18 +94,69 @@ describe("MyStack", () => {
     expect(back.UPSTASH_REDIS_REST_URL).toBe(
       `https://\${upstash_redis_database.ClickCounter.endpoint}`,
     );
-    expect(back.UPSTASH_REDIS_REST_TOKEN).toBe(
-      `\${upstash_redis_database.ClickCounter.rest_token}`,
+    expect(back.UPSTASH_REDIS_REST_TOKEN_PARAMETER).toBe(
+      `\${aws_ssm_parameter.UpstashRestToken.name}`,
     );
+    expect(JSON.stringify(back)).not.toContain("rest_token");
     expect(front.BACKEND_URL).toBe(`\${aws_lambda_function_url.${backUrl.key}.function_url}`);
   });
 
-  it("exposes both Lambdas over unauthenticated function URLs", () => {
+  it("keeps the REST token in a SecureString only the backend can read", () => {
+    const param = resource.aws_ssm_parameter?.UpstashRestToken;
+    expect(param.type).toBe("SecureString");
+    expect(param.value).toBe(`\${upstash_redis_database.ClickCounter.rest_token}`);
+
+    const grant = resource.aws_iam_role_policy?.BackendReadsRestToken;
+    expect(grant.role).toBe(`\${aws_iam_role.${inApp("aws_iam_role", "Backend").key}.name}`);
+    expect(JSON.parse(grant.policy).Statement).toEqual([
+      {
+        Effect: "Allow",
+        Action: "ssm:GetParameter",
+        Resource: `\${aws_ssm_parameter.UpstashRestToken.arn}`,
+      },
+    ]);
+  });
+
+  it("gives each function its own execution role", () => {
+    const roles = apps.map(({ id }) => inApp("aws_iam_role", id));
+    expect(roles.map((role) => role.name)).toEqual([
+      "hono-backend-execution-role",
+      "sveltekit-frontend-execution-role",
+    ]);
     for (const { id } of apps) {
-      expect(inApp("aws_lambda_function_url", id).authorization_type).toBe("NONE");
+      const role = inApp("aws_iam_role", id);
+      expect(inApp("aws_lambda_function", id).role).toBe(`\${aws_iam_role.${role.key}.arn}`);
     }
+  });
+
+  it("serves the frontend to anyone and the backend only to signed IAM requests", () => {
+    expect(inApp("aws_lambda_function_url", "Frontend").authorization_type).toBe("NONE");
+    expect(inApp("aws_lambda_function_url", "Backend").authorization_type).toBe("AWS_IAM");
     expect(Object.keys(JSON.parse(synthesized).output)).toEqual(
       expect.arrayContaining(["FrontendUrl", "BackendUrl"]),
     );
+  });
+
+  it("lets only the frontend's role invoke the backend, and only through its URL", () => {
+    const grant = inApp("aws_iam_role_policy", "Backend");
+    const backendFn = inApp("aws_lambda_function", "Backend");
+    const frontendRole = inApp("aws_iam_role", "Frontend");
+    const backendArn = `\${aws_lambda_function.${backendFn.key}.arn}`;
+
+    expect(grant.role).toBe(`\${aws_iam_role.${frontendRole.key}.name}`);
+    expect(JSON.parse(grant.policy).Statement).toEqual([
+      {
+        Effect: "Allow",
+        Action: "lambda:InvokeFunctionUrl",
+        Resource: backendArn,
+        Condition: { StringEquals: { "lambda:FunctionUrlAuthType": "AWS_IAM" } },
+      },
+      {
+        Effect: "Allow",
+        Action: "lambda:InvokeFunction",
+        Resource: backendArn,
+        Condition: { Bool: { "lambda:InvokedViaFunctionUrl": "true" } },
+      },
+    ]);
   });
 });

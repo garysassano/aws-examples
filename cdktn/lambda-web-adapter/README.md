@@ -4,6 +4,8 @@ CDKTN app that runs a SvelteKit frontend and a Hono backend as Lambdaliths on AW
 
 Each app is an ordinary Node web server in an arm64 container image. The [AWS Lambda Web Adapter](https://github.com/awslabs/aws-lambda-web-adapter) runs as a Lambda extension inside the image, turns each invocation into an HTTP request to the server, and each function is exposed over a Lambda function URL.
 
+The frontend's URL is public. The backend's URL uses `AWS_IAM` auth, so only the frontend can call it: the frontend signs each request with SigV4 using its execution role, which is the only role allowed `lambda:InvokeFunctionUrl` and `lambda:InvokeFunction` on the backend. Each function has its own execution role, and the Upstash REST token is kept in an SSM SecureString that only the backend's role can read.
+
 ## Prerequisites
 
 - **_AWS:_**
@@ -43,20 +45,22 @@ pnpm destroy
 
 ## Application Details
 
-Each function shares its name with the ECR repository that holds its image.
+Each function shares its name with the ECR repository that holds its image, and has its own `<name>-execution-role`.
 
-- `hono-backend`
+- `hono-backend` (function URL auth: `AWS_IAM`; a direct request without a signature gets `403 Forbidden`)
   - Environment variables:
-    - `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` - REST endpoint and token of the `click-counter` database, read by `Redis.fromEnv()` from `@upstash/redis`
+    - `UPSTASH_REDIS_REST_URL` - REST endpoint of the `click-counter` database
+    - `UPSTASH_REDIS_REST_TOKEN_PARAMETER` - Name of the SSM SecureString that holds the REST token, which the server reads once at startup; for local development, `UPSTASH_REDIS_REST_TOKEN` can hold the token itself
   - Endpoints:
     - `GET /` - Hello message
     - `GET /ping` - Returns `pong`; the Lambda Web Adapter's readiness check
     - `GET /api/clicks` - Returns the current click count
     - `POST /api/clicks` - Increments the click count and returns it
     - Both `/api/clicks` routes report the Redis call's duration in a `Server-Timing: redis;dur=…` header, which the frontend uses to time each hop
-- `sveltekit-frontend`
+- `sveltekit-frontend` (function URL auth: `NONE`)
   - Environment variables:
     - `BACKEND_URL` - Function URL of `hono-backend`, declared and validated in `src/env.ts`
+    - `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, and `AWS_SESSION_TOKEN` - The execution role's credentials, which Lambda sets and `src/server/backend.ts` signs backend requests with; without them, as in local development, it calls the backend unsigned
   - Endpoints:
     - `GET /` - Click counter, rendered on the server, with the time of each hop on the last request
     - The request path shows the Svelte, Hono, and Upstash Redis logos, copied unchanged from [sveltejs/branding](https://github.com/sveltejs/branding), [honojs/hono](https://github.com/honojs/hono), and [upstash/docs](https://github.com/upstash/docs) into `src/assets`
@@ -64,6 +68,8 @@ Each function shares its name with the ECR repository that holds its image.
     - `GET /ping` - Returns `pong`; the Lambda Web Adapter's readiness check
 
 Both servers listen on port 3000, which the images pass to the adapter as `AWS_LWA_PORT`.
+
+The SecureString uses the AWS managed key `aws/ssm`, which any principal in the account can decrypt with, so the `ssm:GetParameter` grant is what limits who reads the token; a customer managed KMS key would add a second, key-level grant. Terraform state still holds the token, as it holds every secret Terraform manages, so keep the state private.
 
 ## Architecture Diagram
 
