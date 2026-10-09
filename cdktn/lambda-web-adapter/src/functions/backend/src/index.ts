@@ -7,11 +7,8 @@ import { timing, wrapTime } from "hono/timing";
 /**
  * The Upstash REST token is a secret, so it lives in an SSM SecureString rather than
  * in the function's configuration; the name of the parameter is all Lambda passes.
- * UPSTASH_REDIS_REST_TOKEN, if set, is used as is, for local development.
  */
 async function restToken(): Promise<string> {
-  const local = process.env.UPSTASH_REDIS_REST_TOKEN;
-  if (local) return local;
   const name = process.env.UPSTASH_REDIS_REST_TOKEN_PARAMETER;
   if (!name) throw new Error("UPSTASH_REDIS_REST_TOKEN_PARAMETER is required");
   const { Parameter } = await new SSMClient().send(

@@ -4,7 +4,6 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
     "build": "esbuild src/index.ts --bundle --platform=node --format=esm --main-fields=module,main --target=node24 --minify --sourcemap --outfile=dist/index.mjs",
     "check": "tsc --noEmit"
   },
@@ -17,7 +16,6 @@
   "devDependencies": {
     "@types/node": "^24.19.1",
     "esbuild": "^0.28.2",
-    "tsx": "^4.23.15",
     "typescript": "^7.0.2"
   }
 }

@@ -19,22 +19,18 @@ export interface Hop {
 
 // The backend's function URL uses AWS_IAM auth, so requests must carry a SigV4
 // signature for the `lambda` service from a role allowed to invoke it.
-const signer =
-  AWS_ACCESS_KEY_ID && AWS_SECRET_ACCESS_KEY && AWS_REGION
-    ? new SignatureV4({
-        service: "lambda",
-        region: AWS_REGION,
-        sha256: Hash.bind(null, "sha256"),
-        credentials: {
-          accessKeyId: AWS_ACCESS_KEY_ID,
-          secretAccessKey: AWS_SECRET_ACCESS_KEY,
-          sessionToken: AWS_SESSION_TOKEN,
-        },
-      })
-    : undefined;
+const signer = new SignatureV4({
+  service: "lambda",
+  region: AWS_REGION,
+  sha256: Hash.bind(null, "sha256"),
+  credentials: {
+    accessKeyId: AWS_ACCESS_KEY_ID,
+    secretAccessKey: AWS_SECRET_ACCESS_KEY,
+    sessionToken: AWS_SESSION_TOKEN,
+  },
+});
 
 async function signedHeaders(url: URL, method: string): Promise<Record<string, string>> {
-  if (!signer) return {};
   const { headers } = await signer.sign(
     new HttpRequest({
       method,
