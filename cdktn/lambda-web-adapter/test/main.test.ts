@@ -117,6 +117,15 @@ describe("MyStack", () => {
     ]);
   });
 
+  it.each(apps)("logs $name to a log group that destroy removes", ({ id, name }) => {
+    const logGroup = inApp("aws_cloudwatch_log_group", id);
+    expect(logGroup.name).toBe(`/aws/lambda/${name}`);
+    expect(logGroup.retention_in_days).toBe(7);
+    expect(inApp("aws_lambda_function", id).logging_config.log_group).toBe(
+      `\${aws_cloudwatch_log_group.${logGroup.key}.name}`,
+    );
+  });
+
   it("gives each function its own execution role", () => {
     const roles = apps.map(({ id }) => inApp("aws_iam_role", id));
     expect(roles.map((role) => role.name)).toEqual([

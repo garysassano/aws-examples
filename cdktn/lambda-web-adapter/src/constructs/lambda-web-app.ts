@@ -1,4 +1,5 @@
 import { Construct } from "constructs";
+import { CloudwatchLogGroup } from "../../.gen/providers/aws/cloudwatch-log-group/index.js";
 import { EcrRepository } from "../../.gen/providers/aws/ecr-repository/index.js";
 import { IamRole } from "../../.gen/providers/aws/iam-role/index.js";
 import { IamRolePolicy } from "../../.gen/providers/aws/iam-role-policy/index.js";
@@ -75,6 +76,13 @@ export class LambdaWebApp extends Construct {
 
     const pushedImage = new RegistryImage(this, "PushedImage", { name: image.name, triggers });
 
+    // Declared rather than left for Lambda to create, so destroy removes it and its
+    // logs expire.
+    const logGroup = new CloudwatchLogGroup(this, "LogGroup", {
+      name: `/aws/lambda/${props.name}`,
+      retentionInDays: 7,
+    });
+
     this.function = new LambdaFunction(this, "Function", {
       functionName: props.name,
       role: this.role.arn,
@@ -84,7 +92,7 @@ export class LambdaWebApp extends Construct {
       architectures: ["arm64"],
       memorySize: 1769,
       timeout: 10,
-      loggingConfig: { logFormat: "JSON" },
+      loggingConfig: { logFormat: "JSON", logGroup: logGroup.name },
       environment: props.environment ? { variables: props.environment } : undefined,
     });
 

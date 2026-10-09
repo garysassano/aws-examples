@@ -3,15 +3,19 @@ import { onMount, untrack } from "svelte";
 import { prefersReducedMotion } from "svelte/motion";
 import { fly } from "svelte/transition";
 import { type SubmitFunction, enhance } from "$app/forms";
+import { refreshAll } from "$app/navigation";
 import hono from "../assets/hono.svg";
 import svelte from "../assets/svelte.svg";
 import upstashRedis from "../assets/upstash-redis.svg";
-import type { PageProps } from "./$types";
+import type { PageData, PageProps } from "./$types";
 
 let { data, form }: PageProps = $props();
 
-// After a click, the action's result; on page load, the load function's.
-const counter = $derived(form ?? data);
+type Counter = Pick<PageData, "clicks" | "hops">;
+
+// The load function's result, replaced by each click's result until `load` runs again,
+// as it does when the tab becomes visible.
+let counter: Counter = $derived(data);
 
 const ICONS: Record<string, string> = { SvelteKit: svelte, Hono: hono, Redis: upstashRedis };
 
@@ -60,7 +64,7 @@ onMount(() => {
   if (packets.length) removeLater(0);
 });
 
-const count: SubmitFunction = () => {
+const count: SubmitFunction<Counter> = () => {
   submitting = true;
   let shownAt = 0;
   const timer = setTimeout(() => {
@@ -69,11 +73,14 @@ const count: SubmitFunction = () => {
   }, SHOW_AFTER_MS);
 
   return async ({ result, update }) => {
-    // The action returns the new count, so skip rerunning `load`.
-    await update({ refreshAll: false });
-    if (result.type === "success") {
+    if (result.type === "success" && result.data) {
+      // The action returns the new count, so it is shown without rerunning `load`.
+      counter = result.data;
       bumps.push(nextBump++);
       sendPacket();
+    } else {
+      // Errors, failures, and redirects get SvelteKit's default handling.
+      await update();
     }
     clearTimeout(timer);
     if (busy) {
@@ -85,6 +92,13 @@ const count: SubmitFunction = () => {
   };
 };
 </script>
+
+<!-- Counts made in other tabs or by other people appear when this tab is shown again. -->
+<svelte:document
+  onvisibilitychange={() => {
+    if (document.visibilityState === "visible") refreshAll();
+  }}
+/>
 
 <main class="card">
   <header>
