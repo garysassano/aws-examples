@@ -27,46 +27,33 @@ let busy = $state(false);
 let bumps = $state<number[]>([]);
 let nextBump = 0;
 
-// The light along the arrows always finishes both hops. Results that arrive while
-// it runs are coalesced into one more pass, so a burst of clicks ends with a full
-// pass instead of restarting it midway. The first pass plays as the page loads.
-// A timer ends each pass rather than `animationend`, which fires before hydration
-// when the page is slow to load.
-const PULSE_MS = 520;
-const PULSE_GAP_MS = 380;
-// A pause after each pass, so it finishes before the next and back-to-back passes
-// read as separate.
-const PASS_REST_MS = 200;
+// Each successful click sends a packet of light along the arrows, one hop after
+// the other, lighting each head as it arrives. Packets run independently, so a burst
+// of clicks shows as a stream rather than restarting or queueing one animation.
+// A packet is removed on a timer, which also works when the first one finishes
+// before the page hydrates.
+const HOP_MS = 420;
+const HOP_GAP_MS = 320;
+const MAX_PACKETS = 4;
 
-let pass = $state(0);
-let passing = true;
-let owed = false;
+// The first packet plays as the page loads.
+let packets = $state<number[]>([0]);
+let nextPacket = 1;
 
-const passMs = () => PULSE_MS + PULSE_GAP_MS * (counter.hops.length - 1) + PASS_REST_MS;
+const packetMs = () => HOP_MS + HOP_GAP_MS * (counter.hops.length - 1) + 50;
 
-function pulse() {
-  if (prefersReducedMotion.current) return;
-  if (passing) {
-    owed = true;
-    return;
-  }
-  passing = true;
-  pass++;
-  setTimeout(passEnded, passMs());
+function removeLater(id: number) {
+  setTimeout(() => (packets = packets.filter((packet) => packet !== id)), packetMs());
 }
 
-function passEnded() {
-  passing = false;
-  if (owed) {
-    owed = false;
-    pulse();
-  }
+function sendPacket() {
+  if (prefersReducedMotion.current || packets.length >= MAX_PACKETS) return;
+  const id = nextPacket++;
+  packets.push(id);
+  removeLater(id);
 }
 
-onMount(() => {
-  const timer = setTimeout(passEnded, passMs());
-  return () => clearTimeout(timer);
-});
+onMount(() => removeLater(0));
 
 const count: SubmitFunction = () => {
   submitting = true;
@@ -81,7 +68,7 @@ const count: SubmitFunction = () => {
     await update({ refreshAll: false });
     if (result.type === "success") {
       bumps.push(nextBump++);
-      pulse();
+      sendPacket();
     }
     clearTimeout(timer);
     if (busy) {
@@ -139,21 +126,24 @@ const count: SubmitFunction = () => {
     <ol
       class="path"
       aria-label="Request path, with each hop's time on the last request"
-      style:--pulse="{PULSE_MS}ms"
-      style:--pulse-gap="{PULSE_GAP_MS}ms"
+      style:--hop="{HOP_MS}ms"
+      style:--hop-gap="{HOP_GAP_MS}ms"
     >
       {@render node("SvelteKit")}
       {#each counter.hops as hop, i (hop.to)}
         <li class="hop" style:--i={i}>
           <span class="ms">{hop.ms} ms</span>
-          <!-- Each pass replays the pulse, which travels each hop in turn and lights
-               the head as it arrives. -->
-          {#key pass}
-            <span class="line"><span class="pulse" aria-hidden="true"></span></span>
-            <svg class="head" width="7" height="10" viewBox="0 0 7 10" aria-hidden="true">
-              <path d="M1.25 1.25 5.75 5 1.25 8.75" />
-            </svg>
-          {/key}
+          <span class="line">
+            {#each packets as id (id)}<span class="packet" aria-hidden="true"></span>{/each}
+          </span>
+          <span class="head" aria-hidden="true">
+            <svg width="9" height="12" viewBox="0 0 9 12"><path d="M1.5 1.5 7 6 1.5 10.5" /></svg>
+            {#each packets as id (id)}
+              <svg class="flash" width="9" height="12" viewBox="0 0 9 12">
+                <path d="M1.5 1.5 7 6 1.5 10.5" />
+              </svg>
+            {/each}
+          </span>
         </li>
         {@render node(hop.to, hop.vendor)}
       {/each}
@@ -353,7 +343,10 @@ const count: SubmitFunction = () => {
     font-size: 0.6875rem;
   }
 
+  /* Above the arrows, so packets emerge from under their source pill. */
   .node {
+    position: relative;
+    z-index: 1;
     display: inline-flex;
     flex: none;
     align-items: center;
@@ -379,7 +372,7 @@ const count: SubmitFunction = () => {
     display: flex;
     flex: 1 1 0;
     align-items: center;
-    min-width: 30px;
+    min-width: 32px;
     margin: 0 4px;
     color: var(--muted);
   }
@@ -387,80 +380,82 @@ const count: SubmitFunction = () => {
   .line {
     position: relative;
     flex: 1;
-    height: 1.5px;
-    overflow: hidden;
-    border-radius: 1px;
-    background: linear-gradient(to right, transparent, currentColor 70%);
+    height: 2.5px;
+    border-radius: 2px;
+    background: linear-gradient(to right, transparent, currentColor 65%);
   }
 
   .head {
+    position: relative;
     flex: none;
-    margin-left: -1px;
+    display: grid;
+    margin-left: -2px;
+  }
+
+  .head > svg {
+    grid-area: 1 / 1;
+    display: block;
   }
 
   .head path {
     fill: none;
     stroke: currentColor;
-    stroke-width: 1.5;
+    stroke-width: 2;
     stroke-linecap: round;
     stroke-linejoin: round;
   }
 
-  /* A short accent highlight sweeps from source to target, one hop after another,
-     and the head flashes as it arrives. Both share one duration and delay, so their
-     keyframes line up: at 70% the highlight, 45% of the line wide, is centered on the
-     line's end (0.55 x 141% + 0.225 = 1). */
-  .pulse {
+  /* A packet: a glowing capsule that crosses each hop in turn. */
+  .packet {
     position: absolute;
-    inset: 0;
-    background: linear-gradient(to right, transparent, var(--accent), transparent) no-repeat;
-    background-size: 45% 100%;
-    background-position: -80% 0;
-    animation: travel var(--pulse) calc(var(--i) * var(--pulse-gap)) both;
+    top: 50%;
+    left: -14px;
+    width: 14px;
+    height: 4px;
+    margin-top: -2px;
+    border-radius: 2px;
+    background: linear-gradient(to right, transparent, var(--accent));
+    box-shadow: 0 0 8px 1px color-mix(in srgb, var(--accent) 55%, transparent);
+    opacity: 0;
+    animation: travel var(--hop) ease-in-out calc(var(--i) * var(--hop-gap)) both;
   }
 
   @keyframes travel {
-    from {
-      background-position: -80% 0;
-      animation-timing-function: ease-in;
+    15% {
+      opacity: 1;
     }
-    70% {
-      background-position: 141% 0;
-      animation-timing-function: linear;
+    85% {
+      left: calc(100% - 12px);
+      opacity: 1;
     }
     to {
-      background-position: 180% 0;
+      left: calc(100% - 8px);
+      opacity: 0;
     }
   }
 
-  .head path {
-    animation: arrive var(--pulse) calc(var(--i) * var(--pulse-gap)) both;
+  /* A lit copy of the head that flashes as the packet arrives. Both share one
+     duration and delay, so the flash peaks as the packet reaches the tip. */
+  .head .flash {
+    opacity: 0;
+    animation: arrive var(--hop) calc(var(--i) * var(--hop-gap)) both;
   }
 
-  .head {
-    animation: nudge var(--pulse) calc(var(--i) * var(--pulse-gap)) both;
+  .head .flash path {
+    stroke: var(--accent);
   }
 
   @keyframes arrive {
-    55% {
-      stroke: currentColor;
-    }
-    72% {
-      stroke: var(--accent);
-    }
-    to {
-      stroke: currentColor;
-    }
-  }
-
-  @keyframes nudge {
-    55% {
+    70% {
+      opacity: 0;
       translate: 0;
     }
-    72% {
-      translate: 1.5px 0;
+    88% {
+      opacity: 1;
+      translate: 2px 0;
     }
     to {
+      opacity: 0;
       translate: 0;
     }
   }
@@ -508,13 +503,9 @@ const count: SubmitFunction = () => {
       animation-duration: 2s;
     }
 
-    .pulse {
+    .packet,
+    .head .flash {
       display: none;
-    }
-
-    .head,
-    .head path {
-      animation: none;
     }
 
     .bump {
