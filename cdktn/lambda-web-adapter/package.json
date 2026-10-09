@@ -7,7 +7,7 @@
   "scripts": {
     "cdktn": "cdktn",
     "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm synth && pnpm check:functions",
-    "check:functions": "pnpm -C src/functions/back install --frozen-lockfile && pnpm -C src/functions/back check && pnpm -C src/functions/front install --frozen-lockfile && pnpm -C src/functions/front check",
+    "check:functions": "pnpm -C src/functions/backend install --frozen-lockfile && pnpm -C src/functions/backend check && pnpm -C src/functions/frontend install --frozen-lockfile && pnpm -C src/functions/frontend check",
     "deploy": "cdktn deploy --auto-approve",
     "destroy": "cdktn destroy --auto-approve",
     "diff": "cdktn diff",

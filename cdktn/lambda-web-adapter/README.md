@@ -25,7 +25,7 @@ pnpm gen
 
 `pnpm gen` generates the AWS, Docker, and Upstash provider constructs into `.gen/`. Re-run it whenever a provider constraint in `cdktf.json` changes.
 
-The Hono backend in `src/functions/back` and the SvelteKit frontend in `src/functions/front` are standalone pnpm projects with their own lockfiles, because each one is the build context of its Docker image. Biome lints them with the rest of the app, and `pnpm check` installs and typechecks them.
+The Hono backend in `src/functions/backend` and the SvelteKit frontend in `src/functions/frontend` are standalone pnpm projects with their own lockfiles, because each one is the build context of its Docker image. Biome lints them with the rest of the app, and `pnpm check` installs and typechecks them.
 
 ## Deployment
 
@@ -43,17 +43,19 @@ pnpm destroy
 
 ## Application Details
 
-- `back-lambda` (Hono)
+Each function shares its name with the ECR repository that holds its image.
+
+- `hono-backend`
   - Environment variables:
-    - `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` - REST endpoint and token of the Redis database, read by `Redis.fromEnv()` from `@upstash/redis`
+    - `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` - REST endpoint and token of the `click-counter` database, read by `Redis.fromEnv()` from `@upstash/redis`
   - Endpoints:
     - `GET /` - Hello message
     - `GET /ping` - Returns `pong`; the Lambda Web Adapter's readiness check
     - `GET /api/clicks` - Returns the current click count
     - `POST /api/clicks` - Increments the click count and returns it
-- `front-lambda` (SvelteKit)
+- `sveltekit-frontend`
   - Environment variables:
-    - `BACKEND_URL` - Function URL of `back-lambda`, declared and validated in `src/env.ts`
+    - `BACKEND_URL` - Function URL of `hono-backend`, declared and validated in `src/env.ts`
   - Endpoints:
     - `GET /` - Click counter, rendered on the server
     - `POST /?/increment` - Form action that increments the counter through the backend

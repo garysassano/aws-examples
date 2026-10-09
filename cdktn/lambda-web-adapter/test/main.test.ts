@@ -5,8 +5,8 @@ import { beforeAll, describe, expect, it } from "vitest";
 type Resources = Record<string, Record<string, any>>;
 
 const apps = [
-  { id: "Back", dir: "back" },
-  { id: "Front", dir: "front" },
+  { id: "Backend", dir: "backend", name: "hono-backend" },
+  { id: "Frontend", dir: "frontend", name: "sveltekit-frontend" },
 ] as const;
 
 describe("MyStack", () => {
@@ -43,7 +43,7 @@ describe("MyStack", () => {
   it("creates a TLS Redis database in the same region as the Lambdas", () => {
     expect(
       Testing.toHaveResourceWithProperties(synthesized, "upstash_redis_database", {
-        database_name: "redis-database",
+        database_name: "click-counter",
         region: "global",
         primary_region: "eu-central-1",
         tls: true,
@@ -51,15 +51,15 @@ describe("MyStack", () => {
     ).toBe(true);
   });
 
-  it.each(apps)("lets destroy remove the $dir image repository", ({ id, dir }) => {
+  it.each(apps)("lets destroy remove the $name image repository", ({ id, name }) => {
     const repo = inApp("aws_ecr_repository", id);
 
-    expect(repo.name).toBe(`${dir}-repo`);
+    expect(repo.name).toBe(name);
     // ECR refuses to delete a non-empty repository, and this stack always pushes an image.
     expect(repo.force_delete).toBe(true);
   });
 
-  it.each(apps)("builds the $dir image for arm64 and rebuilds it on change", ({ id, dir }) => {
+  it.each(apps)("builds the $name image for arm64 and rebuilds it on change", ({ id, dir }) => {
     const image = inApp("docker_image", id);
     const push = inApp("docker_registry_image", id);
 
@@ -73,11 +73,11 @@ describe("MyStack", () => {
     expect(push.triggers.filesha256).toBe(image.triggers.filesha256);
   });
 
-  it.each(apps)("deploys the $dir Lambda from its pushed image digest", ({ id, dir }) => {
+  it.each(apps)("deploys $name from its pushed image digest", ({ id, name }) => {
     const fn = inApp("aws_lambda_function", id);
     const push = inApp("docker_registry_image", id);
 
-    expect(fn.function_name).toBe(`${dir}-lambda`);
+    expect(fn.function_name).toBe(name);
     expect(fn.package_type).toBe("Image");
     expect(fn.architectures).toEqual(["arm64"]);
     expect(fn.memory_size).toBe(1769);
@@ -87,15 +87,15 @@ describe("MyStack", () => {
   });
 
   it("passes the Redis REST endpoint to the backend and the backend URL to the frontend", () => {
-    const back = inApp("aws_lambda_function", "Back").environment.variables;
-    const front = inApp("aws_lambda_function", "Front").environment.variables;
-    const backUrl = inApp("aws_lambda_function_url", "Back");
+    const back = inApp("aws_lambda_function", "Backend").environment.variables;
+    const front = inApp("aws_lambda_function", "Frontend").environment.variables;
+    const backUrl = inApp("aws_lambda_function_url", "Backend");
 
     expect(back.UPSTASH_REDIS_REST_URL).toBe(
-      `https://\${upstash_redis_database.RedisDatabase.endpoint}`,
+      `https://\${upstash_redis_database.ClickCounter.endpoint}`,
     );
     expect(back.UPSTASH_REDIS_REST_TOKEN).toBe(
-      `\${upstash_redis_database.RedisDatabase.rest_token}`,
+      `\${upstash_redis_database.ClickCounter.rest_token}`,
     );
     expect(front.BACKEND_URL).toBe(`\${aws_lambda_function_url.${backUrl.key}.function_url}`);
   });
@@ -105,7 +105,7 @@ describe("MyStack", () => {
       expect(inApp("aws_lambda_function_url", id).authorization_type).toBe("NONE");
     }
     expect(Object.keys(JSON.parse(synthesized).output)).toEqual(
-      expect.arrayContaining(["FrontLambdaURL", "BackLambdaURL"]),
+      expect.arrayContaining(["FrontendUrl", "BackendUrl"]),
     );
   });
 });

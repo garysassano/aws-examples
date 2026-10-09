@@ -28,27 +28,27 @@ export class MyStack extends TerraformStack {
     });
 
     // Lets the Docker provider push to this account's ECR registry.
-    const token = new DataAwsEcrAuthorizationToken(this, "EcrToken");
+    const ecrToken = new DataAwsEcrAuthorizationToken(this, "EcrToken");
     new DockerProvider(this, "DockerProvider", {
       registryAuth: [
         {
-          address: token.proxyEndpoint,
-          username: token.userName,
-          password: token.password,
+          address: ecrToken.proxyEndpoint,
+          username: ecrToken.userName,
+          password: ecrToken.password,
         },
       ],
     });
 
     // Upstash Redis with its primary in the same region as the functions.
-    const redisDatabase = new RedisDatabase(this, "RedisDatabase", {
-      databaseName: "redis-database",
+    const clickCounter = new RedisDatabase(this, "ClickCounter", {
+      databaseName: "click-counter",
       region: "global",
       primaryRegion: region,
       tls: true,
     });
 
-    const lambdaRole = new IamRole(this, "LambdaRole", {
-      name: "lambda-role",
+    const executionRole = new IamRole(this, "ExecutionRole", {
+      name: "lambda-web-adapter-execution-role",
       assumeRolePolicy: JSON.stringify({
         Version: "2012-10-17",
         Statement: [
@@ -60,33 +60,33 @@ export class MyStack extends TerraformStack {
         ],
       }),
     });
-    new IamRolePolicyAttachment(this, "LambdaRolePolicyAttachment", {
-      role: lambdaRole.name,
+    new IamRolePolicyAttachment(this, "ExecutionRoleBasicPolicy", {
+      role: executionRole.name,
       policyArn: "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
     });
 
     // Hono API that keeps the click count in Redis.
-    const back = new LambdaWebApp(this, "Back", {
-      name: "back",
-      buildContext: join(functionsDir, "back"),
-      roleArn: lambdaRole.arn,
+    const backend = new LambdaWebApp(this, "Backend", {
+      name: "hono-backend",
+      buildContext: join(functionsDir, "backend"),
+      roleArn: executionRole.arn,
       environment: {
-        UPSTASH_REDIS_REST_URL: `https://${redisDatabase.endpoint}`,
-        UPSTASH_REDIS_REST_TOKEN: redisDatabase.restToken,
+        UPSTASH_REDIS_REST_URL: `https://${clickCounter.endpoint}`,
+        UPSTASH_REDIS_REST_TOKEN: clickCounter.restToken,
       },
     });
 
     // SvelteKit app that renders the count and calls the API from the server.
-    const front = new LambdaWebApp(this, "Front", {
-      name: "front",
-      buildContext: join(functionsDir, "front"),
-      roleArn: lambdaRole.arn,
+    const frontend = new LambdaWebApp(this, "Frontend", {
+      name: "sveltekit-frontend",
+      buildContext: join(functionsDir, "frontend"),
+      roleArn: executionRole.arn,
       environment: {
-        BACKEND_URL: back.functionUrl.functionUrl,
+        BACKEND_URL: backend.functionUrl.functionUrl,
       },
     });
 
-    new TerraformOutput(this, "FrontLambdaURL", { value: front.functionUrl.functionUrl });
-    new TerraformOutput(this, "BackLambdaURL", { value: back.functionUrl.functionUrl });
+    new TerraformOutput(this, "FrontendUrl", { value: frontend.functionUrl.functionUrl });
+    new TerraformOutput(this, "BackendUrl", { value: backend.functionUrl.functionUrl });
   }
 }

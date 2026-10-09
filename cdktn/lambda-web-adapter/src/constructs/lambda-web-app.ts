@@ -7,7 +7,7 @@ import { RegistryImage } from "../../.gen/providers/docker/registry-image/index.
 import { hashBuildContext } from "../utils/hash-context.js";
 
 export interface LambdaWebAppProps {
-  /** Prefix for the ECR repository (`<name>-repo`) and the function (`<name>-lambda`). */
+  /** Name of both the ECR repository and the function. */
   readonly name: string;
   /** Directory holding the Dockerfile and its build context. */
   readonly buildContext: string;
@@ -27,8 +27,8 @@ export class LambdaWebApp extends Construct {
   constructor(scope: Construct, id: string, props: LambdaWebAppProps) {
     super(scope, id);
 
-    const repo = new EcrRepository(this, "Repo", {
-      name: `${props.name}-repo`,
+    const repository = new EcrRepository(this, "Repository", {
+      name: props.name,
       // ECR refuses to delete a repository that still holds images.
       forceDelete: true,
     });
@@ -37,7 +37,7 @@ export class LambdaWebApp extends Construct {
     const triggers = { filesha256: hashBuildContext(props.buildContext) };
 
     const image = new Image(this, "Image", {
-      name: repo.repositoryUrl,
+      name: repository.repositoryUrl,
       buildAttribute: {
         context: props.buildContext,
         platform: "linux/arm64",
@@ -48,14 +48,14 @@ export class LambdaWebApp extends Construct {
       triggers,
     });
 
-    const pushed = new RegistryImage(this, "Push", { name: image.name, triggers });
+    const pushedImage = new RegistryImage(this, "PushedImage", { name: image.name, triggers });
 
     this.function = new LambdaFunction(this, "Function", {
-      functionName: `${props.name}-lambda`,
+      functionName: props.name,
       role: props.roleArn,
       packageType: "Image",
       // Pinning the digest makes every push update the function.
-      imageUri: `${pushed.name}@${pushed.sha256Digest}`,
+      imageUri: `${pushedImage.name}@${pushedImage.sha256Digest}`,
       architectures: ["arm64"],
       memorySize: 1769,
       timeout: 10,
@@ -63,7 +63,7 @@ export class LambdaWebApp extends Construct {
       environment: props.environment ? { variables: props.environment } : undefined,
     });
 
-    this.functionUrl = new LambdaFunctionUrl(this, "Url", {
+    this.functionUrl = new LambdaFunctionUrl(this, "FunctionUrl", {
       functionName: this.function.functionName,
       authorizationType: "NONE",
     });
