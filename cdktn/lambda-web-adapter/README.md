@@ -54,20 +54,20 @@ Each function shares its name with the ECR repository that holds its image, and 
   - Endpoints:
     - `GET /` - Hello message
     - `GET /ping` - Returns `pong`; the Lambda Web Adapter's readiness check
-    - `GET /api/clicks` - Returns the current click count
-    - `POST /api/clicks` - Increments the click count and returns it
-    - Both `/api/clicks` routes report the Redis call's duration in a `Server-Timing: redis;dur=…` header, which the frontend uses to time each hop
+    - `GET /api/clicks` - Returns the current click count, with the Redis call's duration in a `Server-Timing: redis;dur=…` header
+    - `POST /api/clicks` - Increments the click count and returns it, with the same header
 - `sveltekit-frontend` (function URL auth: `NONE`)
   - Environment variables:
     - `BACKEND_URL` - Function URL of `hono-backend`, declared and validated in `src/env.ts`
     - `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, and `AWS_SESSION_TOKEN` - The execution role's credentials, which Lambda sets and `src/server/backend.ts` signs backend requests with; without them, as in local development, it calls the backend unsigned
   - Endpoints:
-    - `GET /` - Click counter, rendered on the server, with the time of each hop on the last request; the page reloads its data when its tab is shown again or the browser window regains focus, so counts made elsewhere appear
-    - The request path shows the Svelte, Hono, and Upstash Redis logos, copied unchanged from [sveltejs/branding](https://github.com/sveltejs/branding), [honojs/hono](https://github.com/honojs/hono), and [upstash/docs](https://github.com/upstash/docs) into `src/assets`
+    - `GET /` - Click counter, rendered on the server
     - `POST /` - Form action that increments the counter through the backend; it is the page's default action, because function URLs reject the `/` in a named action's `?/name` query string
     - `GET /ping` - Returns `pong`; the Lambda Web Adapter's readiness check
 
 Both servers listen on port 3000, which the images pass to the adapter as `AWS_LWA_PORT`.
+
+The page draws the request path from SvelteKit through Hono to Upstash Redis with each hop's time on the last request, split using the backend's `Server-Timing` header. It reloads its data when its tab is shown again or the browser regains focus, so counts made elsewhere appear. The Svelte, Hono, and Upstash Redis logos are copied unchanged from [sveltejs/branding](https://github.com/sveltejs/branding), [honojs/hono](https://github.com/honojs/hono), and [upstash/docs](https://github.com/upstash/docs) into `src/assets`.
 
 The SecureString uses the AWS managed key `aws/ssm`, which any principal in the account can decrypt with, so the `ssm:GetParameter` grant is what limits who reads the token; a customer managed KMS key would add a second, key-level grant. Terraform state still holds the token, as it holds every secret Terraform manages, so keep the state private.
 
