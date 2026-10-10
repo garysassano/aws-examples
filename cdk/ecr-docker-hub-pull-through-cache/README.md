@@ -63,6 +63,8 @@ The Docker Hub secret is not managed by the app, so delete it separately:
 aws secretsmanager delete-secret --secret-id ecr-pullthroughcache/docker-hub --force-delete-without-recovery
 ```
 
+ECS Express Mode creates the `default` ECS cluster if it does not already exist, and it is kept after the stack is deleted.
+
 ## Architecture Diagram - High Level
 
 ![Architecture Diagram - High Level](./src/assets/arch-hld.svg)
@@ -92,5 +94,3 @@ aws secretsmanager delete-secret --secret-id ecr-pullthroughcache/docker-hub --f
 - **Grants instead of a registry policy.** Each service role gets `ecr:BatchImportUpstreamImage` on the cache repository directly. ECR also accepts the permission through the registry permissions policy, but that is a single document per registry, and writing it from this app would replace any policy already there.
 - **A repository created in advance.** ECR creates a cache repository on the first pull by itself. Creating it in the stack instead lets the services reference it, gives it a lifecycle rule that expires superseded images after 7 days, and lets `cdk destroy` remove it with its images. Its tags stay mutable, since ECR overwrites `stable-alpine` when the upstream image changes.
 - **A secret created by hand.** Creating the secret in the stack would put the token in the CloudFormation template, where anyone who can read the stack can see it. The stack references the existing secret by name instead.
-- **Platforms.** The Fargate service runs on ARM64 (AWS Graviton). App Runner offers no choice of architecture, and ECS Express Mode defaults to x86-64. All three pull the same multi-architecture tag.
-- **Express Mode's cluster.** ECS Express Mode runs its service in the `default` ECS cluster, creating it if it does not exist yet, and keeps the cluster after the stack is deleted.
