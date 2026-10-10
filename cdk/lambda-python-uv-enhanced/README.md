@@ -10,7 +10,7 @@ Measured in `eu-central-1` on the `python3.15` [preview runtime](https://aws.ama
 
 ### Lambda
 
-| | `UvPythonFunction` | Official `PythonFunction` |
+| | `UvPythonFunction` | `PythonFunction` |
 | --- | --- | --- |
 | Init, median of 30 forced cold starts | 347 ms | 587 ms |
 | Init, p90 of 30 forced cold starts | 487 ms | 727 ms |
@@ -38,7 +38,7 @@ The example leaves [SnapStart](https://docs.aws.amazon.com/lambda/latest/dg/snap
 
 SnapStart runs the init phase once, when a version is published, and restores later cold starts from a snapshot of it. The official construct compiles its modules during that one init, so its missing bytecode no longer slows its cold starts, and both functions restore in the same time.
 
-| | `UvPythonFunction` | Official `PythonFunction` |
+| | `UvPythonFunction` | `PythonFunction` |
 | --- | --- | --- |
 | Restore, median | 359 ms | 359 ms |
 | Restore, p90 | 400 ms | 400 ms |
@@ -58,7 +58,7 @@ For a function this small, SnapStart does not beat a package that loads fast on 
 
 ### Package
 
-| | `UvPythonFunction` | Official `PythonFunction` |
+| | `UvPythonFunction` | `PythonFunction` |
 | --- | --- | --- |
 | Deployed, zipped | 6.7 KB code + 5.8 MB layer | 3.6 MB code |
 | Unzipped | 48 KB code + 18 MB layer, bytecode included | 12 MB |
@@ -68,7 +68,7 @@ For a function this small, SnapStart does not beat a package that loads fast on 
 
 The functions target arm64, and the build host is x86_64, so Docker runs the official construct's arm64 bundling image under QEMU emulation. The last column builds the same function for x86_64, the host's own architecture, to show how much of the time emulation costs. `UvPythonFunction` installs wheels for either target on the host, so its times do not change.
 
-| | `UvPythonFunction` | Official `PythonFunction`, arm64 | Official `PythonFunction`, x86_64 |
+| | `UvPythonFunction` | `PythonFunction`, arm64 | `PythonFunction`, x86_64 |
 | --- | --- | --- | --- |
 | Needs | uv, with Docker only as a fallback | Docker | Docker |
 | Bundling image | None | 988 MB, built from the Lambda `python3.15` base image | 972 MB |
