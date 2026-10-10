@@ -1,7 +1,7 @@
 [project]
 name = "app"
 version = "0.1.0"
-requires-python = ">=3.14"
+requires-python = ">=3.15"
 dependencies = [
     "aws-lambda-powertools[parser]>=3.35.0",
 ]
@@ -23,4 +23,7 @@ module-root = ""
 required-version = ">=0.12.22"
 # Dependency cooldown: like pnpm's minimumReleaseAge, skip releases younger than 3 days.
 exclude-newer = "3 days"
+# Temporary exemption: the first pydantic with Python 3.15 wheels (pydantic 2.14.0, pydantic-core
+# 2.50.0) came out on 2026-10-08. Remove this once the 3-day cooldown passes on 2026-10-11.
+exclude-newer-package = { pydantic = "2026-10-09T00:00:00Z", pydantic-core = "2026-10-09T00:00:00Z" }
 
