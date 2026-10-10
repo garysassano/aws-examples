@@ -48,10 +48,10 @@ SnapStart runs the init phase once, when a version is published, and restores la
 
 ```mermaid
 xychart-beta
-  title "Cold start, median (ms)"
-  x-axis ["UvPythonFunction init", "PythonFunction init", "UvPythonFunction SnapStart", "PythonFunction SnapStart"]
-  y-axis "ms" 0 --> 650
-  bar [347, 587, 359, 359]
+  title "Init without SnapStart vs restore with it, median (ms)"
+  x-axis ["UvPythonFunction init", "UvPythonFunction restore", "PythonFunction init", "PythonFunction restore"]
+  y-axis "Duration (ms)" 0 --> 650
+  bar [347, 359, 587, 359]
 ```
 
 For a function this small, SnapStart does not beat a package that loads fast on its own: a restore of either function takes about as long as `UvPythonFunction`'s plain init, and the first invocation after a restore is slower than one after a plain init. Lambda bills only part of a restore (56 ms of 359 ms here), but SnapStart adds a charge for caching each published version, for at least three hours, and one for each restore. It pays off when init is expensive, as with the official construct's 587 ms, or for functions that load much more code or data.
