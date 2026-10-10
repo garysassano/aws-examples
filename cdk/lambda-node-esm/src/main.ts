@@ -9,6 +9,6 @@ const devEnv = {
 
 const app = new App();
 
-new MyStack(app, "cdk-lambda-esm-bundle-dev", { env: devEnv });
+new MyStack(app, "cdk-lambda-node-esm-dev", { env: devEnv });
 
 app.synth();
