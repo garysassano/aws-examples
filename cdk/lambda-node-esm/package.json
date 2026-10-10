@@ -1,5 +1,5 @@
 {
-  "name": "cdk-lambda-esm-bundle",
+  "name": "cdk-lambda-node-esm",
   "private": true,
   "version": "0.0.0",
   "license": "MIT",
