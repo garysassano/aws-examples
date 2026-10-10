@@ -1,5 +1,5 @@
 {
-  "name": "cdk-ecr-dockerhub-pull-through-cache",
+  "name": "cdk-ecr-docker-hub-pull-through-cache",
   "private": true,
   "version": "0.0.0",
   "license": "MIT",

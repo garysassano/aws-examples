@@ -2,7 +2,7 @@ import { Cpu, HealthCheck, Memory, Service, Source } from "@aws-cdk/aws-apprunne
 import { Role, ServicePrincipal } from "aws-cdk-lib/aws-iam";
 import { CfnOutput, Stack, type StackProps } from "aws-cdk-lib/core";
 import type { Construct } from "constructs";
-import { type DockerHubCacheStack, NGINX_IMAGE_TAG } from "./dockerhub-cache-stack.js";
+import { type DockerHubCacheStack, NGINX_IMAGE_TAG } from "./docker-hub-cache-stack.js";
 
 export interface AppRunnerStackProps extends StackProps {
   readonly cache: DockerHubCacheStack;
