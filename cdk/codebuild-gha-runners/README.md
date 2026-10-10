@@ -14,7 +14,13 @@ CDK app that, given an existing GitHub repository, attaches a repository webhook
   - Must have completed the [CDK bootstrapping](https://docs.aws.amazon.com/cdk/v2/guide/bootstrapping.html) for the target AWS environment.
 - **_GitHub:_**
   - Must have created a GitHub repository in your personal account.
-  - Must have set the `GITHUB_TOKEN`, `GITHUB_OWNER` and `GITHUB_REPO` variables in your local environment.
+  - Must have stored a GitHub token in AWS Secrets Manager as a secret named `github-token`, so the token never appears in the CloudFormation template:
+
+    ```sh
+    aws secretsmanager create-secret --name github-token --secret-string "$GITHUB_TOKEN"
+    ```
+
+  - Must have set the `GITHUB_OWNER` and `GITHUB_REPO` variables in your local environment.
 - **_mise:_**
   - [Install mise](https://mise.jdx.dev/installing-mise.html), which manages the required toolchain.
 
@@ -54,6 +60,12 @@ pnpm run deploy
 
 ```sh
 pnpm destroy
+```
+
+The `github-token` secret is not managed by the app, so delete it separately:
+
+```sh
+aws secretsmanager delete-secret --secret-id github-token --force-delete-without-recovery
 ```
 
 ## Architecture Diagram

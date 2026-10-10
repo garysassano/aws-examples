@@ -217,37 +217,6 @@ importers:
         specifier: 'catalog:'
         version: 4.6.5
 
-  cdk/apprunner-dockerhub-cache:
-    dependencies:
-      '@aws-cdk/aws-apprunner-alpha':
-        specifier: 'catalog:'
-        version: 2.272.0-alpha.0(aws-cdk-lib@2.272.0(constructs@10.7.2))(constructs@10.7.2)
-      aws-cdk-lib:
-        specifier: 'catalog:'
-        version: 2.272.0(constructs@10.7.2)
-      constructs:
-        specifier: 'catalog:'
-        version: 10.7.2
-    devDependencies:
-      '@biomejs/biome':
-        specifier: 'catalog:'
-        version: 2.5.14
-      '@types/node':
-        specifier: 'catalog:'
-        version: 26.6.2
-      aws-cdk:
-        specifier: 'catalog:'
-        version: 2.1144.0
-      tsx:
-        specifier: 'catalog:'
-        version: 4.23.15
-      typescript:
-        specifier: 'catalog:'
-        version: 7.0.2
-      zod:
-        specifier: 'catalog:'
-        version: 4.6.5
-
   cdk/apprunner-otel-collector:
     dependencies:
       '@aws-cdk/aws-apprunner-alpha':
@@ -278,9 +247,6 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
-      zod:
-        specifier: 'catalog:'
-        version: 4.6.5
 
   cdk/appsync-events:
     dependencies:
@@ -408,8 +374,11 @@ importers:
         specifier: 'catalog:'
         version: 4.6.5
 
-  cdk/ecs-dockerhub-cache:
+  cdk/ecr-dockerhub-pull-through-cache:
     dependencies:
+      '@aws-cdk/aws-apprunner-alpha':
+        specifier: 'catalog:'
+        version: 2.272.0-alpha.0(aws-cdk-lib@2.272.0(constructs@10.7.2))(constructs@10.7.2)
       aws-cdk-lib:
         specifier: 'catalog:'
         version: 2.272.0(constructs@10.7.2)
@@ -432,9 +401,6 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
-      zod:
-        specifier: 'catalog:'
-        version: 4.6.5
 
   cdk/ecs-managed-instances:
     dependencies:
@@ -491,9 +457,6 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
-      zod:
-        specifier: 'catalog:'
-        version: 4.6.5
 
   cdk/eventbridge-webhooks-momento:
     dependencies:

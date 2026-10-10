@@ -1,5 +1,5 @@
 {
-  "name": "cdk-apprunner-dockerhub-cache",
+  "name": "cdk-ecr-dockerhub-pull-through-cache",
   "private": true,
   "version": "0.0.0",
   "license": "MIT",
@@ -26,7 +26,6 @@
     "@types/node": "catalog:",
     "aws-cdk": "catalog:",
     "tsx": "catalog:",
-    "typescript": "catalog:",
-    "zod": "catalog:"
+    "typescript": "catalog:"
   }
 }

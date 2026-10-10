@@ -168,8 +168,42 @@ async fn function_handler(
     })
 }
 
-#[tokio::main]
-async fn main() -> Result<(), LambdaError> {
+/// Reads the OTLP headers, which usually hold the vendor's API key, from Secrets Manager.
+async fn read_otlp_headers(secret_id: &str) -> Result<String, LambdaError> {
+    let aws_config = aws_config::load_defaults(BehaviorVersion::latest()).await;
+    let secret = aws_sdk_secretsmanager::Client::new(&aws_config)
+        .get_secret_value()
+        .secret_id(secret_id)
+        .send()
+        .await?;
+    secret
+        .secret_string()
+        .map(str::to_owned)
+        .ok_or_else(|| format!("Secret {secret_id} has no string value").into())
+}
+
+fn main() -> Result<(), LambdaError> {
+    // Keeping the headers in a secret keeps the API key out of the template and the
+    // function configuration. Both the forwarder's own exporter and the core library read
+    // OTEL_EXPORTER_OTLP_HEADERS from the environment, so it is set here, while no other
+    // thread exists yet: the single-threaded runtime, and with it any blocking threads it
+    // started, is dropped before the multi-threaded one is built.
+    if let Ok(secret_id) = env::var("OTEL_EXPORTER_OTLP_HEADERS_SECRET") {
+        let headers = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()?
+            .block_on(read_otlp_headers(&secret_id))?;
+        // SAFETY: the process is still single-threaded, as explained above.
+        unsafe { env::set_var("OTEL_EXPORTER_OTLP_HEADERS", headers) };
+    }
+
+    tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .build()?
+        .block_on(run())
+}
+
+async fn run() -> Result<(), LambdaError> {
     // Set to the endpoint's signing name, `xray`, for the CloudWatch OTLP endpoint, which
     // takes SigV4 instead of static headers.
     let sigv4_service = env::var("OTLP_SIGV4_SERVICE").ok();
