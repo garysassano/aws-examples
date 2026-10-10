@@ -4,7 +4,7 @@ CDKTN app that runs a SvelteKit frontend and a Hono backend as Lambdaliths on AW
 
 Each app is an ordinary Node web server in an arm64 container image. The [AWS Lambda Web Adapter](https://github.com/awslabs/aws-lambda-web-adapter) runs as a Lambda extension inside the image, turns each invocation into an HTTP request to the server, and each function is exposed over a Lambda function URL.
 
-The frontend's URL is public. The backend's URL uses `AWS_IAM` auth, so only the frontend can call it: the frontend signs each request with SigV4 using its execution role, which is the only role allowed `lambda:InvokeFunctionUrl` and `lambda:InvokeFunction` on the backend. Each function has its own execution role, and the Upstash REST token is kept in an SSM SecureString that only the backend's role can read.
+The frontend's URL is public. The backend's URL uses `AWS_IAM` auth, so only the frontend can call it: the frontend signs each request with SigV4 using its execution role, and that role is the only one granted `lambda:InvokeFunctionUrl` and `lambda:InvokeFunction` on the backend function. Each function has its own execution role, and the Upstash REST token is kept in an SSM SecureString that only the backend's role can read.
 
 ## Prerequisites
 
