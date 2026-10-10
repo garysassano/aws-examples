@@ -20,13 +20,23 @@ Measured in `eu-central-1` on the `python3.15` [preview runtime](https://aws.ama
 | Bytecode on Lambda | Precompiled, hash-based, used as shipped | None shipped, so each module is compiled in memory on every cold start |
 | Wheels | `aarch64` | `aarch64` |
 
-Once a function is warm, both run the same code at the same speed; the difference is all in loading it.
+```mermaid
+xychart-beta
+  title "Init duration over 30 forced cold starts (ms)"
+  x-axis ["UvPythonFunction p50", "UvPythonFunction p90", "PythonFunction p50", "PythonFunction p90"]
+  y-axis "Init (ms)" 0 --> 800
+  bar [347, 487, 587, 727]
+```
+
+Once a function is warm, both run the same code at the same speed; the difference is all in loading it. Lambda has billed the init phase of on-demand functions [since August 2025](https://aws.amazon.com/blogs/compute/aws-lambda-standardizes-billing-for-init-phase/), so a shorter init lowers the bill as well as the latency.
 
 AWS warns that preview runtimes have slower cold starts than GA runtimes while they are being optimized: on `python3.14`, the same functions initialized in 268 ms and 501 ms.
 
 #### SnapStart
 
-The example leaves [SnapStart](https://docs.aws.amazon.com/lambda/latest/dg/snapstart.html) off. These numbers come from the same functions with it turned on (`snapStart: SnapStartConf.ON_PUBLISHED_VERSIONS`) and invoked through published versions.
+The example leaves [SnapStart](https://docs.aws.amazon.com/lambda/latest/dg/snapstart.html) off. These numbers come from the same functions with it turned on (`snapStart: SnapStartConf.ON_PUBLISHED_VERSIONS`), in three rounds per function: each round published a new version and invoked it 12 times at once, so every invocation landed on a freshly restored execution environment (36 and 35 restores).
+
+SnapStart runs the init phase once, when a version is published, and restores later cold starts from a snapshot of it. The official construct compiles its modules during that one init, so its missing bytecode no longer slows its cold starts, and both functions restore in the same time.
 
 | | `UvPythonFunction` | Official `PythonFunction` |
 | --- | --- | --- |
@@ -36,8 +46,6 @@ The example leaves [SnapStart](https://docs.aws.amazon.com/lambda/latest/dg/snap
 | First invoke after a restore, median | 28 ms | 12 ms |
 | Max memory used | 71 MB | 74 MB |
 
-Restores come from three rounds per function: each round published a new version and invoked it 12 times at once, so every invocation landed on a freshly restored execution environment (36 and 35 restores).
-
 ```mermaid
 xychart-beta
   title "Cold start, median (ms)"
@@ -46,9 +54,7 @@ xychart-beta
   bar [347, 587, 359, 359]
 ```
 
-SnapStart runs the init phase once, when a version is published, and later cold starts restore that initialized memory. The official construct's modules are compiled during that one init, so its missing bytecode no longer costs anything, and both functions restore in the same time.
-
-For a function this small, though, SnapStart does not beat a package that loads fast on its own: a restore of either function takes about as long as `UvPythonFunction`'s plain init, and the first invocation after a restore is slower than one after a plain init. Lambda bills only part of a restore (56 ms of 359 ms here), but SnapStart adds a charge for caching each published version, for at least three hours, and one for each restore. It pays off when init is expensive, as with the official construct's 587 ms, or for functions that load much more code or data. Lambda has billed the init phase of on-demand functions [since August 2025](https://aws.amazon.com/blogs/compute/aws-lambda-standardizes-billing-for-init-phase/), so a shorter init without SnapStart lowers the bill as well as the latency.
+For a function this small, SnapStart does not beat a package that loads fast on its own: a restore of either function takes about as long as `UvPythonFunction`'s plain init, and the first invocation after a restore is slower than one after a plain init. Lambda bills only part of a restore (56 ms of 359 ms here), but SnapStart adds a charge for caching each published version, for at least three hours, and one for each restore. It pays off when init is expensive, as with the official construct's 587 ms, or for functions that load much more code or data.
 
 ### Package
 
