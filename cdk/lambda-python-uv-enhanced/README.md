@@ -11,7 +11,7 @@ Measured in `eu-central-1` on `python3.14`, arm64, 512 MB, built on an x86_64 ho
 | | `UvPythonFunction` | Official `PythonFunction` |
 | --- | --- | --- |
 | Median init, 15 forced cold starts | 260 ms | 490 ms |
-| Bytecode on Lambda | `unchecked-hash`, used | `missing` |
+| Bytecode on Lambda | Precompiled, hash-based, used as shipped | None shipped, so each module is compiled in memory on every cold start |
 | Deployment package | 6.6 KB code + 5.6 MB layer | 3.5 MB code |
 | Upload after a handler-only change | 6.6 KB | 3.5 MB |
 | Bundling | uv on the host, no Docker | Docker build of a 3.6 GB image |
