@@ -66,21 +66,25 @@ For a function this small, SnapStart does not beat a package that loads fast on 
 
 ### Build
 
-| | `UvPythonFunction` | Official `PythonFunction` |
-| --- | --- | --- |
-| Needs | uv, with Docker only as a fallback | Docker |
-| Bundling image | None | 981 MB, built from the Lambda `python3.15` base image |
-| First synth, empty uv cache or no image | 2.5 s | 138 s |
-| Synth, caches warm | 1.7 s | 5.2 s |
-| Synth after a handler-only change | 1.4 s, the code asset only | 5.1 s, the whole bundle |
+The functions target arm64, and the build host is x86_64, so Docker runs the official construct's arm64 bundling image under QEMU emulation. The last column builds the same function for x86_64, the host's own architecture, to show how much of its time that costs. `UvPythonFunction` installs wheels for either target on the host, so its times do not change.
+
+| | `UvPythonFunction` | Official `PythonFunction` | Official, x86_64 target |
+| --- | --- | --- | --- |
+| Needs | uv, with Docker only as a fallback | Docker | Docker |
+| Bundling image | None | 988 MB, built from the Lambda `python3.15` base image | 972 MB |
+| First synth, empty uv cache or no image | 2.7 s | 132 s | 27.5 s |
+| Synth, caches warm | 1.7 s | 5.0 s | 3.0 s |
+| Synth after a handler-only change | 1.8 s, the code asset only | 5.4 s, the whole bundle | 3.2 s, the whole bundle |
 
 ```mermaid
 xychart-beta
   title "First synth with empty caches (s)"
-  x-axis ["UvPythonFunction", "PythonFunction"]
+  x-axis ["UvPythonFunction", "PythonFunction", "PythonFunction x86_64"]
   y-axis "Synth (s)" 0 --> 150
-  bar [2.5, 138]
+  bar [2.7, 132, 27.5]
 ```
+
+On an arm64 host, such as Apple silicon or Graviton, the emulation cost moves to the x86_64 target instead, so the official construct is fastest when the target matches the host. With a matching target here, its first synth still took ten times as long as `UvPythonFunction`'s, and every later one about twice as long.
 
 The official construct builds its bundling image from the runtime's SAM build image, and there is none for `python3.15` yet. This example gives it [its own](./src/docker/alpha-bundling/Dockerfile) instead: the Lambda base image with what the construct's Dockerfile would add.
 
