@@ -1,5 +1,5 @@
 {
-  "name": "cdk-lambda-python-uv",
+  "name": "cdk-lambda-python-uv-enhanced",
   "private": true,
   "version": "0.0.0",
   "license": "MIT",
@@ -17,6 +17,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@aws-cdk/aws-lambda-python-alpha": "catalog:",
     "aws-cdk-lib": "catalog:",
     "constructs": "catalog:"
   },

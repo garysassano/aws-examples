@@ -41,8 +41,6 @@ export interface UvPythonFunctionProps extends FunctionOptions {
   readonly runtime?: Runtime;
   /** @default Architecture.ARM_64 */
   readonly architecture?: Architecture;
-  /** Workspace member to deploy, when `entry` is a workspace with several applications. */
-  readonly workspacePackage?: string;
   /** @default true */
   readonly compileBytecode?: boolean;
   /** uv version for the Docker fallback, used when uv is not on the PATH. */
@@ -62,7 +60,6 @@ export class UvPythonFunction extends LambdaFunction {
   constructor(scope: Construct, id: string, props: UvPythonFunctionProps) {
     const {
       entry,
-      workspacePackage,
       compileBytecode = true,
       uvVersion = DEFAULT_UV_VERSION,
       runtime = Runtime.PYTHON_3_14,
@@ -75,7 +72,6 @@ export class UvPythonFunction extends LambdaFunction {
     const target: Target = {
       python: runtime.name.replace(/^python/, ""),
       platform: `${architecture === Architecture.ARM_64 ? "aarch64" : "x86_64"}-${MANYLINUX}`,
-      workspacePackage,
       compileBytecode,
       uvVersion,
     };
@@ -108,7 +104,6 @@ export class UvPythonFunction extends LambdaFunction {
 interface Target {
   readonly python: string;
   readonly platform: string;
-  readonly workspacePackage?: string;
   readonly compileBytecode: boolean;
   readonly uvVersion: string;
 }
@@ -130,7 +125,6 @@ function hash(...parts: (string | Buffer)[]): string {
  */
 function commands(target: Target, part: Part, outputDir: string, tmpDir: string): string[][] {
   const requirements = `${tmpDir}/requirements-${part}.txt`;
-  const selection = target.workspacePackage ? ["--package", target.workspacePackage] : [];
   const install = [
     "uv",
     "pip",
@@ -146,7 +140,7 @@ function commands(target: Target, part: Part, outputDir: string, tmpDir: string)
     "copy",
     ...(target.compileBytecode ? ["--compile-bytecode"] : ["--no-compile-bytecode"]),
   ];
-  const exportBase = ["uv", "export", "--locked", "--no-dev", "--no-editable", ...selection];
+  const exportBase = ["uv", "export", "--locked", "--no-dev", "--no-editable"];
   if (part === "dependencies") {
     return [
       [...exportBase, "--no-emit-local", "--output-file", requirements],

@@ -942,8 +942,11 @@ importers:
         specifier: 'catalog:'
         version: 4.6.5
 
-  cdk/lambda-python-uv:
+  cdk/lambda-python-uv-enhanced:
     dependencies:
+      '@aws-cdk/aws-lambda-python-alpha':
+        specifier: 'catalog:'
+        version: 2.272.0-alpha.0(aws-cdk-lib@2.272.0(constructs@10.7.2))(constructs@10.7.2)
       aws-cdk-lib:
         specifier: 'catalog:'
         version: 2.272.0(constructs@10.7.2)
