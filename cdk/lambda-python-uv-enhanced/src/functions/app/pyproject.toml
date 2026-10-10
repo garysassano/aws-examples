@@ -4,7 +4,6 @@ version = "0.1.0"
 requires-python = ">=3.14"
 dependencies = [
     "aws-lambda-powertools[parser]>=3.35.0",
-    "report",
 ]
 
 [dependency-groups]
@@ -16,13 +15,12 @@ dev = [
 requires = ["uv_build>=0.12.22,<0.14"]
 build-backend = "uv_build"
 
+[tool.uv.build-backend]
+# The package sits at the project root, the flat layout the alpha construct copies as-is.
+module-root = ""
+
 [tool.uv]
 required-version = ">=0.12.22"
 # Dependency cooldown: like pnpm's minimumReleaseAge, skip releases younger than 3 days.
 exclude-newer = "3 days"
 
-[tool.uv.workspace]
-members = ["packages/*"]
-
-[tool.uv.sources]
-report = { workspace = true }
