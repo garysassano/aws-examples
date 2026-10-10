@@ -852,6 +852,10 @@
 <text x="441" y="431" font-family="Consolas, Menlo, DejaVu Sans Mono, Liberation Mono, monospace" font-size="12" text-anchor="middle" fill="#232F3E" font-weight="normal">
 <tspan x="441" dy="0">otlp</tspan>
 </text>
+<rect x="398" y="517" width="86" height="18" rx="4" fill="#EAF2FC" stroke="#7FA7D8" stroke-width="1" data-chip="option"/>
+<text x="441" y="530" font-family="Consolas, Menlo, DejaVu Sans Mono, Liberation Mono, monospace" font-size="12" text-anchor="middle" fill="#232F3E" font-weight="normal">
+<tspan x="441" dy="0">clickhouse</tspan>
+</text>
 <g data-legend="">
 <polyline points="398.56,-95 426.56,-95" fill="none" stroke="#232F3E" stroke-width="2" stroke-linejoin="miter" stroke-dasharray="6 5"/>
 <polygon points="434.56,-95 426.56,-99 426.56,-91" fill="#232F3E"/>
