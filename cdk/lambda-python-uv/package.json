@@ -1,0 +1,30 @@
+{
+  "name": "cdk-lambda-python-uv",
+  "private": true,
+  "version": "0.0.0",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "cdk": "cdk",
+    "check": "pnpm lint && pnpm typecheck && pnpm synth",
+    "deploy": "cdk deploy",
+    "destroy": "cdk destroy",
+    "diff": "cdk diff",
+    "format": "biome format --write . && uv run --project src/functions/app --frozen ruff format src/functions/app",
+    "lint": "biome check . && uv run --project src/functions/app --frozen ruff check src/functions/app && uv run --project src/functions/app --frozen ruff format --check src/functions/app",
+    "lint:fix": "biome check --write . && uv run --project src/functions/app --frozen ruff check --fix src/functions/app",
+    "synth": "cdk synth --strict",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "catalog:",
+    "constructs": "catalog:"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "catalog:",
+    "@types/node": "catalog:",
+    "aws-cdk": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:"
+  }
+}
