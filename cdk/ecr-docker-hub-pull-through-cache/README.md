@@ -1,13 +1,13 @@
-# cdk-ecr-dockerhub-pull-through-cache
+# cdk-ecr-docker-hub-pull-through-cache
 
 CDK app that caches the NGINX image from Docker Hub in Amazon ECR with a [pull-through cache rule](https://docs.aws.amazon.com/AmazonECR/latest/userguide/pull-through-cache.html), then runs it on three AWS container services side by side.
 
-| Stack                                                  | Runs                                                                                                             | Endpoint                        |
-| ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------- | ------------------------------- |
-| `cdk-ecr-dockerhub-pull-through-cache-dev`             | ECR pull-through cache rule for Docker Hub and the `docker-hub/library/nginx` cache repository                   | —                               |
-| `cdk-ecr-dockerhub-pull-through-cache-apprunner-dev`   | [AWS App Runner](https://docs.aws.amazon.com/apprunner/latest/dg/what-is-apprunner.html)                         | HTTPS on the App Runner domain  |
-| `cdk-ecr-dockerhub-pull-through-cache-ecs-fargate-dev` | Amazon ECS on Fargate behind an Application Load Balancer that the stack manages                                 | HTTP on the load balancer       |
-| `cdk-ecr-dockerhub-pull-through-cache-ecs-express-dev` | [Amazon ECS Express Mode](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/express-service-work.html) | HTTPS on the ECS-managed domain |
+| Stack                                                   | Runs                                                                                                             | Endpoint                        |
+| ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | ------------------------------- |
+| `cdk-ecr-docker-hub-pull-through-cache-dev`             | ECR pull-through cache rule for Docker Hub and the `docker-hub/library/nginx` cache repository                   | —                               |
+| `cdk-ecr-docker-hub-pull-through-cache-apprunner-dev`   | [AWS App Runner](https://docs.aws.amazon.com/apprunner/latest/dg/what-is-apprunner.html)                         | HTTPS on the App Runner domain  |
+| `cdk-ecr-docker-hub-pull-through-cache-ecs-fargate-dev` | Amazon ECS on Fargate behind an Application Load Balancer that the stack manages                                 | HTTP on the load balancer       |
+| `cdk-ecr-docker-hub-pull-through-cache-ecs-express-dev` | [Amazon ECS Express Mode](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/express-service-work.html) | HTTPS on the ECS-managed domain |
 
 The pull-through cache rule exists once per registry, so all three services share the cache stack, and deploying any of them deploys it first. Each service role gets `ecr:BatchImportUpstreamImage` on the cache repository directly, rather than through the registry permissions policy, which is a single document per registry and would replace any policy already there.
 
@@ -51,7 +51,7 @@ pnpm run deploy --all
 Or deploy one service, which also deploys the cache stack:
 
 ```sh
-pnpm run deploy cdk-ecr-dockerhub-pull-through-cache-ecs-express-dev
+pnpm run deploy cdk-ecr-docker-hub-pull-through-cache-ecs-express-dev
 ```
 
 Each service stack prints the URL of its NGINX service as an output.
