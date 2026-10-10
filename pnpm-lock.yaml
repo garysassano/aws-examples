@@ -713,15 +713,12 @@ importers:
 
   cdk/lambda-dynamic-provisioned-concurrency:
     dependencies:
+      '@aws-lambda-powertools/event-handler':
+        specifier: 'catalog:'
+        version: 2.35.0(@standard-schema/spec@1.1.0)
       '@aws-lambda-powertools/logger':
         specifier: 'catalog:'
         version: 2.35.0(@aws-lambda-powertools/jmespath@2.35.0)(@middy/core@7.9.2)
-      '@middy/core':
-        specifier: 'catalog:'
-        version: 7.9.2
-      '@middy/http-error-handler':
-        specifier: 'catalog:'
-        version: 7.9.2
       aws-cdk-lib:
         specifier: 'catalog:'
         version: 2.272.0(constructs@10.7.2)
@@ -732,6 +729,9 @@ importers:
       '@biomejs/biome':
         specifier: 'catalog:'
         version: 2.5.14
+      '@types/aws-lambda':
+        specifier: 'catalog:'
+        version: 8.10.163
       '@types/node':
         specifier: 'catalog:'
         version: 26.6.2
