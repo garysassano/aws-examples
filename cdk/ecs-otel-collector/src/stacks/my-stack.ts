@@ -27,11 +27,12 @@ import { RetentionDays } from "aws-cdk-lib/aws-logs";
 import { Bucket } from "aws-cdk-lib/aws-s3";
 import { BucketDeployment, Source as S3Source } from "aws-cdk-lib/aws-s3-deployment";
 import { Secret } from "aws-cdk-lib/aws-secretsmanager";
-import { Duration, RemovalPolicy, SecretValue, Stack, type StackProps } from "aws-cdk-lib/core";
+import { CfnOutput, Duration, RemovalPolicy, Stack, type StackProps } from "aws-cdk-lib/core";
 import type { Construct } from "constructs";
-import { validateEnv } from "../utils/validate-env.js";
+import { adotNodeLayerArn } from "../utils/adot-node-layer.js";
 
-const env = validateEnv(["HONEYCOMB_API_KEY"]);
+// Created before deployment, so the API key never appears in the template.
+const honeycombApiKeySecretName: string = "honeycomb-api-key";
 
 export class MyStack extends Stack {
   constructor(scope: Construct, id: string, props: StackProps = {}) {
@@ -41,11 +42,11 @@ export class MyStack extends Stack {
     // SECRETS MANAGER
     //==============================================================================
 
-    const honeycombApiKeySecret = new Secret(this, "HoneycombApiKeySecret", {
-      secretName: "honeycomb-api-key",
-      secretStringValue: SecretValue.unsafePlainText(env.HONEYCOMB_API_KEY),
-      removalPolicy: RemovalPolicy.DESTROY,
-    });
+    const honeycombApiKeySecret = Secret.fromSecretNameV2(
+      this,
+      "HoneycombApiKeySecret",
+      honeycombApiKeySecretName,
+    );
 
     //==============================================================================
     // VPC
@@ -212,11 +213,11 @@ export class MyStack extends Stack {
     const adotNodeLayer = LayerVersion.fromLayerVersionArn(
       this,
       "AdotNodeLayer",
-      "arn:aws:lambda:eu-central-1:615299751070:layer:AWSOpenTelemetryDistroJs:10",
+      adotNodeLayerArn(this),
     );
 
-    new NodejsFunction(this, "AdotHelloLambda", {
-      functionName: "adot-hello-lambda",
+    // No fixed name, so this app and its App Runner or ECS counterpart can share an account.
+    const adotHelloLambda = new NodejsFunction(this, "AdotHelloLambda", {
       entry: join(import.meta.dirname, "../functions/hello", "index.ts"),
       layers: [adotNodeLayer],
       runtime: Runtime.NODEJS_24_X,
@@ -238,5 +239,7 @@ export class MyStack extends Stack {
         OTEL_EXPORTER_OTLP_COMPRESSION: "gzip",
       },
     });
+
+    new CfnOutput(this, "AdotHelloLambdaName", { value: adotHelloLambda.functionName });
   }
 }

@@ -17,9 +17,22 @@ The sample functions export their spans as gzipped OTLP protobuf in JSON lines, 
 - **_CloudWatch exporter (default):_**
   - Must have enabled [Transaction Search](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Enable-TransactionSearch.html) in the target account, so that it accepts spans on its OTLP endpoint.
 - **_OTLP exporter:_**
-  - Must have set the `OTEL_EXPORTER_OTLP_ENDPOINT` and `OTEL_EXPORTER_OTLP_HEADERS` variables in your local environment.
+  - Must have stored the OTLP headers, in `OTEL_EXPORTER_OTLP_HEADERS` format, in AWS Secrets Manager as a secret named `otlp-headers`, so the API key they usually carry never appears in the CloudFormation template or the function configuration. The forwarder reads it when it starts:
+
+    ```sh
+    aws secretsmanager create-secret --name otlp-headers --secret-string "$OTEL_EXPORTER_OTLP_HEADERS"
+    ```
+
+  - Must have set the `OTEL_EXPORTER_OTLP_ENDPOINT` variable in your local environment.
 - **_ClickHouse exporter:_**
-  - Must have set the `CLICKHOUSE_ENDPOINT`, `CLICKHOUSE_DATABASE`, `CLICKHOUSE_USERNAME` and `CLICKHOUSE_PASSWORD` variables in your local environment.
+  - Must have stored the ClickHouse connection settings in AWS Secrets Manager as a secret named `clickhouse-config`, so the password never appears in the CloudFormation template, and set the `CLICKHOUSE_SECRET_ARN` variable to its complete ARN, which the ROTel extension needs to resolve it:
+
+    ```sh
+    export CLICKHOUSE_SECRET_ARN=$(aws secretsmanager create-secret --name clickhouse-config \
+      --secret-string "{\"endpoint\":\"$CLICKHOUSE_ENDPOINT\",\"database\":\"$CLICKHOUSE_DATABASE\",\"user\":\"$CLICKHOUSE_USERNAME\",\"password\":\"$CLICKHOUSE_PASSWORD\"}" \
+      --query ARN --output text)
+    ```
+
   - Must have created the OpenTelemetry tables in that database, for example with [clickhouse-ddl](https://github.com/rotel-dev/rotel/tree/main/src/bin/clickhouse-ddl):
 
     ```sh
@@ -72,6 +85,13 @@ The app checks the chosen exporter's variables whenever it runs, so pass the sam
 
 ```sh
 pnpm destroy -c exporter=clickhouse
+```
+
+The `otlp-headers` and `clickhouse-config` secrets are not managed by the app, so delete whichever you created separately:
+
+```sh
+aws secretsmanager delete-secret --secret-id otlp-headers --force-delete-without-recovery
+aws secretsmanager delete-secret --secret-id clickhouse-config --force-delete-without-recovery
 ```
 
 ## Transports

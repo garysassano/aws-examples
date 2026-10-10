@@ -27,7 +27,6 @@ import {
   Duration,
   type IAspect,
   RemovalPolicy,
-  SecretValue,
   Stack,
   type StackProps,
 } from "aws-cdk-lib/core";
@@ -250,28 +249,25 @@ export class MyStack extends Stack {
       );
     } else if (exporter === "otlp") {
       // The forwarder sends the spans, and its own, to the OTLP endpoint.
-      const env = validateEnv(["OTEL_EXPORTER_OTLP_ENDPOINT", "OTEL_EXPORTER_OTLP_HEADERS"]);
+      const env = validateEnv(["OTEL_EXPORTER_OTLP_ENDPOINT"]);
       otlpForwarder.addEnvironment("OTEL_EXPORTER_OTLP_ENDPOINT", env.OTEL_EXPORTER_OTLP_ENDPOINT);
-      otlpForwarder.addEnvironment("OTEL_EXPORTER_OTLP_HEADERS", env.OTEL_EXPORTER_OTLP_HEADERS);
+      // Created before deployment, so the API key in the headers never appears in the
+      // template or the function configuration. The forwarder reads it when it starts.
+      const otlpHeaders = Secret.fromSecretNameV2(this, "OtlpHeaders", "otlp-headers");
+      otlpForwarder.addEnvironment("OTEL_EXPORTER_OTLP_HEADERS_SECRET", otlpHeaders.secretName);
+      otlpHeaders.grantRead(otlpForwarder);
     } else {
       // The forwarder sends the spans, and its own, to the ROTel Lambda extension,
       // which exports them to ClickHouse together with the forwarder's logs.
-      const env = validateEnv([
-        "CLICKHOUSE_ENDPOINT",
-        "CLICKHOUSE_DATABASE",
-        "CLICKHOUSE_USERNAME",
-        "CLICKHOUSE_PASSWORD",
-      ]);
-      const clickHouseConfig = new Secret(this, "ClickHouseConfig", {
-        secretName: "clickhouse-config",
-        description: "ClickHouse connection settings for the ROTel Lambda extension",
-        secretObjectValue: {
-          endpoint: SecretValue.unsafePlainText(env.CLICKHOUSE_ENDPOINT),
-          database: SecretValue.unsafePlainText(env.CLICKHOUSE_DATABASE),
-          user: SecretValue.unsafePlainText(env.CLICKHOUSE_USERNAME),
-          password: SecretValue.unsafePlainText(env.CLICKHOUSE_PASSWORD),
-        },
-      });
+      // Created before deployment, so the password never appears in the template. ROTel
+      // matches secrets by the complete ARN that Secrets Manager returns, so a name or a
+      // partial ARN would not resolve.
+      const env = validateEnv(["CLICKHOUSE_SECRET_ARN"]);
+      const clickHouseConfig = Secret.fromSecretCompleteArn(
+        this,
+        "ClickHouseConfig",
+        env.CLICKHOUSE_SECRET_ARN,
+      );
 
       otlpForwarder.addLayers(
         LayerVersion.fromLayerVersionArn(
