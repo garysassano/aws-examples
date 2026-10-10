@@ -69,3 +69,7 @@ aws secretsmanager delete-secret --secret-id ecr-pullthroughcache/docker-hub --f
 ```
 
 ECS Express Mode creates the `default` ECS cluster if it does not already exist, and it is kept after the stack is deleted.
+
+## Architecture Diagram
+
+![Architecture Diagram](./src/assets/arch-diagram.svg)
