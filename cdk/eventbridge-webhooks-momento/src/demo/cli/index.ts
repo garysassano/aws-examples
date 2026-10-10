@@ -18,6 +18,7 @@ const CONFIG = {
     TOPIC_NAME: "momento-eventbridge-topic",
     TTL_SECONDS: 120,
   },
+  CACHE_POLL_ATTEMPTS: 10,
 } as const;
 
 // Logging helpers
@@ -27,13 +28,13 @@ const log = {
   warn: (msg: string) => console.log(chalk.yellow("⚠ ") + msg),
   error: (msg: string) => console.log(chalk.red("✖ ") + msg),
   group: (header: { icon: string; text: string }, details: { label: string; value: string }[]) => {
-    console.log("\n" + chalk.blue(header.icon) + chalk.gray(` ${header.text}`));
+    console.log(`\n${chalk.blue(header.icon)}${chalk.gray(` ${header.text}`)}`);
     details.forEach((detail) => {
       console.log(chalk.gray(`  → ${detail.label}: `) + chalk.cyan(detail.value));
     });
   },
-  data: (msg: string, obj: any) => {
-    console.log("\n" + chalk.cyan(msg));
+  data: (msg: string, obj: unknown) => {
+    console.log(`\n${chalk.cyan(msg)}`);
     console.dir(obj, { depth: null, colors: true });
   },
 };
@@ -61,7 +62,9 @@ async function saveToDatabase(data: ReturnType<typeof generateWeatherData>) {
       MaxTemp: { N: data.maxTemp },
       MinTemp: { N: data.minTemp },
       ChancesOfPrecipitation: { N: data.precipitation },
-      TTL: { N: CONFIG.MOMENTO.TTL_SECONDS.toString() },
+      // DynamoDB TTL takes an epoch time; the cache put pipe passes TtlSeconds to Momento.
+      TTL: { N: String(Math.floor(Date.now() / 1000) + CONFIG.MOMENTO.TTL_SECONDS) },
+      TtlSeconds: { N: String(CONFIG.MOMENTO.TTL_SECONDS) },
     },
   };
 
@@ -69,7 +72,8 @@ async function saveToDatabase(data: ReturnType<typeof generateWeatherData>) {
 }
 
 // Momento Operations
-async function getFromCache(key: string): Promise<string> {
+// The pipe delivers asynchronously, so poll the cache for a short while.
+async function getFromCache(key: string): Promise<unknown> {
   log.group({ icon: "🔍", text: "Searching in cache..." }, [
     { label: "Cache", value: CONFIG.MOMENTO.CACHE_NAME },
     { label: "Key", value: key },
@@ -80,10 +84,15 @@ async function getFromCache(key: string): Promise<string> {
     defaultTtlSeconds: CONFIG.MOMENTO.TTL_SECONDS,
   });
 
-  const response = await client.get(CONFIG.MOMENTO.CACHE_NAME, key);
-  if (response.type === CacheGetResponse.Hit) {
-    const data = JSON.parse(response.valueString());
-    return data;
+  for (let attempt = 0; attempt < CONFIG.CACHE_POLL_ATTEMPTS; attempt++) {
+    const response = await client.get(CONFIG.MOMENTO.CACHE_NAME, key);
+    if (response.type === CacheGetResponse.Hit) {
+      return JSON.parse(response.valueString());
+    }
+    if (response.type === CacheGetResponse.Error) {
+      throw new Error(`Cache get failed: ${response.toString()}`);
+    }
+    await sleep(1000);
   }
   return "Not found in cache";
 }
@@ -135,7 +144,7 @@ async function main() {
 
     const subscription = await subscribeToTopic();
     console.log(
-      "\n" + chalk.green("✔ ") + `Subscribed to topic: ${chalk.cyan(CONFIG.MOMENTO.TOPIC_NAME)}`,
+      `\n${chalk.green("✔ ")}Subscribed to topic: ${chalk.cyan(CONFIG.MOMENTO.TOPIC_NAME)}`,
     );
 
     // Save to DynamoDB
@@ -145,15 +154,12 @@ async function main() {
     await saveToDatabase(weatherData);
     log.data("💾 Saved to DynamoDB:", weatherData);
 
-    // Wait for EventBridge and check cache
+    // Wait for EventBridge Pipes to put the item in the cache
     console.log(
       "\n" +
         chalk.blue("ℹ ") +
-        chalk.gray(
-          `Waiting ${CONFIG.MOMENTO.TTL_SECONDS / 60} minutes for EventBridge propagation...`,
-        ),
+        chalk.gray(`Waiting up to ${CONFIG.CACHE_POLL_ATTEMPTS}s for EventBridge Pipes...`),
     );
-    await sleep(2000);
 
     const cacheValue = await getFromCache(weatherData.location);
     log.data("📦 Retrieved from cache:", cacheValue);
@@ -173,4 +179,4 @@ async function main() {
   }
 }
 
-void main().then(() => console.log("\n" + chalk.green("🎉 Demo completed successfully!")));
+void main().then(() => console.log(`\n${chalk.green("🎉 Demo completed successfully!")}`));

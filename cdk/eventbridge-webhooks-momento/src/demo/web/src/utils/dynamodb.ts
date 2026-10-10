@@ -4,11 +4,20 @@ import {
   GetItemCommand,
   PutItemCommand,
 } from "@aws-sdk/client-dynamodb";
+import { REGION } from "./constants";
 
-// Create DynamoDB client using default credentials chain
-const ddbClient = new DynamoDBClient({});
+// A browser has no default credential chain, so the local dev server passes
+// credentials in through VITE_ variables. Never build this app for hosting.
+const ddbClient = new DynamoDBClient({
+  region: REGION,
+  credentials: {
+    accessKeyId: import.meta.env.VITE_AWS_ACCESS_KEY_ID,
+    secretAccessKey: import.meta.env.VITE_AWS_SECRET_ACCESS_KEY,
+    sessionToken: import.meta.env.VITE_AWS_SESSION_TOKEN || undefined,
+  },
+});
 
-export const tableName = "weather-stats-demo";
+export const tableName = "weather-stats-table";
 
 export function createRecord(
   location: string,
@@ -22,7 +31,9 @@ export function createRecord(
     MaxTemp: { N: maxTemp },
     MinTemp: { N: minTemp },
     ChancesOfPrecipitation: { N: precipitation },
-    TTL: { N: ttl },
+    // DynamoDB TTL takes an epoch time; the cache put pipe passes TtlSeconds to Momento.
+    TTL: { N: String(Math.floor(Date.now() / 1000) + Number(ttl)) },
+    TtlSeconds: { N: ttl },
   };
   const command = new PutItemCommand({
     TableName: tableName,

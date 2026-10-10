@@ -13,7 +13,7 @@
   "dependencies": {
     "@aws-sdk/client-dynamodb": "catalog:",
     "@gomomento/sdk": "^1.118.1",
-    "chalk": "^6.0.0"
+    "chalk": "^6.0.1"
   },
   "devDependencies": {
     "@biomejs/biome": "catalog:",
