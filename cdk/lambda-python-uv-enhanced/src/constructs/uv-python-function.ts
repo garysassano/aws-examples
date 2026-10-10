@@ -185,9 +185,9 @@ function bundling(entry: string, target: Target, part: Part): BundlingOptions {
   };
   return {
     local,
-    image: DockerImage.fromRegistry(
-      `ghcr.io/astral-sh/uv:${target.uvVersion}-python${target.python}-trixie-slim`,
-    ),
+    // The plain uv image, without a system Python: uv downloads the same managed CPython it uses on
+    // the host, so both paths compile the same bytecode, also for versions not yet on Docker Hub.
+    image: DockerImage.fromRegistry(`ghcr.io/astral-sh/uv:${target.uvVersion}-trixie-slim`),
     command: [
       "bash",
       "-euo",
@@ -197,7 +197,7 @@ function bundling(entry: string, target: Target, part: Part): BundlingOptions {
         .map((args) => args.map(shellQuote).join(" "))
         .join(" && "),
     ],
-    environment: { ...env, UV_CACHE_DIR: "/tmp/uv-cache", UV_PYTHON_DOWNLOADS: "never" },
+    environment: { ...env, UV_CACHE_DIR: "/tmp/uv-cache" },
   };
 }
 
