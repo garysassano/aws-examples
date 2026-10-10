@@ -55,10 +55,6 @@ Every invocation of the `current-time` function passes through the maintenance g
 
 ![Architecture Diagram - Low Level](./src/assets/arch-lld.svg)
 
-The way AWS Lambda works under the hood is by using [Firecracker](https://github.com/firecracker-microvm/firecracker), a virtual machine monitor (VMM) designed to rapidly spawn a fleet of microVMs in response to Lambda invocation events. When a new microVM is created, it reads and applies the settings you've configured for your Lambda function to set up the microVM environment accordingly. Additionally, your Lambda function code and any attached layers are copied into designated directories within the microVM.
-
-With this knowledge, it's possible to alter a function's behaviour by having a wrapper script adjust the environment before the managed runtime starts. Swapping the handler keeps the official Runtime Interface Client (RIC) in charge of the invocation loop, so the extension does not depend on RIC internals and keeps working as the managed runtime is updated.
-
 1. **Executing the Wrapper Script**
    - At cold start, Lambda runs a [wrapper script](https://docs.aws.amazon.com/lambda/latest/dg/runtimes-modify.html#runtime-wrapper) from the Lambda layer instead of the runtime's entrypoint, because the `AWS_LAMBDA_EXEC_WRAPPER` environment variable points to it. The wrapper stores the configured handler in `MAINTENANCE_WINDOW_ORIGINAL_HANDLER`, points `_HANDLER` at the layer's `maintenance_window_gate.handler`, and then executes the managed Python runtime unchanged.
 
@@ -79,3 +75,8 @@ With this knowledge, it's possible to alter a function's behaviour by having a w
    - If the current time falls within the window, the Lambda function handler is bypassed. Instead, the Lambda invocation event is stored in Amazon DynamoDB for future manual triggering, and the invocation returns a `{"skipped": true, ...}` result. Returning a result rather than an error stops Lambda from retrying asynchronous events, so the DynamoDB archive is the only copy to replay. If the archive write fails, the invocation errors and the event falls back to Lambda's normal retries.
    - Archived items are keyed by the invocation's request ID and the time it was skipped. The event is stored as JSON text in `event`, or gzip-compressed in `event_gzip` when it would exceed DynamoDB's 400 KB item limit. An event too large even when compressed fails the invocation with `EventTooLargeToArchive`. Lambda can deliver the same asynchronous event more than once, so the archive can hold duplicates. A replay workflow should deduplicate on a stable event or business-operation ID, such as an EventBridge event `id`, rather than on the event content, because identical payloads can be separate operations. Deduplicating replay submissions still does not make the replayed invocation exactly-once, since Lambda can deliver it more than once too.
    - The previous table is retained when a deployment replaces it, as happens when upgrading from the version that keyed events by timestamp alone, so events awaiting replay are not deleted. Remove it manually once they have been replayed.
+
+### Design Notes
+
+- **Why a layer can change the function.** Lambda runs each function in a [Firecracker](https://github.com/firecracker-microvm/firecracker) microVM, a lightweight virtual machine that it starts in response to invocation events. When it creates one, it applies the settings you've configured for the function and copies the function code and every attached layer into designated directories, so a wrapper script from a layer can adjust the environment before the managed runtime starts.
+- **Swapping the handler, not the runtime client.** Pointing `_HANDLER` at the gate keeps the official Runtime Interface Client (RIC) in charge of the invocation loop, so the extension does not depend on RIC internals and keeps working as the managed runtime is updated.
