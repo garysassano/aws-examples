@@ -1,4 +1,5 @@
 import { join } from "node:path";
+import { PythonFunction } from "@aws-cdk/aws-lambda-python-alpha";
 import { EndpointType, LambdaIntegration, RestApi } from "aws-cdk-lib/aws-apigateway";
 import { AttributeType, TableV2 } from "aws-cdk-lib/aws-dynamodb";
 import { ManagedPolicy, PolicyStatement, ServicePrincipal } from "aws-cdk-lib/aws-iam";
@@ -23,7 +24,6 @@ import { Secret } from "aws-cdk-lib/aws-secretsmanager";
 import {
   Aspects,
   CfnOutput,
-  DockerImage,
   Duration,
   type IAspect,
   RemovalPolicy,
@@ -33,7 +33,6 @@ import {
 } from "aws-cdk-lib/core";
 import { RustExtension, RustFunction } from "cargo-lambda-cdk";
 import type { Construct, IConstruct } from "constructs";
-import { PythonFunction } from "uv-python-lambda";
 import { getExporter } from "../utils/exporter.js";
 import { getTransport } from "../utils/transport.js";
 import { validateEnv } from "../utils/validate-env.js";
@@ -149,22 +148,21 @@ export class MyStack extends Stack {
     });
 
     // Client Python Function
-    // The bundling image takes its Python version from the function's runtime,
-    // so dependencies are always built for the interpreter Lambda runs.
-    const clientPythonRuntime = Runtime.PYTHON_3_14;
+    // The uv.lock makes the construct install dependencies with uv, in the SAM build
+    // image for the function's runtime and architecture. Its default uv is old.
     const clientPython = new PythonFunction(this, "ClientPython", {
       functionName: "client-python",
-      rootDir: join(import.meta.dirname, "../functions/client-python"),
-      runtime: clientPythonRuntime,
+      entry: join(import.meta.dirname, "../functions/client-python"),
+      index: "index.py",
+      handler: "handler",
+      runtime: Runtime.PYTHON_3_14,
       architecture: Architecture.ARM_64,
       memorySize: 1024,
       timeout: Duration.minutes(1),
       loggingFormat: LoggingFormat.JSON,
       bundling: {
-        image: DockerImage.fromBuild(join(import.meta.dirname, "../functions/client-python"), {
-          buildArgs: { PYTHON_VERSION: clientPythonRuntime.name.replace("python", "") },
-        }),
-        assetExcludes: ["Dockerfile", ".venv"],
+        buildArgs: { UV_VERSION: "0.13.0" },
+        assetExcludes: [".venv"],
       },
       environment: {
         LAMBDA_EXTENSION_SPAN_PROCESSOR_MODE: "async",

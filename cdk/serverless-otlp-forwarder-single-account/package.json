@@ -17,6 +17,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@aws-cdk/aws-lambda-python-alpha": "catalog:",
     "@dev7a/lambda-otel-lite": "catalog:",
     "@opentelemetry/api": "catalog:",
     "@opentelemetry/instrumentation": "catalog:",
@@ -25,7 +26,6 @@
     "aws-cdk-lib": "catalog:",
     "cargo-lambda-cdk": "catalog:",
     "constructs": "catalog:",
-    "uv-python-lambda": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
