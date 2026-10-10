@@ -10,5 +10,5 @@
     "target": "ES2025",
     "types": ["node"]
   },
-  "include": ["index.ts", "src/**/*.ts"]
+  "include": ["index.ts"]
 }

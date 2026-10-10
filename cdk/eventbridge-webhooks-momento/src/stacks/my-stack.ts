@@ -12,7 +12,6 @@ import { ApiDestinationTarget } from "@aws-cdk/aws-pipes-targets-alpha";
 import { AttributeType, StreamViewType, TableV2 } from "aws-cdk-lib/aws-dynamodb";
 import { ApiDestination, Authorization, Connection, HttpMethod } from "aws-cdk-lib/aws-events";
 import { LogGroup, RetentionDays } from "aws-cdk-lib/aws-logs";
-import { Secret } from "aws-cdk-lib/aws-secretsmanager";
 import { Queue } from "aws-cdk-lib/aws-sqs";
 import { Duration, RemovalPolicy, SecretValue, Stack, type StackProps } from "aws-cdk-lib/core";
 import type { Construct } from "constructs";
@@ -20,21 +19,14 @@ import { validateEnv } from "../utils/validate-env.js";
 
 const cacheName: string = "momento-eventbridge-cache";
 const topicName: string = "momento-eventbridge-topic";
+// Created before deployment, so the API key never appears in the template.
+const apiKeySecretName: string = "momento-api-key";
 
-const env = validateEnv(["MOMENTO_API_KEY", "MOMENTO_API_ENDPOINT"]);
+const env = validateEnv(["MOMENTO_API_ENDPOINT"]);
 
 export class MyStack extends Stack {
   constructor(scope: Construct, id: string, props: StackProps = {}) {
     super(scope, id, props);
-
-    //==============================================================================
-    // SECRETS MANAGER
-    //==============================================================================
-
-    const momentoApiKeySecret = new Secret(this, "MomentoApiKeySecret", {
-      secretName: "momento-api-key-secret",
-      secretStringValue: SecretValue.unsafePlainText(env.MOMENTO_API_KEY),
-    });
 
     //==============================================================================
     // DYNAMODB
@@ -80,7 +72,10 @@ export class MyStack extends Stack {
     //------------------------------------------------------------------------------
     const momentoConnection = new Connection(this, "MomentoConnection", {
       connectionName: "momento-connection",
-      authorization: Authorization.apiKey("Authorization", momentoApiKeySecret.secretValue),
+      authorization: Authorization.apiKey(
+        "Authorization",
+        SecretValue.secretsManager(apiKeySecretName),
+      ),
     });
 
     //------------------------------------------------------------------------------
@@ -144,7 +139,8 @@ export class MyStack extends Stack {
         pathParameterValues: [cacheName],
         queryStringParameters: {
           key: "$.dynamodb.Keys.Location.S",
-          ttl_seconds: "$.dynamodb.NewImage.TTL.N",
+          // TTL holds the epoch time for DynamoDB TTL; Momento wants seconds from now.
+          ttl_seconds: "$.dynamodb.NewImage.TtlSeconds.N",
         },
         inputTransformation: InputTransformation.fromObject({
           Location: "<$.dynamodb.Keys.Location.S>",

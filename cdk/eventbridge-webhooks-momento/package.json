@@ -18,7 +18,6 @@
   },
   "dependencies": {
     "@aws-cdk/aws-pipes-alpha": "catalog:",
-    "@aws-cdk/aws-pipes-enrichments-alpha": "catalog:",
     "@aws-cdk/aws-pipes-sources-alpha": "catalog:",
     "@aws-cdk/aws-pipes-targets-alpha": "catalog:",
     "aws-cdk-lib": "catalog:",
