@@ -14,10 +14,21 @@ const app = new App();
 
 // The pull-through cache rule exists once per registry, so every service shares the same
 // cache stack. Deploying a service stack deploys the cache stack too.
-const cache = new DockerHubCacheStack(app, "cdk-ecr-dockerhub-ptc-cache-dev", { env: devEnv });
+const cache = new DockerHubCacheStack(app, "cdk-ecr-dockerhub-pull-through-cache-dev", {
+  env: devEnv,
+});
 
-new AppRunnerStack(app, "cdk-ecr-dockerhub-ptc-apprunner-dev", { env: devEnv, cache });
-new EcsFargateStack(app, "cdk-ecr-dockerhub-ptc-ecs-fargate-dev", { env: devEnv, cache });
-new EcsExpressStack(app, "cdk-ecr-dockerhub-ptc-ecs-express-dev", { env: devEnv, cache });
+new AppRunnerStack(app, "cdk-ecr-dockerhub-pull-through-cache-apprunner-dev", {
+  env: devEnv,
+  cache,
+});
+new EcsFargateStack(app, "cdk-ecr-dockerhub-pull-through-cache-ecs-fargate-dev", {
+  env: devEnv,
+  cache,
+});
+new EcsExpressStack(app, "cdk-ecr-dockerhub-pull-through-cache-ecs-express-dev", {
+  env: devEnv,
+  cache,
+});
 
 app.synth();
