@@ -2,35 +2,36 @@
 
 CDK app that deploys the same Python handler from the same [uv](https://docs.astral.sh/uv/) project twice: with `UvPythonFunction`, a construct in this example that follows uv's [AWS Lambda guide](https://docs.astral.sh/uv/guides/integration/aws-lambda/) and adds what the guide leaves out, and with the official [`PythonFunction`](https://github.com/aws/aws-cdk/tree/main/packages/%40aws-cdk/aws-lambda-python-alpha) from `@aws-cdk/aws-lambda-python-alpha`.
 
-Both functions use the same runtime, architecture, memory, logging, SnapStart setting and uv version. Each returns a report of how its package was loaded: the interpreter, the CPU, where each module came from, and whether Python could use its shipped bytecode.
+Both functions use the same runtime, architecture, memory, logging and uv version. Each returns a report of how its package was loaded: the interpreter, the CPU, where each module came from, and whether Python could use its shipped bytecode.
 
 ## Comparison
 
-Measured in `eu-central-1` on the `python3.15` [preview runtime](https://aws.amazon.com/blogs/compute/introducing-public-preview-runtimes-on-aws-lambda-starting-with-node-js-26-and-python-3-15/) (Python 3.15.0rc2), arm64, 512 MB, with [SnapStart](https://docs.aws.amazon.com/lambda/latest/dg/snapstart.html) on published versions. Builds ran on an x86_64 host, timing a whole `cdk synth` with only that function in the stack, as the median of three runs.
+Measured in `eu-central-1` on the `python3.15` [preview runtime](https://aws.amazon.com/blogs/compute/introducing-public-preview-runtimes-on-aws-lambda-starting-with-node-js-26-and-python-3-15/) (Python 3.15.0rc2), arm64, 512 MB. Builds ran on an x86_64 host, timing a whole `cdk synth` with only that function in the stack, as the median of three runs.
 
 ### Lambda
 
-Each function is invoked through its `live` alias, which points at a published version and so restores from a SnapStart snapshot. `$LATEST` is never published, so invoking it shows the same package without SnapStart.
+The SnapStart rows come from the same functions with [SnapStart](https://docs.aws.amazon.com/lambda/latest/dg/snapstart.html) turned on (`snapStart: SnapStartConf.ON_PUBLISHED_VERSIONS`) and invoked through published versions. The example leaves it off, for the reasons in [What SnapStart changes](#what-snapstart-changes).
 
 | | `UvPythonFunction` | Official `PythonFunction` |
 | --- | --- | --- |
-| SnapStart restore, median | 359 ms | 359 ms |
-| SnapStart restore, p90 | 400 ms | 400 ms |
-| Billed restore, median | 56 ms | 60 ms |
-| First invoke after a restore, median | 28 ms | 12 ms |
-| Init without SnapStart, median of 30 forced cold starts | 347 ms | 587 ms |
-| Init without SnapStart, p90 | 487 ms | 727 ms |
+| Init, median of 30 forced cold starts | 347 ms | 587 ms |
+| Init, p90 of 30 forced cold starts | 487 ms | 727 ms |
+| First invoke after a cold start, median | 2.7 ms | 2.7 ms |
 | Warm invoke, median of 50 | 2.0 ms | 1.8 ms |
-| Max memory used after a restore | 71 MB | 74 MB |
+| Max memory used | 66 MB | 71 MB |
+| With SnapStart: restore, median | 359 ms | 359 ms |
+| With SnapStart: restore, p90 | 400 ms | 400 ms |
+| With SnapStart: billed restore, median | 56 ms | 60 ms |
+| With SnapStart: first invoke after a restore, median | 28 ms | 12 ms |
 | Bytecode on Lambda | Precompiled, hash-based, used as shipped | None shipped, so each module is compiled in memory on every cold start |
 | Wheels | `aarch64` | `aarch64` |
 
-Restores come from three rounds per function: each round published a new version and invoked it 12 times at once, so every invocation landed on a freshly restored execution environment (36 and 35 restores).
+SnapStart restores come from three rounds per function: each round published a new version and invoked it 12 times at once, so every invocation landed on a freshly restored execution environment (36 and 35 restores).
 
 ```mermaid
 xychart-beta
   title "Cold start, median (ms)"
-  x-axis ["UvPythonFunction init", "PythonFunction init", "UvPythonFunction restore", "PythonFunction restore"]
+  x-axis ["UvPythonFunction init", "PythonFunction init", "UvPythonFunction SnapStart", "PythonFunction SnapStart"]
   y-axis "ms" 0 --> 650
   bar [347, 587, 359, 359]
 ```
@@ -41,7 +42,7 @@ Once a function is warm, both run the same code at the same speed; the differenc
 
 SnapStart runs the init phase once, when a version is published, and later cold starts restore that initialized memory. The official construct's modules are compiled during that one init, so its missing bytecode no longer costs anything, and both functions restore in the same time.
 
-For a function this small, SnapStart does not beat a package that loads fast on its own: a restore of either function takes about as long as `UvPythonFunction`'s plain init, and the first invocation after a restore is slower than one after a plain init. Lambda bills only part of a restore (56 ms of 359 ms here), but SnapStart adds a charge for caching each published version, for at least three hours, and one for each restore. It pays off when init is expensive, as with the official construct's 587 ms, or for functions that load much more code or data. Lambda has billed the init phase of on-demand functions [since August 2025](https://aws.amazon.com/blogs/compute/aws-lambda-standardizes-billing-for-init-phase/), so a shorter init without SnapStart lowers the bill as well as the latency.
+For a function this small, though, SnapStart does not beat a package that loads fast on its own: a restore of either function takes about as long as `UvPythonFunction`'s plain init, and the first invocation after a restore is slower than one after a plain init. Lambda bills only part of a restore (56 ms of 359 ms here), but SnapStart adds a charge for caching each published version, for at least three hours, and one for each restore. It pays off when init is expensive, as with the official construct's 587 ms, or for functions that load much more code or data. Lambda has billed the init phase of on-demand functions [since August 2025](https://aws.amazon.com/blogs/compute/aws-lambda-standardizes-billing-for-init-phase/), so a shorter init without SnapStart lowers the bill as well as the latency.
 
 AWS warns that preview runtimes have slower cold starts than GA runtimes while they are being optimized: on `python3.14`, the same functions initialized in 268 ms and 501 ms.
 
@@ -110,9 +111,9 @@ pnpm run deploy
 Then invoke either function:
 
 ```sh
-aws lambda invoke --function-name lambda-python-uv-enhanced --qualifier live \
+aws lambda invoke --function-name lambda-python-uv-enhanced \
   --cli-binary-format raw-in-base64-out --payload '{"name": "uv"}' response.json
-aws lambda invoke --function-name lambda-python-uv-alpha --qualifier live \
+aws lambda invoke --function-name lambda-python-uv-alpha \
   --cli-binary-format raw-in-base64-out --payload '{"name": "uv"}' response.json
 ```
 
