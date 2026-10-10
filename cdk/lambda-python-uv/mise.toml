@@ -1,0 +1,3 @@
+# uv bundles the Python function on the host; the construct's Docker fallback uses the same version.
+[tools]
+uv = "0.13.0"
