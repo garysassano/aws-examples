@@ -13,14 +13,15 @@ catalog:
   "@astrojs/check": ^0.9.10
   "@astrojs/preact": ^6.0.5
   "@astrojs/rss": ^4.0.19
-  aws-cdk: ^2.1143.0
-  aws-cdk-lib: ^2.270.0
+  aws-cdk: ^2.1144.0
+  aws-cdk-lib: ^2.272.0
   # Alpha modules ship in lockstep with aws-cdk-lib; bump them together.
-  "@aws-cdk/aws-apprunner-alpha": 2.270.0-alpha.0
-  "@aws-cdk/aws-pipes-alpha": 2.270.0-alpha.0
-  "@aws-cdk/aws-pipes-enrichments-alpha": 2.270.0-alpha.0
-  "@aws-cdk/aws-pipes-sources-alpha": 2.270.0-alpha.0
-  "@aws-cdk/aws-pipes-targets-alpha": 2.270.0-alpha.0
+  "@aws-cdk/aws-apprunner-alpha": 2.272.0-alpha.0
+  "@aws-cdk/aws-lambda-python-alpha": 2.272.0-alpha.0
+  "@aws-cdk/aws-pipes-alpha": 2.272.0-alpha.0
+  "@aws-cdk/aws-pipes-enrichments-alpha": 2.272.0-alpha.0
+  "@aws-cdk/aws-pipes-sources-alpha": 2.272.0-alpha.0
+  "@aws-cdk/aws-pipes-targets-alpha": 2.272.0-alpha.0
   "@aws-lambda-powertools/event-handler": ^2.35.0
   "@aws-lambda-powertools/idempotency": ^2.35.0
   "@aws-lambda-powertools/jmespath": ^2.35.0
@@ -66,7 +67,6 @@ catalog:
   "@types/aws-lambda": ^8.10.163
   "@types/node": ^26.6.2
   typescript: ^7.0.2
-  uv-python-lambda: ^0.0.7
   vitest: ^5.0.1
   yaml: ^2.9.1
   zod: ^4.6.5
