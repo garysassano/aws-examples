@@ -10,8 +10,6 @@ Measured in `eu-central-1` on the `python3.15` [preview runtime](https://aws.ama
 
 ### Lambda
 
-The SnapStart rows come from the same functions with [SnapStart](https://docs.aws.amazon.com/lambda/latest/dg/snapstart.html) turned on (`snapStart: SnapStartConf.ON_PUBLISHED_VERSIONS`) and invoked through published versions. The example leaves it off, for the reasons in [What SnapStart changes](#what-snapstart-changes).
-
 | | `UvPythonFunction` | Official `PythonFunction` |
 | --- | --- | --- |
 | Init, median of 30 forced cold starts | 347 ms | 587 ms |
@@ -19,14 +17,26 @@ The SnapStart rows come from the same functions with [SnapStart](https://docs.aw
 | First invoke after a cold start, median | 2.7 ms | 2.7 ms |
 | Warm invoke, median of 50 | 2.0 ms | 1.8 ms |
 | Max memory used | 66 MB | 71 MB |
-| With SnapStart: restore, median | 359 ms | 359 ms |
-| With SnapStart: restore, p90 | 400 ms | 400 ms |
-| With SnapStart: billed restore, median | 56 ms | 60 ms |
-| With SnapStart: first invoke after a restore, median | 28 ms | 12 ms |
 | Bytecode on Lambda | Precompiled, hash-based, used as shipped | None shipped, so each module is compiled in memory on every cold start |
 | Wheels | `aarch64` | `aarch64` |
 
-SnapStart restores come from three rounds per function: each round published a new version and invoked it 12 times at once, so every invocation landed on a freshly restored execution environment (36 and 35 restores).
+Once a function is warm, both run the same code at the same speed; the difference is all in loading it.
+
+AWS warns that preview runtimes have slower cold starts than GA runtimes while they are being optimized: on `python3.14`, the same functions initialized in 268 ms and 501 ms.
+
+#### SnapStart
+
+The example leaves [SnapStart](https://docs.aws.amazon.com/lambda/latest/dg/snapstart.html) off. These numbers come from the same functions with it turned on (`snapStart: SnapStartConf.ON_PUBLISHED_VERSIONS`) and invoked through published versions.
+
+| | `UvPythonFunction` | Official `PythonFunction` |
+| --- | --- | --- |
+| Restore, median | 359 ms | 359 ms |
+| Restore, p90 | 400 ms | 400 ms |
+| Billed restore, median | 56 ms | 60 ms |
+| First invoke after a restore, median | 28 ms | 12 ms |
+| Max memory used | 71 MB | 74 MB |
+
+Restores come from three rounds per function: each round published a new version and invoked it 12 times at once, so every invocation landed on a freshly restored execution environment (36 and 35 restores).
 
 ```mermaid
 xychart-beta
@@ -36,15 +46,9 @@ xychart-beta
   bar [347, 587, 359, 359]
 ```
 
-Once a function is warm, both run the same code at the same speed; the difference is all in loading it.
-
-### What SnapStart changes
-
 SnapStart runs the init phase once, when a version is published, and later cold starts restore that initialized memory. The official construct's modules are compiled during that one init, so its missing bytecode no longer costs anything, and both functions restore in the same time.
 
 For a function this small, though, SnapStart does not beat a package that loads fast on its own: a restore of either function takes about as long as `UvPythonFunction`'s plain init, and the first invocation after a restore is slower than one after a plain init. Lambda bills only part of a restore (56 ms of 359 ms here), but SnapStart adds a charge for caching each published version, for at least three hours, and one for each restore. It pays off when init is expensive, as with the official construct's 587 ms, or for functions that load much more code or data. Lambda has billed the init phase of on-demand functions [since August 2025](https://aws.amazon.com/blogs/compute/aws-lambda-standardizes-billing-for-init-phase/), so a shorter init without SnapStart lowers the bill as well as the latency.
-
-AWS warns that preview runtimes have slower cold starts than GA runtimes while they are being optimized: on `python3.14`, the same functions initialized in 268 ms and 501 ms.
 
 ### Package
 
