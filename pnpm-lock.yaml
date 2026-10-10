@@ -374,7 +374,7 @@ importers:
         specifier: 'catalog:'
         version: 4.6.5
 
-  cdk/ecr-dockerhub-pull-through-cache:
+  cdk/ecr-docker-hub-pull-through-cache:
     dependencies:
       '@aws-cdk/aws-apprunner-alpha':
         specifier: 'catalog:'
