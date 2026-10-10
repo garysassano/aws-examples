@@ -7,8 +7,8 @@
   "scripts": {
     "cdk": "cdk",
     "check": "pnpm lint && pnpm typecheck && pnpm synth",
-    "deploy": "cdk deploy",
-    "destroy": "cdk destroy",
+    "deploy": "cdk deploy --all",
+    "destroy": "cdk destroy --all",
     "diff": "cdk diff",
     "format": "biome format --write .",
     "lint": "biome check .",
@@ -17,14 +17,14 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@aws-lambda-powertools/event-handler": "catalog:",
     "@aws-lambda-powertools/logger": "catalog:",
-    "@middy/core": "catalog:",
-    "@middy/http-error-handler": "catalog:",
     "aws-cdk-lib": "catalog:",
     "constructs": "catalog:"
   },
   "devDependencies": {
     "@biomejs/biome": "catalog:",
+    "@types/aws-lambda": "catalog:",
     "@types/node": "catalog:",
     "aws-cdk": "catalog:",
     "esbuild": "catalog:",
