@@ -66,9 +66,9 @@ For a function this small, SnapStart does not beat a package that loads fast on 
 
 ### Build
 
-The functions target arm64, and the build host is x86_64, so Docker runs the official construct's arm64 bundling image under QEMU emulation. The last column builds the same function for x86_64, the host's own architecture, to show how much of its time that costs. `UvPythonFunction` installs wheels for either target on the host, so its times do not change.
+The functions target arm64, and the build host is x86_64, so Docker runs the official construct's arm64 bundling image under QEMU emulation. The last column builds the same function for x86_64, the host's own architecture, to show how much of the time emulation costs. `UvPythonFunction` installs wheels for either target on the host, so its times do not change.
 
-| | `UvPythonFunction` | Official `PythonFunction` | Official, x86_64 target |
+| | `UvPythonFunction` | Official `PythonFunction`, arm64 | Official `PythonFunction`, x86_64 |
 | --- | --- | --- | --- |
 | Needs | uv, with Docker only as a fallback | Docker | Docker |
 | Bundling image | None | 988 MB, built from the Lambda `python3.15` base image | 972 MB |
@@ -79,7 +79,7 @@ The functions target arm64, and the build host is x86_64, so Docker runs the off
 ```mermaid
 xychart-beta
   title "First synth with empty caches (s)"
-  x-axis ["UvPythonFunction", "PythonFunction", "PythonFunction x86_64"]
+  x-axis ["UvPythonFunction", "PythonFunction arm64", "PythonFunction x86_64"]
   y-axis "Synth (s)" 0 --> 150
   bar [2.7, 132, 27.5]
 ```
