@@ -6,19 +6,55 @@ Both functions use the same runtime, architecture, memory, logging and uv versio
 
 ## Comparison
 
-Measured in `eu-central-1` on `python3.14`, arm64, 512 MB, built on an x86_64 host:
+Measured in `eu-central-1` on `python3.14`, arm64, 512 MB. Builds ran on an x86_64 host, timing a whole `cdk synth` with only that function in the stack, as the median of three runs for the official construct's first build and five runs otherwise.
+
+### Lambda
 
 | | `UvPythonFunction` | Official `PythonFunction` |
 | --- | --- | --- |
-| Median init, 15 forced cold starts | 260 ms | 490 ms |
+| Init, median of 30 forced cold starts | 268 ms | 501 ms |
+| Init, p90 of 30 forced cold starts | 277 ms | 518 ms |
+| First invoke after a cold start, median | 2.7 ms | 2.6 ms |
+| Warm invoke, median of 50 | 1.9 ms | 1.8 ms |
+| Max memory used | 62 MB | 66 MB |
 | Bytecode on Lambda | Precompiled, hash-based, used as shipped | None shipped, so each module is compiled in memory on every cold start |
-| Deployment package | 6.6 KB code + 5.6 MB layer | 3.5 MB code |
-| Upload after a handler-only change | 6.6 KB | 3.5 MB |
-| Bundling | uv on the host, no Docker | Docker build of a 3.6 GB image |
-| First synth, no Docker images cached | 222 s for both functions, almost all of it the official construct's image | |
-| Synth with images cached | 5 s for both functions | |
+| Wheels | `aarch64` | `aarch64` |
 
-Both install `aarch64` wheels, so `pydantic-core` loads on Lambda either way.
+```mermaid
+xychart-beta
+  title "Init duration over 30 forced cold starts (ms)"
+  x-axis ["UvPythonFunction p50", "UvPythonFunction p90", "PythonFunction p50", "PythonFunction p90"]
+  y-axis "Init (ms)" 0 --> 600
+  bar [268, 277, 501, 518]
+```
+
+Once a function is warm, both run the same code at the same speed; the difference is all in loading it.
+
+### Package
+
+| | `UvPythonFunction` | Official `PythonFunction` |
+| --- | --- | --- |
+| Deployed, zipped | 6.6 KB code + 5.6 MB layer | 3.5 MB code |
+| Unzipped | 48 KB code + 18 MB layer, bytecode included | 12 MB |
+| Upload after a handler-only change | 6.6 KB | 3.5 MB |
+
+### Build
+
+| | `UvPythonFunction` | Official `PythonFunction` |
+| --- | --- | --- |
+| Needs | uv, with Docker only as a fallback | Docker |
+| Bundling image | None | 3.6 GB, built from the SAM build image |
+| First synth, empty uv cache or no image | 2.6 s | 207 s |
+| Synth, caches warm | 1.6 s | 5.1 s |
+| Synth after a handler-only change | 1.4 s, the code asset only | 5.3 s, the whole bundle |
+
+```mermaid
+xychart-beta
+  title "First synth with empty caches (s)"
+  x-axis ["UvPythonFunction", "PythonFunction"]
+  y-axis "Synth (s)" 0 --> 220
+  bar [2.6, 207]
+```
 
 ## What `UvPythonFunction` does
 
