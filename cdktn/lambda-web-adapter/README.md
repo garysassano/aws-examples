@@ -71,11 +71,11 @@ The page draws the request path from SvelteKit through Hono to Upstash Redis wit
 
 The SecureString uses the AWS managed key `aws/ssm`, which any principal in the account can decrypt with, so the `ssm:GetParameter` grant is what limits who reads the token; a customer managed KMS key would add a second, key-level grant. Terraform state still holds the token, as it holds every secret Terraform manages, so keep the state private.
 
-## Design Notes
-
-- **Lambda-to-Lambda call.** The frontend calls the backend synchronously, so it waits, and is billed, while the backend runs, and a request can meet two cold starts. That cost is small here, about 15 ms per request, and the split is the point of the example: two independently deployed web apps. In a product, the browser would usually call the API directly with user authentication, or the frontend would talk to Redis itself.
-- **Hono without the adapter.** Hono also runs on Lambda natively through `hono/aws-lambda`, which handles function URL, API Gateway, ALB, and VPC Lattice events with no adapter or HTTP server in the function. For a Hono-only service that is usually the leaner choice, with faster cold starts and an optional zip deployment, and the frontend could then call it with the Lambda Invoke API instead of a function URL. The Lambda Web Adapter earns its place with frameworks that lack an official Lambda adapter, such as SvelteKit, whose Node build runs here unchanged.
-
 ## Architecture Diagram
 
 ![Architecture Diagram](./src/assets/arch-diagram.svg)
+
+### Design Notes
+
+- **Lambda-to-Lambda call.** The frontend calls the backend synchronously, so it waits, and is billed, while the backend runs, and a request can meet two cold starts. That cost is small here, about 15 ms per request, and the split is the point of the example: two independently deployed web apps. In a product, the browser would usually call the API directly with user authentication, or the frontend would talk to Redis itself.
+- **Hono without the adapter.** Hono also runs on Lambda natively through `hono/aws-lambda`, which handles function URL, API Gateway, ALB, and VPC Lattice events with no adapter or HTTP server in the function. For a Hono-only service that is usually the leaner choice, with faster cold starts and an optional zip deployment, and the frontend could then call it with the Lambda Invoke API instead of a function URL. The Lambda Web Adapter earns its place with frameworks that lack an official Lambda adapter, such as SvelteKit, whose Node build runs here unchanged.
