@@ -384,15 +384,15 @@
 </text>
 </g>
 <g data-legend="">
-<polyline points="641.64,790 669.64,790" fill="none" stroke="#232F3E" stroke-width="2" stroke-linejoin="miter" stroke-dasharray="6 5"/>
-<polygon points="677.64,790 669.64,786 669.64,794" fill="#232F3E"/>
-<text x="689.64" y="794" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="start" fill="#536577" font-weight="normal">
-<tspan x="689.64" dy="0">At cold start</tspan>
+<polyline points="658.65,790 686.65,790" fill="none" stroke="#232F3E" stroke-width="2" stroke-linejoin="miter" stroke-dasharray="6 5"/>
+<polygon points="694.65,790 686.65,786 686.65,794" fill="#232F3E"/>
+<text x="706.65" y="794" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="start" fill="#536577" font-weight="normal">
+<tspan x="706.65" dy="0">At cold start</tspan>
 </text>
-<polyline points="641.64,814 669.64,814" fill="none" stroke="#232F3E" stroke-width="2" stroke-linejoin="miter"/>
-<polygon points="677.64,814 669.64,810 669.64,818" fill="#232F3E"/>
-<text x="689.64" y="818" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="start" fill="#536577" font-weight="normal">
-<tspan x="689.64" dy="0">On each invocation</tspan>
+<polyline points="658.65,814 686.65,814" fill="none" stroke="#232F3E" stroke-width="2" stroke-linejoin="miter"/>
+<polygon points="694.65,814 686.65,810 686.65,818" fill="#232F3E"/>
+<text x="706.65" y="818" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="start" fill="#536577" font-weight="normal">
+<tspan x="706.65" dy="0">At invocation</tspan>
 </text>
 </g>
 <circle cx="717" cy="275" r="15" fill="#232F3E"/>
