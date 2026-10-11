@@ -67,9 +67,8 @@ Both constructs deploy one zip, so a handler-only change uploads the whole packa
 
 The functions target arm64, and the build host is x86_64, so Docker runs the official construct's arm64 bundling image under QEMU emulation. The last column builds the same function for x86_64, the host's own architecture, to show how much of the time emulation costs. `UvPythonFunction` installs wheels for either target on the host, so its times do not change.
 
-| | `UvPythonFunction` | `PythonFunction` | `PythonFunction` |
+| | `UvPythonFunction` | `PythonFunction` (arm64) | `PythonFunction` (x86_64) |
 | --- | --- | --- | --- |
-| Target architecture | arm64 or x86_64, same times | arm64 | x86_64 |
 | Needs | uv, with Docker only as a fallback | Docker | Docker |
 | Bundling image | None | 3.6 GB, the construct's default, built on the `python3.14` SAM build image | 3.5 GB |
 | First synth, empty uv cache or no bundling image | 2.6 s | 100 s | 28 s |
@@ -79,7 +78,7 @@ The functions target arm64, and the build host is x86_64, so Docker runs the off
 ```mermaid
 xychart-beta
   title "First synth with empty caches (s)"
-  x-axis ["UvPythonFunction", "PythonFunction arm64", "PythonFunction x86_64"]
+  x-axis ["UvPythonFunction", "PythonFunction (arm64)", "PythonFunction (x86_64)"]
   y-axis "Synth (s)" 0 --> 120
   bar [2.6, 100, 28]
 ```
