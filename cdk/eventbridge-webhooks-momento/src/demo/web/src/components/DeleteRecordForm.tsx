@@ -1,48 +1,58 @@
-import type React from "react";
-import { deleteRecord } from "../utils/dynamodb";
-import { toastError, toastSuccess } from "../utils/toast";
+import { type FormEvent, useId, useState } from "react";
+import { deleteRecord } from "../api";
+import { type Status, StatusLine, inputClass } from "./ui";
 
-type DeleteRecordFormProps = {
+type Props = {
   location: string;
-  handleChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onLocationChange: (location: string) => void;
 };
 
-const DeleteRecordForm = (props: DeleteRecordFormProps) => {
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+export default function DeleteRecordForm({ location, onLocationChange }: Props) {
+  const inputId = useId();
+  const [status, setStatus] = useState<Status>();
+  const [busy, setBusy] = useState(false);
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    const key = location.trim();
+    setBusy(true);
     try {
-      await deleteRecord(props.location);
-      toastSuccess("Item deleted successfully");
+      const { deleted } = await deleteRecord(key);
+      setStatus(
+        deleted
+          ? { ok: true, text: `Deleted ${key}. Watch for its REMOVE message on the topic.` }
+          : { ok: false, text: `There is no record for ${key}, so nothing changed.` },
+      );
     } catch (error) {
-      console.error("Error deleting item", error);
-      toastError("Error deleting item");
+      setStatus({ ok: false, text: `Could not delete the record: ${(error as Error).message}` });
+    } finally {
+      setBusy(false);
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col items-start space-y-2 w-full">
-      <label htmlFor="location-input" className="text-sm font-medium text-gray-600">
+      <label htmlFor={inputId} className="text-sm font-medium text-gray-600">
         Location
       </label>
       <div className="flex w-full items-center space-x-2">
         <input
+          id={inputId}
           type="text"
-          id="location-input"
-          value={props.location}
-          onChange={props.handleChange}
+          value={location}
+          onChange={(event) => onLocationChange(event.target.value)}
           required
-          className="flex-1 rounded-lg border px-3 py-2 text-sm focus:border-blue-500 focus:ring-blue-500"
-          placeholder="Enter Location"
+          className={`${inputClass} flex-1`}
         />
         <button
           type="submit"
-          className="rounded-lg bg-red-500 px-4 py-2 font-bold text-white hover:bg-red-600 focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+          disabled={busy}
+          className="rounded-lg bg-red-500 px-4 py-2 font-bold text-white hover:bg-red-600 disabled:opacity-50 focus:outline-hidden focus:ring-2 focus:ring-blue-500"
         >
-          Delete
+          {busy ? "Deleting…" : "Delete"}
         </button>
       </div>
+      <StatusLine status={status} />
     </form>
   );
-};
-
-export default DeleteRecordForm;
+}

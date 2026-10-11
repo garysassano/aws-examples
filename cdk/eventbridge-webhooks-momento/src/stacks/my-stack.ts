@@ -22,7 +22,9 @@ const topicName: string = "momento-eventbridge-topic";
 // Created before deployment, so the API key never appears in the template.
 const apiKeySecretName: string = "momento-api-key";
 
-const env = validateEnv(["MOMENTO_API_ENDPOINT"]);
+const env = validateEnv(["MOMENTO_ENDPOINT"]);
+// Momento serves its HTTP API from the same regional endpoint that its SDKs use.
+const momentoHttpApi = `https://api.cache.${env.MOMENTO_ENDPOINT}`;
 
 export class MyStack extends Stack {
   constructor(scope: Construct, id: string, props: StackProps = {}) {
@@ -86,7 +88,7 @@ export class MyStack extends Stack {
       {
         apiDestinationName: "momento-cache-put-api-destination",
         connection: momentoConnection,
-        endpoint: `${env.MOMENTO_API_ENDPOINT}/cache/*`,
+        endpoint: `${momentoHttpApi}/cache/*`,
         httpMethod: HttpMethod.PUT,
       },
     );
@@ -97,7 +99,7 @@ export class MyStack extends Stack {
       {
         apiDestinationName: "momento-cache-delete-api-destination",
         connection: momentoConnection,
-        endpoint: `${env.MOMENTO_API_ENDPOINT}/cache/*`,
+        endpoint: `${momentoHttpApi}/cache/*`,
         httpMethod: HttpMethod.DELETE,
       },
     );
@@ -108,7 +110,7 @@ export class MyStack extends Stack {
       {
         apiDestinationName: "momento-topics-post-api-destination",
         connection: momentoConnection,
-        endpoint: `${env.MOMENTO_API_ENDPOINT}/topics/*/*`,
+        endpoint: `${momentoHttpApi}/topics/*/*`,
         httpMethod: HttpMethod.POST,
       },
     );
