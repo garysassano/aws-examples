@@ -1,4 +1,5 @@
-import { App, type Environment } from "aws-cdk-lib/core";
+import { App, Aspects, type Environment, RemovalPolicies } from "aws-cdk-lib/core";
+import { DenyLogGroupCreation } from "./aspects/deny-log-group-creation.js";
 import { LambdaStack } from "./stacks/lambda-stack.js";
 import { StepfunctionsStack } from "./stacks/stepfunctions-stack.js";
 import { validateEnv } from "./utils/validate-env.js";
@@ -22,5 +23,10 @@ new StepfunctionsStack(app, "cdk-sfn-cross-account-lambda-src", {
 new LambdaStack(app, "cdk-sfn-cross-account-lambda-trg", {
   env: trgEnv,
 });
+
+// Delete log groups with their stacks, so nothing is left behind and a redeploy can recreate them.
+RemovalPolicies.of(app).destroy({ applyToResourceTypes: ["AWS::Logs::LogGroup"] });
+// Keep Lambda from recreating a deleted log group with logs it delivers late.
+Aspects.of(app).add(new DenyLogGroupCreation());
 
 app.synth();

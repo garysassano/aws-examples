@@ -125,8 +125,6 @@ Both stacks deploy and each keeps at least one 1024 MB environment provisioned u
 pnpm run destroy
 ```
 
-Lambda creates the functions' log groups outside the stacks, so `/aws/lambda/dpc-basic` and `/aws/lambda/dpc-advanced` remain until you delete them.
-
 ## Architecture Diagram
 
 ![Architecture Diagram](./src/assets/arch-diagram.svg)
