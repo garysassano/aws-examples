@@ -27,7 +27,7 @@ pnpm run deploy
 Access the website by clicking the `<CLOUDFRONT_DISTRIBUTION_URL>`:
 
 ```sh
-✔  Complete
+✓  Complete
    MyBlog: <CLOUDFRONT_DISTRIBUTION_URL>
 ```
 
@@ -36,3 +36,5 @@ Access the website by clicking the `<CLOUDFRONT_DISTRIBUTION_URL>`:
 ```sh
 pnpm destroy
 ```
+
+This removes the stage's resources, state, and passphrase. SST's bootstrap for the account and Region stays for other SST apps: the `sst-asset-*` and `sst-state-*` buckets, the `sst-asset` ECR repository, and the `/sst/bootstrap` SSM parameter.

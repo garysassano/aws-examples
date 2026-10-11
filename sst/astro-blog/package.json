@@ -10,7 +10,7 @@
     "check": "pnpm lint && pnpm typecheck && pnpm build",
     "deploy": "sst deploy",
     "destroy": "sst remove",
-    "dev": "sst dev astro dev",
+    "dev": "astro dev",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "typecheck": "astro check"

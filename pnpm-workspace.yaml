@@ -8,10 +8,10 @@ packages:
 # Shared versions. Examples reference these as `catalog:`; a dependency only one
 # example uses stays pinned in that example's package.json.
 catalog:
-  astro: ^7.3.4
+  astro: ^7.3.8
   astro-sst: ^3.1.4
   "@astrojs/check": ^0.9.10
-  "@astrojs/preact": ^6.0.5
+  "@astrojs/preact": ^6.0.6
   "@astrojs/rss": ^4.0.19
   aws-cdk: ^2.1144.0
   aws-cdk-lib: ^2.272.0
@@ -26,17 +26,17 @@ catalog:
   "@aws-lambda-powertools/jmespath": ^2.35.0
   "@aws-lambda-powertools/logger": ^2.35.0
   "@aws-lambda-powertools/parser": ^2.35.0
-  "@aws-sdk/client-bedrock-runtime": ^3.1138.0
-  "@aws-sdk/client-dynamodb": ^3.1138.0
-  "@aws-sdk/client-ecs": ^3.1138.0
-  "@aws-sdk/client-rekognition": ^3.1138.0
-  "@aws-sdk/client-s3": ^3.1138.0
-  "@aws-sdk/client-sns": ^3.1138.0
-  "@aws-sdk/client-sqs": ^3.1138.0
-  "@aws-sdk/client-ssm": ^3.1138.0
-  "@aws-sdk/lib-dynamodb": ^3.1138.0
-  "@aws-sdk/s3-request-presigner": ^3.1138.0
-  "@biomejs/biome": ^2.5.14
+  "@aws-sdk/client-bedrock-runtime": ^3.1148.0
+  "@aws-sdk/client-dynamodb": ^3.1148.0
+  "@aws-sdk/client-ecs": ^3.1148.0
+  "@aws-sdk/client-rekognition": ^3.1148.0
+  "@aws-sdk/client-s3": ^3.1148.0
+  "@aws-sdk/client-sns": ^3.1148.0
+  "@aws-sdk/client-sqs": ^3.1148.0
+  "@aws-sdk/client-ssm": ^3.1148.0
+  "@aws-sdk/lib-dynamodb": ^3.1148.0
+  "@aws-sdk/s3-request-presigner": ^3.1148.0
+  "@biomejs/biome": ^2.5.15
   cargo-lambda-cdk: ^0.0.36
   cdktn: ^0.24.0
   cdktn-cli: ^0.24.0
@@ -61,10 +61,10 @@ catalog:
   "@opentelemetry/sdk-trace-base": ^2.11.0
   "@opentelemetry/sdk-trace-node": ^2.11.0
   "@opentelemetry/semantic-conventions": ^1.43.0
-  sst: ^4.17.1
+  sst: ^4.17.2
   tsx: ^4.23.15
   "@types/aws-lambda": ^8.10.163
-  "@types/node": ^26.6.2
+  "@types/node": ^26.6.4
   typescript: ^7.0.2
   vitest: ^5.0.1
   yaml: ^2.9.1
