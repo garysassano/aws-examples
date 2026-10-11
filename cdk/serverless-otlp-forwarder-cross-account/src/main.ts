@@ -1,4 +1,5 @@
-import { App, type Environment } from "aws-cdk-lib/core";
+import { App, Aspects, type Environment, RemovalPolicies } from "aws-cdk-lib/core";
+import { DenyLogGroupCreation } from "./aspects/deny-log-group-creation.js";
 import { OtlpReceiverStack } from "./stacks/otlp-receiver.js";
 import { OtlpSenderStack } from "./stacks/otlp-sender.js";
 import { getTransport } from "./utils/transport.js";
@@ -36,5 +37,10 @@ const otlpSenderStack = new OtlpSenderStack(
 
 // The sender subscribes to, or publishes into, resources the receiver creates.
 otlpSenderStack.addStackDependency(otlpReceiverStack);
+
+// Delete log groups with their stacks, so nothing is left behind and a redeploy can recreate them.
+RemovalPolicies.of(app).destroy({ applyToResourceTypes: ["AWS::Logs::LogGroup"] });
+// Keep Lambda from recreating a deleted log group with logs it delivers late.
+Aspects.of(app).add(new DenyLogGroupCreation());
 
 app.synth();

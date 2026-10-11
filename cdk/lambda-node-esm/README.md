@@ -74,7 +74,7 @@ aws lambda invoke --function-name esm-lambda /dev/stdout
 pnpm destroy
 ```
 
-This removes every stack resource, including the bucket and table with their data. Lambda creates the functions' CloudWatch log groups outside the stack, so `/aws/lambda/cjs-lambda`, `/aws/lambda/esm-lambda`, and the bucket auto-delete function's log group remain until you delete them.
+This removes every stack resource, including the bucket and table with their data and the functions' log groups. Lambda creates the bucket auto-delete function's log group outside the stack, so it remains until you delete it.
 
 ## Architecture Diagram
 

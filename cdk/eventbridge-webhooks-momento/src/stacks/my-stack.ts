@@ -59,7 +59,6 @@ export class MyStack extends Stack {
     const logGroup = new LogGroup(this, "AccessLogs", {
       retention: RetentionDays.THREE_MONTHS,
       logGroupName: `weather-stats-demo-logs-${this.region}`,
-      removalPolicy: RemovalPolicy.DESTROY,
     });
     const logDestination = new CloudwatchLogsLogDestination(logGroup);
 
