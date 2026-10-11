@@ -16,6 +16,14 @@ mise install
 pnpm install
 ```
 
+## Development
+
+```sh
+pnpm sst dev
+```
+
+SST deploys the bucket and a stub of the `Presign` function that runs your local code, then starts `astro dev` at `http://localhost:4321` with `PUBLIC_PRESIGN_URL` set; plain `pnpm dev` starts Astro without it, so uploads fail. Dev mode doesn't deploy the website, so on a stage you've deployed it replaces the site; pass `--stage dev` to keep them apart.
+
 ## Deployment
 
 ```sh
@@ -27,7 +35,8 @@ pnpm run deploy
 Access the website by clicking the `<CLOUDFRONT_DISTRIBUTION_URL>`:
 
 ```sh
-✔  Complete
+✓  Complete
+   Presign: <FUNCTION_URL>
    MyWebsite: <CLOUDFRONT_DISTRIBUTION_URL>
 ```
 
@@ -36,6 +45,8 @@ Access the website by clicking the `<CLOUDFRONT_DISTRIBUTION_URL>`:
 ```sh
 pnpm destroy
 ```
+
+This removes the stage's resources, including the bucket and its uploads, along with the stage's state and passphrase. SST's bootstrap for the account and Region stays for other SST apps: the `sst-asset-*` and `sst-state-*` buckets, the `sst-asset` ECR repository, the `/sst/bootstrap` SSM parameter, and, once you've run `sst dev`, the `sst` AppSync Events API.
 
 ## How it works
 
