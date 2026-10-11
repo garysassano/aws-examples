@@ -48,14 +48,10 @@ Each service prints the URL of its NGINX service as an output.
 ## Cleanup
 
 ```sh
-pnpm destroy --all
+pnpm destroy --all -c service=all
 ```
 
-The app creates only the stacks for the chosen service, so pass the same value to remove another service:
-
-```sh
-pnpm destroy --all -c service=ecs-fargate
-```
+With `-c service=all` the app includes every service stack, so this removes whichever services you deployed, skips the others, and deletes the shared cache stack last. Without it, `--all` covers only the default service, so the cache stack would be deleted even if another service still pulls from it.
 
 The Docker Hub secret is not managed by the app, so delete it separately:
 
@@ -92,5 +88,5 @@ ECS Express Mode creates the `default` ECS cluster if it does not already exist,
 
 - **One cache for every service.** A pull-through cache rule exists once per registry, so the rule and the cache repository live in a shared stack that each service stack depends on, and deploying a service deploys it first.
 - **Grants instead of a registry policy.** Each service role gets `ecr:BatchImportUpstreamImage` on the cache repository directly. ECR also accepts the permission through the registry permissions policy, but that is a single document per registry, and writing it from this app would replace any policy already there.
-- **A repository created in advance.** ECR creates a cache repository on the first pull by itself. Creating it in the stack instead lets the services reference it, gives it a lifecycle rule that expires superseded images after 7 days, and lets `cdk destroy` remove it with its images. Its tags stay mutable, since ECR overwrites `stable-alpine` when the upstream image changes.
+- **A repository created in advance.** ECR creates a cache repository on the first pull by itself. Creating it in the stack instead lets the services reference it, gives it a lifecycle rule that expires superseded images once they are more than 7 days old, and lets `cdk destroy` remove it with its images. Its tags stay mutable, since ECR overwrites `stable-alpine` when the upstream image changes.
 - **A secret created by hand.** Creating the secret in the stack would put the token in the CloudFormation template, where anyone who can read the stack can see it. The stack references the existing secret by name instead.
