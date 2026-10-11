@@ -1,14 +1,13 @@
-import ReactDOM from "react-dom/client";
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
-import { ToastContainer } from "react-toastify";
 
 const root = document.getElementById("root");
 if (!root) throw new Error("index.html has no #root element");
 
-ReactDOM.createRoot(root).render(
-  <>
+createRoot(root).render(
+  <StrictMode>
     <App />
-    <ToastContainer />
-  </>,
+  </StrictMode>,
 );
