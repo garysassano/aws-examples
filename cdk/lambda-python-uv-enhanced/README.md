@@ -68,8 +68,9 @@ For a function this small, SnapStart does not beat a package that loads fast on 
 
 The functions target arm64, and the build host is x86_64, so Docker runs the official construct's arm64 bundling image under QEMU emulation. The last column builds the same function for x86_64, the host's own architecture, to show how much of the time emulation costs. `UvPythonFunction` installs wheels for either target on the host, so its times do not change.
 
-| | `UvPythonFunction` | `PythonFunction`, arm64 | `PythonFunction`, x86_64 |
+| | `UvPythonFunction` | `PythonFunction` | `PythonFunction` |
 | --- | --- | --- | --- |
+| Target architecture | arm64 or x86_64, same times | arm64 | x86_64 |
 | Needs | uv, with Docker only as a fallback | Docker | Docker |
 | Bundling image | None | 988 MB, built from the Lambda `python3.15` base image | 972 MB |
 | First synth, empty uv cache or no image | 2.7 s | 132 s | 27.5 s |
