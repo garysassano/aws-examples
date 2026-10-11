@@ -1,4 +1,5 @@
-import { App } from "aws-cdk-lib/core";
+import { App, Aspects, RemovalPolicies } from "aws-cdk-lib/core";
+import { DenyLogGroupCreation } from "./aspects/deny-log-group-creation.js";
 import { AppRunnerStack } from "./stacks/apprunner-stack.js";
 import { DockerHubCacheStack } from "./stacks/docker-hub-cache-stack.js";
 import { EcsExpressStack } from "./stacks/ecs-express-stack.js";
@@ -38,5 +39,10 @@ if (service === "apprunner" || service === "all") {
     cache,
   });
 }
+
+// Delete log groups with their stacks, so nothing is left behind and a redeploy can recreate them.
+RemovalPolicies.of(app).destroy({ applyToResourceTypes: ["AWS::Logs::LogGroup"] });
+// Keep Lambda from recreating a deleted log group with logs it delivers late.
+Aspects.of(app).add(new DenyLogGroupCreation());
 
 app.synth();

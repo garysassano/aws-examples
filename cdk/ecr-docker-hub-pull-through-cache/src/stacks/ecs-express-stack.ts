@@ -1,7 +1,7 @@
 import { CfnExpressGatewayService } from "aws-cdk-lib/aws-ecs";
 import { ManagedPolicy, Role, ServicePrincipal } from "aws-cdk-lib/aws-iam";
 import { LogGroup, RetentionDays } from "aws-cdk-lib/aws-logs";
-import { CfnOutput, RemovalPolicy, Stack, type StackProps } from "aws-cdk-lib/core";
+import { CfnOutput, Stack, type StackProps } from "aws-cdk-lib/core";
 import type { Construct } from "constructs";
 import { type DockerHubCacheStack, NGINX_IMAGE_TAG } from "./docker-hub-cache-stack.js";
 
@@ -27,7 +27,6 @@ export class EcsExpressStack extends Stack {
     // outlives the service, since its infrastructure role cannot delete log groups.
     const nginxLogGroup = new LogGroup(this, "NginxLogGroup", {
       retention: RetentionDays.ONE_WEEK,
-      removalPolicy: RemovalPolicy.DESTROY,
     });
 
     //==============================================================================
