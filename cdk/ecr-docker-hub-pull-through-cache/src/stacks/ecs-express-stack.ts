@@ -1,6 +1,7 @@
 import { CfnExpressGatewayService } from "aws-cdk-lib/aws-ecs";
 import { ManagedPolicy, Role, ServicePrincipal } from "aws-cdk-lib/aws-iam";
-import { CfnOutput, Stack, type StackProps } from "aws-cdk-lib/core";
+import { LogGroup, RetentionDays } from "aws-cdk-lib/aws-logs";
+import { CfnOutput, RemovalPolicy, Stack, type StackProps } from "aws-cdk-lib/core";
 import type { Construct } from "constructs";
 import { type DockerHubCacheStack, NGINX_IMAGE_TAG } from "./docker-hub-cache-stack.js";
 
@@ -19,17 +20,27 @@ export class EcsExpressStack extends Stack {
     super(scope, id, props);
 
     //==============================================================================
+    // CLOUDWATCH LOGS
+    //==============================================================================
+
+    // Without a log group of its own, Express Mode creates one that never expires and
+    // outlives the service, since its infrastructure role cannot delete log groups.
+    const nginxLogGroup = new LogGroup(this, "NginxLogGroup", {
+      retention: RetentionDays.ONE_WEEK,
+      removalPolicy: RemovalPolicy.DESTROY,
+    });
+
+    //==============================================================================
     // IAM
     //==============================================================================
 
-    // Role that ECS uses to pull the image and write logs
+    // Role that ECS uses to pull the image and write logs. Scoped grants replace
+    // AmazonECSTaskExecutionRolePolicy, which allows both on every repository and log group.
     const executionRole = new Role(this, "ExecutionRole", {
       assumedBy: new ServicePrincipal("ecs-tasks.amazonaws.com"),
-      managedPolicies: [
-        ManagedPolicy.fromAwsManagedPolicyName("service-role/AmazonECSTaskExecutionRolePolicy"),
-      ],
     });
     props.cache.grantPullThroughCache(executionRole);
+    nginxLogGroup.grantWrite(executionRole);
 
     // Role that ECS uses to manage the load balancer, security groups and auto scaling
     const infrastructureRole = new Role(this, "InfrastructureRole", {
@@ -51,7 +62,13 @@ export class EcsExpressStack extends Stack {
       primaryContainer: {
         image: props.cache.nginxRepository.repositoryUriForTag(NGINX_IMAGE_TAG),
         containerPort: 80,
+        awsLogsConfiguration: {
+          logGroup: nginxLogGroup.logGroupName,
+          logStreamPrefix: "nginx",
+        },
       },
+      // Express Mode supports ARM64, but AWS::ECS::ExpressGatewayService has no property
+      // for it yet, so tasks run on x86_64.
       cpu: "256",
       memory: "512",
       healthCheckPath: "/",
