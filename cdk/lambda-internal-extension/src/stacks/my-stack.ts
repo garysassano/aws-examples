@@ -16,7 +16,6 @@ import {
   Runtime,
   RuntimeFamily,
 } from "aws-cdk-lib/aws-lambda";
-import { LogGroup, RetentionDays } from "aws-cdk-lib/aws-logs";
 import { StringListParameter } from "aws-cdk-lib/aws-ssm";
 import {
   CfnDeletionPolicy,
@@ -91,12 +90,6 @@ export class MyStack extends Stack {
       ],
     });
 
-    // Stack-managed, so `cdk destroy` removes it; Lambda's own group would never expire.
-    const currentTimeLogGroup = new LogGroup(this, "CurrentTimeLogGroup", {
-      retention: RetentionDays.ONE_WEEK,
-      removalPolicy: RemovalPolicy.DESTROY,
-    });
-
     new Function(this, "CurrentTimeFunction", {
       functionName: "current-time",
       description: "Returns the current time, behind the maintenance-window gate",
@@ -107,7 +100,6 @@ export class MyStack extends Stack {
       // The gate's SDK calls take at most about 6 seconds before failing open.
       timeout: Duration.seconds(15),
       loggingFormat: LoggingFormat.JSON,
-      logGroup: currentTimeLogGroup,
       environment: {
         AWS_LAMBDA_EXEC_WRAPPER: "/opt/maintenance-window-wrapper",
         MAINTENANCE_WINDOW_PARAMETER_NAME: maintenanceWindowParameter.parameterName,
