@@ -5,21 +5,19 @@ import {
   Architecture,
   LoggingFormat,
   Runtime,
-  RuntimeFamily,
   SystemLogLevel,
 } from "aws-cdk-lib/aws-lambda";
-import { CfnOutput, DockerImage, Duration, Stack, type StackProps } from "aws-cdk-lib/core";
+import { CfnOutput, Duration, Stack, type StackProps } from "aws-cdk-lib/core";
 import type { Construct } from "constructs";
 import { UvPythonFunction } from "../constructs/uv-python-function.js";
 
-// Public preview runtime; aws-cdk-lib has no Runtime.PYTHON_3_15 constant yet.
-const PYTHON_3_15 = new Runtime("python3.15", RuntimeFamily.PYTHON);
-
 // Both functions deploy the same uv project with the same settings; only the construct differs.
 const entry = join(import.meta.dirname, "../functions/app");
+// The uv version mise.toml pins, for UvPythonFunction's Docker fallback and the official
+// construct's bundling image.
 const uvVersion = "0.13.0";
 const shared = {
-  runtime: PYTHON_3_15,
+  runtime: Runtime.PYTHON_3_14,
   architecture: Architecture.ARM_64,
   memorySize: 512,
   timeout: Duration.seconds(10),
@@ -52,11 +50,9 @@ export class MyStack extends Stack {
       index: "app/handler.py",
       handler: "handler",
       bundling: {
-        // There is no SAM build image for python3.15 yet, which the construct builds its own from.
-        image: DockerImage.fromBuild(join(import.meta.dirname, "../docker/alpha-bundling"), {
-          buildArgs: { UV_VERSION: uvVersion },
-          platform: "linux/arm64",
-        }),
+        // Its default image adds a virtualenv with uv to the runtime's SAM build image; this pins
+        // the same uv as UvPythonFunction instead of the older one its Dockerfile defaults to.
+        buildArgs: { UV_VERSION: uvVersion },
         assetExcludes: [".venv", ".ruff_cache"],
       },
     });
