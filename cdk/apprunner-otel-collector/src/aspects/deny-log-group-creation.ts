@@ -1,6 +1,6 @@
 import { type CfnRole, Role } from "aws-cdk-lib/aws-iam";
 import { Function as LambdaFunction } from "aws-cdk-lib/aws-lambda";
-import { type IAspect, Token } from "aws-cdk-lib/core";
+import { ArnFormat, type IAspect, Stack, Token } from "aws-cdk-lib/core";
 import type { IConstruct } from "constructs";
 
 const POLICY_NAME = "deny-log-group-creation";
@@ -14,7 +14,9 @@ const POLICY_NAME = "deny-log-group-creation";
  * log group belongs to the stack, so its role never needs to create one.
  *
  * The deny goes in the role's own policies rather than a separate policy resource, which
- * CloudFormation deletes before the role, so it lasts exactly as long as the role.
+ * CloudFormation deletes before the role, so it lasts exactly as long as the role. It covers only
+ * `/aws/lambda/*`, where the managed log groups live, so log groups the role must still create,
+ * such as Lambda Insights' `/aws/lambda-insights`, are unaffected.
  */
 export class DenyLogGroupCreation implements IAspect {
   visit(node: IConstruct): void {
@@ -38,7 +40,18 @@ export class DenyLogGroupCreation implements IAspect {
         policyName: POLICY_NAME,
         policyDocument: {
           Version: "2012-10-17",
-          Statement: [{ Effect: "Deny", Action: "logs:CreateLogGroup", Resource: "*" }],
+          Statement: [
+            {
+              Effect: "Deny",
+              Action: "logs:CreateLogGroup",
+              Resource: Stack.of(node).formatArn({
+                service: "logs",
+                resource: "log-group",
+                resourceName: "/aws/lambda/*",
+                arnFormat: ArnFormat.COLON_RESOURCE_NAME,
+              }),
+            },
+          ],
         },
       },
     ];
