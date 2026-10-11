@@ -20,8 +20,7 @@ class Event(BaseModel):
 @event_parser(model=Event)
 def handler(event: Event, context: LambdaContext) -> dict:
     # pydantic-core is a compiled extension with no pure-Python fallback, so importing it at all
-    # proves the dependencies were built for this CPU. UvPythonFunction puts the dependencies in a
-    # layer, while the alpha construct puts them next to the handler.
+    # proves the dependencies were built for this CPU.
     package = report.describe(
         sys.modules[__name__], report, pydantic, pydantic_core_native
     )
