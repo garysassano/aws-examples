@@ -1,6 +1,6 @@
 # cdktn-lambda-web-adapter
 
-CDKTN app that runs a SvelteKit frontend and a Hono backend as Lambdaliths on AWS Lambda through the Lambda Web Adapter, with an Upstash Redis database for state.
+CDKTN app that runs a SvelteKit frontend and a Hono backend as Lambdaliths on AWS Lambda through the Lambda Web Adapter, with an Upstash Redis database for state. [`cdktn-lambda-web-function`](../lambda-web-function) runs the same app as Lambda Web Functions, with no adapter and with the count in DynamoDB.
 
 Each app is an ordinary Node web server in an arm64 container image. The [AWS Lambda Web Adapter](https://github.com/awslabs/aws-lambda-web-adapter) runs as a Lambda extension inside the image, turns each invocation into an HTTP request to the server, and each function is exposed over a Lambda function URL.
 
