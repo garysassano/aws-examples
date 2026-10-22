@@ -36,11 +36,11 @@ describe("MyStack", () => {
     resource = JSON.parse(synthesized).resource;
   }, 120_000);
 
-  it("configures the AWS and AWS Cloud Control providers in eu-west-1", () => {
+  it("configures the AWS and AWS Cloud Control providers in eu-central-1", () => {
     const provider = JSON.parse(synthesized).provider;
     expect(Object.keys(provider)).toEqual(["aws", "awscc"]);
-    expect(provider.aws[0].region).toBe("eu-west-1");
-    expect(provider.awscc[0].region).toBe("eu-west-1");
+    expect(provider.aws[0].region).toBe("eu-central-1");
+    expect(provider.awscc[0].region).toBe("eu-central-1");
   });
 
   it("keeps the count in an on-demand DynamoDB table", () => {

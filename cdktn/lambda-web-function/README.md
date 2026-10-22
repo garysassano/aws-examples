@@ -14,7 +14,7 @@ The frontend's endpoint is public (`ApplicationManaged`). The backend's endpoint
 
 - **_AWS:_**
   - Must have authenticated with [Default Credentials](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#authentication-and-configuration) in your local environment.
-  - Must deploy to a Region that offers Web Functions. The stack uses `eu-west-1`; at launch the others are `us-east-1`, `us-east-2`, `us-west-2`, and `ap-northeast-1`.
+  - Must deploy to a Region that offers Web Functions. The stack uses `eu-central-1`, which was not among the five launch Regions (`us-east-1`, `us-east-2`, `us-west-2`, `eu-west-1`, and `ap-northeast-1`) but served this example in October 2026; change `region` in `src/stacks/my-stack.ts` to use another.
 - **_mise:_**
   - [Install mise](https://mise.jdx.dev/installing-mise.html), which manages Node, pnpm, and OpenTofu.
 
@@ -78,6 +78,22 @@ The page draws the request path from SvelteKit through Hono to DynamoDB with eac
 
 ### Design Notes
 
-- **Compared with the Lambda Web Adapter.** Both run an unchanged Node server. Here Lambda runs it natively: each environment serves many requests at once (up to `maxConcurrencyPerEnvironment`), billing counts active CPU time plus memory for the environment's lifetime rather than each request's duration, and responses stream without extra configuration. In exchange, Web Functions support only Node.js 24 on arm64 with 2 GB of memory, take only `.zip` packages from S3, have no Lambda extensions, and are in five Regions at launch. The adapter still covers other runtimes, container images, and every Region.
 - **Revisions.** A revision is immutable, so every code or configuration change creates a new one. The stack creates it before deleting the old one, and the endpoint's revision weights point at it, so traffic always has a revision to go to. Canary splits between two revisions are possible with `revision_weights`, but a stack that replaces revisions on every change makes them awkward to hold.
 - **Lambda-to-Lambda call.** The frontend calls the backend synchronously, so a request can meet two cold starts. Waiting on the backend uses little of the frontend's CPU, and its environment keeps serving other requests meanwhile, so the split costs less than it does with the adapter. In a product, the browser would usually call the API directly with user authentication, or the frontend would talk to DynamoDB itself.
+
+### Compared with the Lambda Web Adapter
+
+Both examples run the same unchanged Node servers. Web Functions run them natively; the [`lambda-web-adapter`](../lambda-web-adapter) example wraps them in container images with the adapter as an extension.
+
+|                          | Lambda Web Functions (this example)                                             | Lambda Web Adapter                                      |
+| ------------------------ | ------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| Requests per environment | Many at once, up to `maxConcurrencyPerEnvironment` (64 by default, 128 at most) | One at a time                                           |
+| Billing                  | Active CPU time, plus memory for the environment's lifetime                     | Each request's duration, at the configured memory       |
+| Runtimes                 | Node.js 24 only                                                                 | Any, since the adapter runs inside your image           |
+| Memory and architecture  | 2 GB, arm64                                                                     | Configurable (1,769 MB here), arm64 or x86_64           |
+| Packaging                | `.zip` in a versioned S3 bucket                                                 | Container image in ECR (`.zip` with a layer also works) |
+| Endpoint                 | HTTPS endpoint with `IamAuth` or `ApplicationManaged` auth                      | Lambda function URL with `AWS_IAM` or `NONE` auth       |
+| Readiness                | The port accepting connections                                                  | A `/ping` route the adapter polls                       |
+| Response streaming       | Built in                                                                        | Needs a streaming function URL and adapter setting      |
+| Extensions               | None                                                                            | Supported; the adapter is one                           |
+| Regions                  | A subset, starting with five at launch                                          | Every Region                                            |

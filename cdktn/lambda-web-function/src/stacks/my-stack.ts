@@ -7,8 +7,8 @@ import { AwsProvider } from "../../.gen/providers/aws/provider/index.js";
 import { AwsccProvider } from "../../.gen/providers/awscc/provider/index.js";
 import { LambdaWebApp } from "../constructs/lambda-web-app.js";
 
-// One of the Regions that offer Web Functions at launch.
-const region = "eu-west-1";
+// Web Functions run in only some Regions; see the README.
+const region = "eu-central-1";
 const functionsDir = join(import.meta.dirname, "../functions");
 
 export class MyStack extends TerraformStack {
