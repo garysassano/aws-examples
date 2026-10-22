@@ -1,6 +1,10 @@
 # cdktn-lambda-web-function
 
-CDKTN app that runs a SvelteKit frontend and a Hono backend as [AWS Lambda Web Functions](https://docs.aws.amazon.com/lambda/latest/dg/web-functions.html), with a DynamoDB table for state. It is the same app as [`cdktn-lambda-web-adapter`](../lambda-web-adapter), with the adapter replaced by Lambda's own HTTP-native form factor, and Upstash Redis replaced by DynamoDB so the example needs nothing outside AWS.
+CDKTN app that runs a SvelteKit frontend and a Hono backend as [AWS Lambda Web Functions](https://docs.aws.amazon.com/lambda/latest/dg/web-functions.html), with a DynamoDB table for state.
+
+### Related Apps
+
+- [cdktn/lambda-web-adapter](../lambda-web-adapter) - Runs the same app through the Lambda Web Adapter in container images, with Upstash Redis for state.
 
 Each app is an ordinary Node web server. Lambda starts it, waits for it to listen on the address in `AWS_LAMBDA_HTTP_ENDPOINT`, and sends it HTTP requests directly: there is no adapter, no event-to-HTTP translation, and no container image. Each function is a `.zip` package in a versioned S3 bucket, an immutable revision that pins that package's object version, and an HTTPS endpoint that routes to the revision.
 
