@@ -1,0 +1,3 @@
+# node_modules, dist, and .env files are ignored at the repository root.
+/.svelte-kit
+vite.config.ts.timestamp-*
