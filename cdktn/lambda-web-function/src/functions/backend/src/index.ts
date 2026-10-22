@@ -1,46 +1,48 @@
-import { GetParameterCommand, SSMClient } from "@aws-sdk/client-ssm";
+import { DynamoDBClient, GetItemCommand, UpdateItemCommand } from "@aws-sdk/client-dynamodb";
 import { serve } from "@hono/node-server";
-import { Redis } from "@upstash/redis";
 import { Hono } from "hono";
 import { timing, wrapTime } from "hono/timing";
 
-/**
- * The Upstash REST token is a secret, so it lives in an SSM SecureString rather than
- * in the function's configuration; the name of the parameter is all Lambda passes.
- */
-async function restToken(): Promise<string> {
-  const name = process.env.UPSTASH_REDIS_REST_TOKEN_PARAMETER;
-  if (!name) throw new Error("UPSTASH_REDIS_REST_TOKEN_PARAMETER is required");
-  const { Parameter } = await new SSMClient().send(
-    new GetParameterCommand({ Name: name, WithDecryption: true }),
-  );
-  if (!Parameter?.Value) throw new Error(`Parameter ${name} has no value`);
-  return Parameter.Value;
-}
+const TableName = process.env.TABLE_NAME;
+if (!TableName) throw new Error("TABLE_NAME is required");
 
-const url = process.env.UPSTASH_REDIS_REST_URL;
-if (!url) throw new Error("UPSTASH_REDIS_REST_URL is required");
-
-// Read once at startup, before the server listens: Lambda routes requests to an
-// environment as soon as its port accepts connections, so Redis is usable by then.
-const redis = new Redis({ url, token: await restToken() });
+// The count lives in one item, which the first increment creates.
+const Key = { id: { S: "clicks" } };
+const dynamodb = new DynamoDBClient();
 
 const app = new Hono();
 
 app.get("/", (c) => c.text("Hello from Hono!"));
 
-// Reports each Redis call's duration in a `Server-Timing: redis;dur=…` header,
-// which the frontend reads to time the Hono → Redis hop.
+// Reports each DynamoDB call's duration in a `Server-Timing: dynamodb;dur=…` header,
+// which the frontend reads to time the Hono → DynamoDB hop.
 app.use("/api/*", timing({ total: false }));
 
 app.get("/api/clicks", async (c) => {
-  const clicks = (await wrapTime(c, "redis", redis.get<number>("clicks"))) ?? 0;
-  return c.json({ clicks });
+  const { Item } = await wrapTime(
+    c,
+    "dynamodb",
+    dynamodb.send(new GetItemCommand({ TableName, Key, ConsistentRead: true })),
+  );
+  return c.json({ clicks: Number(Item?.clicks?.N ?? 0) });
 });
 
 app.post("/api/clicks", async (c) => {
-  const clicks = await wrapTime(c, "redis", redis.incr("clicks"));
-  return c.json({ clicks });
+  // ADD increments atomically, so concurrent clicks are never lost.
+  const { Attributes } = await wrapTime(
+    c,
+    "dynamodb",
+    dynamodb.send(
+      new UpdateItemCommand({
+        TableName,
+        Key,
+        UpdateExpression: "ADD clicks :one",
+        ExpressionAttributeValues: { ":one": { N: "1" } },
+        ReturnValues: "UPDATED_NEW",
+      }),
+    ),
+  );
+  return c.json({ clicks: Number(Attributes?.clicks?.N) });
 });
 
 app.onError((err, c) => {

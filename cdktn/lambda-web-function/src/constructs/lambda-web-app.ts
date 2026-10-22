@@ -3,7 +3,6 @@ import { join } from "node:path";
 import { AssetType, TerraformAsset } from "cdktn";
 import { Construct } from "constructs";
 import { CloudwatchLogGroup } from "../../.gen/providers/aws/cloudwatch-log-group/index.js";
-import { DataAwsIamPolicyDocument } from "../../.gen/providers/aws/data-aws-iam-policy-document/index.js";
 import { IamRole } from "../../.gen/providers/aws/iam-role/index.js";
 import { IamRolePolicy } from "../../.gen/providers/aws/iam-role-policy/index.js";
 import { S3Bucket } from "../../.gen/providers/aws/s3-bucket/index.js";
@@ -13,7 +12,7 @@ import { S3Object } from "../../.gen/providers/aws/s3-object/index.js";
 import { LambdaWebFunction } from "../../.gen/providers/awscc/lambda-web-function/index.js";
 import { LambdaWebFunctionEndpoint } from "../../.gen/providers/awscc/lambda-web-function-endpoint/index.js";
 import { LambdaWebFunctionRevision } from "../../.gen/providers/awscc/lambda-web-function-revision/index.js";
-import { hashBuildContext } from "../utils/hash-context.js";
+import { hashSource } from "../utils/hash-source.js";
 
 export interface LambdaWebAppProps {
   /** Name of the web function, and prefix of its execution role and code bucket. */
@@ -62,7 +61,7 @@ export class LambdaWebApp extends Construct {
     // NodejsFunction bundles in AWS CDK. The source hash versions the SvelteKit build,
     // so unchanged source builds a byte-identical package and nothing is redeployed.
     run("pnpm", ["install", "--frozen-lockfile"], props.codeDir);
-    run("pnpm", ["build"], props.codeDir, { APP_VERSION: hashBuildContext(props.codeDir) });
+    run("pnpm", ["build"], props.codeDir, { APP_VERSION: hashSource(props.codeDir) });
     const pkg = new TerraformAsset(this, "Package", {
       path: join(props.codeDir, "dist"),
       type: AssetType.ARCHIVE,
@@ -86,18 +85,15 @@ export class LambdaWebApp extends Construct {
     // Lambda writes logs to `<name>.local` in each Region that serves traffic, then
     // copies them to `<name>` in the home Region. Both are declared rather than left
     // for Lambda to create, so destroy removes them and their logs expire.
-    const logGroups = (
-      [
-        ["LogGroup", ""],
-        ["LocalLogGroup", ".local"],
-      ] as const
-    ).map(
-      ([logGroupId, suffix]) =>
-        new CloudwatchLogGroup(this, logGroupId, {
-          name: `/aws/lambda/web/${props.name}${suffix}`,
-          retentionInDays: 7,
-        }),
-    );
+    const logGroupName = `/aws/lambda/web/${props.name}`;
+    const logGroup = new CloudwatchLogGroup(this, "LogGroup", {
+      name: logGroupName,
+      retentionInDays: 7,
+    });
+    const localLogGroup = new CloudwatchLogGroup(this, "LocalLogGroup", {
+      name: `${logGroupName}.local`,
+      retentionInDays: 7,
+    });
     // Without logs:CreateLogGroup, Lambda cannot recreate the groups after a destroy.
     const writeLogs = new IamRolePolicy(this, "WriteLogs", {
       name: "write-logs",
@@ -108,7 +104,7 @@ export class LambdaWebApp extends Construct {
           {
             Effect: "Allow",
             Action: ["logs:CreateLogStream", "logs:PutLogEvents"],
-            Resource: logGroups.map((group) => `${group.arn}:*`),
+            Resource: [`${logGroup.arn}:*`, `${localLogGroup.arn}:*`],
           },
         ],
       }),
@@ -128,27 +124,28 @@ export class LambdaWebApp extends Construct {
     this.function = new LambdaWebFunction(this, "Function", { functionName: props.name });
 
     // Lambda reads the package as its own service principal, and only for this
-    // function's revisions.
-    const readCode = new DataAwsIamPolicyDocument(this, "ReadCode", {
-      statement: [
-        {
-          effect: "Allow",
-          principals: [{ type: "Service", identifiers: ["lambda.amazonaws.com"] }],
-          actions: ["s3:GetObject", "s3:GetObjectVersion"],
-          resources: [`${bucket.arn}/*`],
-          condition: [
-            {
-              test: "ArnLike",
-              variable: "aws:SourceArn",
-              values: [`${this.function.functionArn}/revision/*`],
-            },
-          ],
-        },
-      ],
-    });
+    // function's revisions. Nothing may reach the bucket over plain HTTP.
     const bucketPolicy = new S3BucketPolicy(this, "CodeBucketPolicy", {
       bucket: bucket.id,
-      policy: readCode.json,
+      policy: JSON.stringify({
+        Version: "2012-10-17",
+        Statement: [
+          {
+            Effect: "Allow",
+            Principal: { Service: "lambda.amazonaws.com" },
+            Action: ["s3:GetObject", "s3:GetObjectVersion"],
+            Resource: `${bucket.arn}/*`,
+            Condition: { ArnLike: { "aws:SourceArn": `${this.function.functionArn}/revision/*` } },
+          },
+          {
+            Effect: "Deny",
+            Principal: "*",
+            Action: "s3:*",
+            Resource: [bucket.arn, `${bucket.arn}/*`],
+            Condition: { Bool: { "aws:SecureTransport": "false" } },
+          },
+        ],
+      }),
     });
 
     // The asset hash covers the package's contents, so a changed package, and only a

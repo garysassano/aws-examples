@@ -17,8 +17,8 @@ function walk(dir: string, acc: string[] = []): string[] {
   return acc;
 }
 
-/** Hashes every file Docker would receive as build context. */
-export function hashBuildContext(dir: string): string {
+/** Hashes the paths and contents of a project's source files, so equal source hashes equal. */
+export function hashSource(dir: string): string {
   const hash = createHash("sha256");
 
   for (const file of walk(dir)) {

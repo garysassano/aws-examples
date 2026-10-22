@@ -22,8 +22,7 @@
   },
   "dependencies": {
     "cdktn": "catalog:",
-    "constructs": "catalog:",
-    "zod": "catalog:"
+    "constructs": "catalog:"
   },
   "devDependencies": {
     "@biomejs/biome": "catalog:",

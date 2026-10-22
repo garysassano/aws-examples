@@ -30,31 +30,26 @@ describe("MyStack", () => {
   const ref = (type: string, key: string, attribute: string) => `\${${type}.${key}.${attribute}}`;
 
   beforeAll(async () => {
-    // The stack validates these at import time and throws without them.
-    process.env.UPSTASH_EMAIL = "test@example.com";
-    process.env.UPSTASH_API_KEY = "test-key";
     const { MyStack } = await import("../src/stacks/my-stack.js");
     // `runValidations` makes synth fail on construct-level validation errors.
     synthesized = Testing.synth(new MyStack(new App(), "test"), true);
     resource = JSON.parse(synthesized).resource;
   }, 120_000);
 
-  it("configures the AWS, AWS Cloud Control and Upstash providers in eu-west-1", () => {
+  it("configures the AWS and AWS Cloud Control providers in eu-west-1", () => {
     const provider = JSON.parse(synthesized).provider;
+    expect(Object.keys(provider)).toEqual(["aws", "awscc"]);
     expect(provider.aws[0].region).toBe("eu-west-1");
     expect(provider.awscc[0].region).toBe("eu-west-1");
-    expect(Testing.toHaveProvider(synthesized, "upstash")).toBe(true);
   });
 
-  it("creates a TLS Redis database in the same region as the functions", () => {
-    expect(
-      Testing.toHaveResourceWithProperties(synthesized, "upstash_redis_database", {
-        database_name: "click-counter",
-        region: "global",
-        primary_region: "eu-west-1",
-        tls: true,
-      }),
-    ).toBe(true);
+  it("keeps the count in an on-demand DynamoDB table", () => {
+    expect(resource.aws_dynamodb_table?.Clicks).toMatchObject({
+      name: "lambda-web-function-clicks",
+      billing_mode: "PAY_PER_REQUEST",
+      hash_key: "id",
+      attribute: [{ name: "id", type: "S" }],
+    });
   });
 
   it.each(apps)("uploads the $name package to a versioned bucket", ({ id, name }) => {
@@ -73,25 +68,31 @@ describe("MyStack", () => {
     expect(code.source_hash).toMatch(/^[0-9A-F]{32}$/);
   });
 
-  it.each(apps)("lets only $name's revisions read its code bucket", ({ id }) => {
+  it.each(apps)("lets only $name's revisions read its code bucket, over TLS", ({ id }) => {
     const fn = inApp("awscc_lambda_web_function", id);
+    const bucket = inApp("aws_s3_bucket", id);
+    const bucketArn = ref("aws_s3_bucket", bucket.address, "arn");
     const bucketPolicy = inApp("aws_s3_bucket_policy", id);
-    const documents: Resources[string] = JSON.parse(synthesized).data.aws_iam_policy_document;
-    const [documentKey, document] = Object.entries(documents).find(([key]) =>
-      key.startsWith(`${id}_`),
-    ) ?? [undefined, undefined];
-    const statement = document?.statement[0];
 
-    expect(bucketPolicy.policy).toBe(`\${data.aws_iam_policy_document.${documentKey}.json}`);
-    expect(statement.principals).toEqual([
-      { type: "Service", identifiers: ["lambda.amazonaws.com"] },
-    ]);
-    expect(statement.actions).toEqual(["s3:GetObject", "s3:GetObjectVersion"]);
-    expect(statement.condition).toEqual([
+    expect(bucketPolicy.bucket).toBe(ref("aws_s3_bucket", bucket.address, "id"));
+    expect(JSON.parse(bucketPolicy.policy).Statement).toEqual([
       {
-        test: "ArnLike",
-        variable: "aws:SourceArn",
-        values: [`${ref("awscc_lambda_web_function", fn.address, "function_arn")}/revision/*`],
+        Effect: "Allow",
+        Principal: { Service: "lambda.amazonaws.com" },
+        Action: ["s3:GetObject", "s3:GetObjectVersion"],
+        Resource: `${bucketArn}/*`,
+        Condition: {
+          ArnLike: {
+            "aws:SourceArn": `${ref("awscc_lambda_web_function", fn.address, "function_arn")}/revision/*`,
+          },
+        },
+      },
+      {
+        Effect: "Deny",
+        Principal: "*",
+        Action: "s3:*",
+        Resource: [bucketArn, `${bucketArn}/*`],
+        Condition: { Bool: { "aws:SecureTransport": "false" } },
       },
     ]);
   });
@@ -147,39 +148,31 @@ describe("MyStack", () => {
     );
   });
 
-  it("passes the Redis REST URL and the token's parameter name, never the token", () => {
+  it("passes the backend its table's name and the frontend the backend's URL", () => {
     const back = inApp("awscc_lambda_web_function_revision", "Backend").service_config
       .environment_variables;
     const front = inApp("awscc_lambda_web_function_revision", "Frontend").service_config
       .environment_variables;
     const backEndpoint = inApp("awscc_lambda_web_function_endpoint", "Backend");
 
-    expect(back.UPSTASH_REDIS_REST_URL).toBe(
-      `https://\${upstash_redis_database.ClickCounter.endpoint}`,
-    );
-    expect(back.UPSTASH_REDIS_REST_TOKEN_PARAMETER).toBe(
-      `\${aws_ssm_parameter.UpstashRestToken.name}`,
-    );
-    expect(JSON.stringify(back)).not.toContain("rest_token");
+    expect(back.TABLE_NAME).toBe(`\${aws_dynamodb_table.Clicks.name}`);
     expect(front.BACKEND_URL).toBe(
       `https://${ref("awscc_lambda_web_function_endpoint", backEndpoint.address, "domain_name")}`,
     );
   });
 
-  it("keeps the REST token in a SecureString only the backend can read", () => {
-    const param = resource.aws_ssm_parameter?.UpstashRestToken;
-    expect(param.type).toBe("SecureString");
-    expect(param.value).toBe(`\${upstash_redis_database.ClickCounter.rest_token}`);
-
-    const grant = resource.aws_iam_role_policy?.BackendReadsRestToken;
+  it("lets only the backend read and increment the count", () => {
+    const grant = resource.aws_iam_role_policy?.BackendCountsClicks;
     expect(grant.role).toBe(ref("aws_iam_role", inApp("aws_iam_role", "Backend").address, "name"));
     expect(JSON.parse(grant.policy).Statement).toEqual([
       {
         Effect: "Allow",
-        Action: "ssm:GetParameter",
-        Resource: `\${aws_ssm_parameter.UpstashRestToken.arn}`,
+        Action: ["dynamodb:GetItem", "dynamodb:UpdateItem"],
+        Resource: `\${aws_dynamodb_table.Clicks.arn}`,
       },
     ]);
+    const frontendPolicies = allInApp("aws_iam_role_policy", "Frontend").map((p) => p.policy);
+    expect(JSON.stringify(frontendPolicies)).not.toContain("dynamodb:");
   });
 
   it.each(apps)("logs $name to both of its log groups, which destroy removes", ({ id, name }) => {

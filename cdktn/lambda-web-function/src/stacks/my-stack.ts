@@ -1,16 +1,11 @@
 import { join } from "node:path";
 import { TerraformOutput, TerraformStack } from "cdktn";
 import type { Construct } from "constructs";
+import { DynamodbTable } from "../../.gen/providers/aws/dynamodb-table/index.js";
 import { IamRolePolicy } from "../../.gen/providers/aws/iam-role-policy/index.js";
 import { AwsProvider } from "../../.gen/providers/aws/provider/index.js";
-import { SsmParameter } from "../../.gen/providers/aws/ssm-parameter/index.js";
 import { AwsccProvider } from "../../.gen/providers/awscc/provider/index.js";
-import { UpstashProvider } from "../../.gen/providers/upstash/provider/index.js";
-import { RedisDatabase } from "../../.gen/providers/upstash/redis-database/index.js";
 import { LambdaWebApp } from "../constructs/lambda-web-app.js";
-import { validateEnv } from "../utils/validate-env.js";
-
-const env = validateEnv(["UPSTASH_EMAIL", "UPSTASH_API_KEY"]);
 
 // One of the Regions that offer Web Functions at launch.
 const region = "eu-west-1";
@@ -25,29 +20,15 @@ export class MyStack extends TerraformStack {
     // Web Functions are only in the Cloud Control provider so far.
     new AwsccProvider(this, "AwsccProvider", { region });
 
-    new UpstashProvider(this, "UpstashProvider", {
-      email: env.UPSTASH_EMAIL,
-      apiKey: env.UPSTASH_API_KEY,
+    // One item holds the count, which the backend increments atomically.
+    const table = new DynamodbTable(this, "Clicks", {
+      name: "lambda-web-function-clicks",
+      billingMode: "PAY_PER_REQUEST",
+      hashKey: "id",
+      attribute: [{ name: "id", type: "S" }],
     });
 
-    // Upstash Redis with its primary in the same region as the functions.
-    const clickCounter = new RedisDatabase(this, "ClickCounter", {
-      databaseName: "click-counter",
-      region: "global",
-      primaryRegion: region,
-      tls: true,
-    });
-
-    // The REST token is a secret, so the backend reads it from a SecureString at
-    // startup instead of finding it in its configuration. Terraform state still holds
-    // it, as it holds every secret Terraform manages.
-    const restToken = new SsmParameter(this, "UpstashRestToken", {
-      name: "/lambda-web-function/upstash-redis-rest-token",
-      type: "SecureString",
-      value: clickCounter.restToken,
-    });
-
-    // Hono API that keeps the click count in Redis. Only the frontend may call it:
+    // Hono API that keeps the click count in DynamoDB. Only the frontend may call it:
     // its endpoint accepts SigV4-signed requests from IAM principals with permission.
     const backend = new LambdaWebApp(this, "Backend", {
       name: "hono-backend",
@@ -55,18 +36,21 @@ export class MyStack extends TerraformStack {
       entrypoint: "index.mjs",
       authType: "IamAuth",
       environment: {
-        UPSTASH_REDIS_REST_URL: `https://${clickCounter.endpoint}`,
-        UPSTASH_REDIS_REST_TOKEN_PARAMETER: restToken.name,
+        TABLE_NAME: table.name,
       },
     });
-    // The AWS managed key aws/ssm lets any principal in the account decrypt, so this
-    // grant is what limits who can read the token.
-    new IamRolePolicy(this, "BackendReadsRestToken", {
-      name: "read-upstash-rest-token",
+    new IamRolePolicy(this, "BackendCountsClicks", {
+      name: "count-clicks",
       role: backend.role.name,
       policy: JSON.stringify({
         Version: "2012-10-17",
-        Statement: [{ Effect: "Allow", Action: "ssm:GetParameter", Resource: restToken.arn }],
+        Statement: [
+          {
+            Effect: "Allow",
+            Action: ["dynamodb:GetItem", "dynamodb:UpdateItem"],
+            Resource: table.arn,
+          },
+        ],
       }),
     });
 

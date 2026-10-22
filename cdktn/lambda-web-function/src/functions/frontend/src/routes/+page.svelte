@@ -4,9 +4,9 @@ import { prefersReducedMotion } from "svelte/motion";
 import { fly } from "svelte/transition";
 import { type SubmitFunction, enhance } from "$app/forms";
 import { refreshAll } from "$app/navigation";
+import dynamodb from "../assets/dynamodb.svg";
 import hono from "../assets/hono.svg";
 import svelte from "../assets/svelte.svg";
-import upstashRedis from "../assets/upstash-redis.svg";
 import type { PageData, PageProps } from "./$types";
 
 let { data, form }: PageProps = $props();
@@ -17,7 +17,7 @@ type Counter = Pick<PageData, "clicks" | "hops">;
 // as it does when the tab becomes visible.
 let counter: Counter = $derived(data);
 
-const ICONS: Record<string, string> = { SvelteKit: svelte, Hono: hono, Redis: upstashRedis };
+const ICONS: Record<string, string> = { SvelteKit: svelte, Hono: hono, DynamoDB: dynamodb };
 
 // Most clicks finish before the indicator would appear, so they never flash it;
 // once it appears, it stays long enough to read.
@@ -193,16 +193,16 @@ const count: SubmitFunction<Counter> = () => {
             {/each}
           </span>
         </li>
-        {@render node(hop.to, hop.vendor)}
+        {@render node(hop.to)}
       {/each}
     </ol>
   </footer>
 </main>
 
-{#snippet node(name: string, vendor?: string)}
+{#snippet node(name: string)}
   <li class="node">
     {#if ICONS[name]}<img class="logo" src={ICONS[name]} alt="" width="12" height="12" />{/if}
-    {#if vendor}<span class="vendor">{vendor}</span>{/if}{name}
+    {name}
   </li>
 {/snippet}
 
@@ -533,8 +533,7 @@ const count: SubmitFunction<Counter> = () => {
     color: var(--muted);
   }
 
-  /* Narrow cards drop the logos, then shorten "Upstash Redis" to "Redis", to keep
-     the path on one line. */
+  /* Narrow cards drop the logos to keep the path on one line. */
   @container (width < 340px) {
     .logo {
       display: none;
@@ -542,12 +541,6 @@ const count: SubmitFunction<Counter> = () => {
 
     .node {
       padding: 3px 7px;
-    }
-  }
-
-  @container (width < 270px) {
-    .vendor {
-      display: none;
     }
   }
 

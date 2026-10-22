@@ -11,9 +11,5 @@
     "terraform": ">=1.5.7",
     "opentofu": ">=1.6.0"
   },
-  "terraformProviders": [
-    "hashicorp/aws@~> 6.69.0",
-    "hashicorp/awscc@~> 1.106.0",
-    "upstash/upstash@~> 2.1.0"
-  ]
+  "terraformProviders": ["hashicorp/aws@~> 6.69.0", "hashicorp/awscc@~> 1.106.0"]
 }
