@@ -17,11 +17,28 @@ describe("MyStack", () => {
 
     expect(policy.Statement[0].Principal.Service).toBe("lambda.amazonaws.com");
     expect(policy.Statement[0].Action).toBe("sts:AssumeRole");
-    expect(
-      Testing.toHaveResourceWithProperties(synthesized, "aws_iam_role_policy_attachment", {
-        policy_arn: "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
-      }),
-    ).toBe(true);
+  });
+
+  it("logs to a declared log group that the role cannot recreate", () => {
+    const group = parsed.resource.aws_cloudwatch_log_group.SampleLambdaLogGroup;
+    const writeLogs = parsed.resource.aws_iam_role_policy.LambdaWriteLogs;
+    const fn = parsed.resource.aws_lambda_function.SampleLambda;
+
+    expect(group).toMatchObject({ name: "/aws/lambda/sample-lambda", retention_in_days: 7 });
+    expect(fn.logging_config.log_group).toBe(
+      // biome-ignore lint/suspicious/noTemplateCurlyInString: Terraform interpolation, not a JS template literal
+      "${aws_cloudwatch_log_group.SampleLambdaLogGroup.name}",
+    );
+    // No logs:CreateLogGroup, and no AWSLambdaBasicExecutionRole, which grants it.
+    expect(JSON.parse(writeLogs.policy).Statement).toEqual([
+      {
+        Effect: "Allow",
+        Action: ["logs:CreateLogStream", "logs:PutLogEvents"],
+        // biome-ignore lint/suspicious/noTemplateCurlyInString: Terraform interpolation, not a JS template literal
+        Resource: "${aws_cloudwatch_log_group.SampleLambdaLogGroup.arn}:*",
+      },
+    ]);
+    expect(parsed.resource.aws_iam_role_policy_attachment).toBeUndefined();
   });
 
   it("bundles the function from TypeScript source", () => {

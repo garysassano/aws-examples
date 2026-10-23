@@ -81,4 +81,10 @@ describe("MyStack", () => {
       }),
     ).toBe(true);
   });
+
+  it("gives the task execution role no CloudWatch Logs access, since nothing uses it", () => {
+    const role = parsed.resource.aws_iam_role.ECSTaskExecutionRole;
+    expect(role.inline_policy).toBeUndefined();
+    expect(synthesized).not.toContain("logs:CreateLogGroup");
+  });
 });

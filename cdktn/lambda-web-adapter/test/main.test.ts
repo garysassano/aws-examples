@@ -124,6 +124,20 @@ describe("MyStack", () => {
     expect(inApp("aws_lambda_function", id).logging_config.log_group).toBe(
       `\${aws_cloudwatch_log_group.${logGroup.key}.name}`,
     );
+
+    // No logs:CreateLogGroup, and no AWSLambdaBasicExecutionRole, which grants it, so
+    // Lambda cannot recreate the group after destroy.
+    const writeLogs = Object.entries(resource.aws_iam_role_policy ?? {}).find(
+      ([key, policy]) => key.startsWith(`${id}_`) && policy.name === "write-logs",
+    )?.[1];
+    expect(JSON.parse(writeLogs?.policy).Statement).toEqual([
+      {
+        Effect: "Allow",
+        Action: ["logs:CreateLogStream", "logs:PutLogEvents"],
+        Resource: `\${aws_cloudwatch_log_group.${logGroup.key}.arn}:*`,
+      },
+    ]);
+    expect(resource.aws_iam_role_policy_attachment).toBeUndefined();
   });
 
   it("gives each function its own execution role", () => {
@@ -147,7 +161,10 @@ describe("MyStack", () => {
   });
 
   it("lets only the frontend's role invoke the backend, and only through its URL", () => {
-    const grant = inApp("aws_iam_role_policy", "Backend");
+    const [, grant] =
+      Object.entries(resource.aws_iam_role_policy ?? {}).find(
+        ([key, policy]) => key.startsWith("Backend_") && policy.name !== "write-logs",
+      ) ?? [];
     const backendFn = inApp("aws_lambda_function", "Backend");
     const frontendRole = inApp("aws_iam_role", "Frontend");
     const backendArn = `\${aws_lambda_function.${backendFn.key}.arn}`;
