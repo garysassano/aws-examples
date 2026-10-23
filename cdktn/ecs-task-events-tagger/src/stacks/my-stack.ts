@@ -3,6 +3,7 @@ import { TerraformStack } from "cdktn";
 import type { Construct } from "constructs";
 import { CloudwatchEventRule } from "../../.gen/providers/aws/cloudwatch-event-rule/index.js";
 import { CloudwatchEventTarget } from "../../.gen/providers/aws/cloudwatch-event-target/index.js";
+import { CloudwatchLogGroup } from "../../.gen/providers/aws/cloudwatch-log-group/index.js";
 import { DataAwsIamPolicyDocument } from "../../.gen/providers/aws/data-aws-iam-policy-document/index.js";
 import { DataAwsSubnets } from "../../.gen/providers/aws/data-aws-subnets/index.js";
 import { DataAwsVpc } from "../../.gen/providers/aws/data-aws-vpc/index.js";
@@ -84,13 +85,21 @@ export class MyStack extends TerraformStack {
       },
     );
 
+    // Declared rather than left for Lambda to create, so destroy removes it and its
+    // logs expire.
+    const ecsEventsTaggerLogGroup = new CloudwatchLogGroup(this, "ECSEventsTaggerLogGroup", {
+      name: "/aws/lambda/ecs-events-tagger",
+      retentionInDays: 7,
+    });
+
+    // Without logs:CreateLogGroup, Lambda cannot recreate the group after a destroy.
     const cwLogsPolicy = new DataAwsIamPolicyDocument(this, "CWLogsPolicy", {
       version: "2012-10-17",
       statement: [
         {
           effect: "Allow",
-          actions: ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"],
-          resources: ["*"],
+          actions: ["logs:CreateLogStream", "logs:PutLogEvents"],
+          resources: [`${ecsEventsTaggerLogGroup.arn}:*`],
         },
       ],
     });
@@ -110,15 +119,10 @@ export class MyStack extends TerraformStack {
      * IAM ROLES
      */
 
+    // The container has no log driver, so the role needs no CloudWatch Logs access.
     const ecsTaskExecutionRole = new IamRole(this, "ECSTaskExecutionRole", {
       name: "ecs-task-execution-role",
       assumeRolePolicy: ecsTasksAssumeRolePolicy.json,
-      inlinePolicy: [
-        {
-          name: "cw-logs-policy",
-          policy: cwLogsPolicy.json,
-        },
-      ],
     });
 
     const ecsEventsTaggerRole = new IamRole(this, "ECSEventsTaggerRole", {
@@ -215,6 +219,7 @@ export class MyStack extends TerraformStack {
       timeout: 5,
       loggingConfig: {
         logFormat: "JSON",
+        logGroup: ecsEventsTaggerLogGroup.name,
         systemLogLevel: "WARN",
       },
       environment: {

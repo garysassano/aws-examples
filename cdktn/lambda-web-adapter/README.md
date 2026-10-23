@@ -49,8 +49,6 @@ Each image is rebuilt and pushed only when a file in its build context changes.
 pnpm destroy
 ```
 
-Destroy removes the functions, their ECR repositories with every image, their log groups, and the Upstash database.
-
 ## Application Details
 
 Each function shares its name with the ECR repository that holds its image, and has its own `<name>-execution-role`. Each runs on arm64 with 1,769 MB of memory and a 10-second timeout, and its function URL invokes the function's latest image.

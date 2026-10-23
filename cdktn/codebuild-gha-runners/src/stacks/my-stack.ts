@@ -1,6 +1,7 @@
 import { Fn, TerraformOutput, TerraformStack } from "cdktn";
 import type { Construct } from "constructs";
 import YAML from "yaml";
+import { CloudwatchLogGroup } from "../../.gen/providers/aws/cloudwatch-log-group/index.js";
 import { CodebuildProject } from "../../.gen/providers/aws/codebuild-project/index.js";
 import { CodebuildSourceCredential } from "../../.gen/providers/aws/codebuild-source-credential/index.js";
 import { CodebuildWebhook } from "../../.gen/providers/aws/codebuild-webhook/index.js";
@@ -59,12 +60,20 @@ export class MyStack extends TerraformStack {
       },
     );
 
+    // Declared rather than left for CodeBuild to create, so destroy removes it and its
+    // logs expire.
+    const sampleProjectLogGroup = new CloudwatchLogGroup(this, "SampleProjectLogGroup", {
+      name: "/aws/codebuild/sample-project",
+      retentionInDays: 7,
+    });
+
+    // Without logs:CreateLogGroup, CodeBuild cannot recreate the group after a destroy.
     const cwLogsPolicy = new DataAwsIamPolicyDocument(this, "CWLogsPolicy", {
       statement: [
         {
           effect: "Allow",
-          actions: ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"],
-          resources: ["*"],
+          actions: ["logs:CreateLogStream", "logs:PutLogEvents"],
+          resources: [`${sampleProjectLogGroup.arn}:*`],
         },
       ],
     });
@@ -108,6 +117,9 @@ export class MyStack extends TerraformStack {
       },
       artifacts: {
         type: "NO_ARTIFACTS",
+      },
+      logsConfig: {
+        cloudwatchLogs: { groupName: sampleProjectLogGroup.name },
       },
     });
 
