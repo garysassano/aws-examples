@@ -3,7 +3,6 @@ import { CloudwatchLogGroup } from "../../.gen/providers/aws/cloudwatch-log-grou
 import { EcrRepository } from "../../.gen/providers/aws/ecr-repository/index.js";
 import { IamRole } from "../../.gen/providers/aws/iam-role/index.js";
 import { IamRolePolicy } from "../../.gen/providers/aws/iam-role-policy/index.js";
-import { IamRolePolicyAttachment } from "../../.gen/providers/aws/iam-role-policy-attachment/index.js";
 import { LambdaFunction } from "../../.gen/providers/aws/lambda-function/index.js";
 import { LambdaFunctionUrl } from "../../.gen/providers/aws/lambda-function-url/index.js";
 import { Image } from "../../.gen/providers/docker/image/index.js";
@@ -48,10 +47,6 @@ export class LambdaWebApp extends Construct {
         ],
       }),
     });
-    new IamRolePolicyAttachment(this, "BasicExecution", {
-      role: this.role.name,
-      policyArn: "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
-    });
 
     const repository = new EcrRepository(this, "Repository", {
       name: props.name,
@@ -82,6 +77,21 @@ export class LambdaWebApp extends Construct {
       name: `/aws/lambda/${props.name}`,
       retentionInDays: 7,
     });
+    // Without logs:CreateLogGroup, Lambda cannot recreate the group after a destroy.
+    const writeLogs = new IamRolePolicy(this, "WriteLogs", {
+      name: "write-logs",
+      role: this.role.name,
+      policy: JSON.stringify({
+        Version: "2012-10-17",
+        Statement: [
+          {
+            Effect: "Allow",
+            Action: ["logs:CreateLogStream", "logs:PutLogEvents"],
+            Resource: `${logGroup.arn}:*`,
+          },
+        ],
+      }),
+    });
 
     this.function = new LambdaFunction(this, "Function", {
       functionName: props.name,
@@ -94,6 +104,7 @@ export class LambdaWebApp extends Construct {
       timeout: 10,
       loggingConfig: { logFormat: "JSON", logGroup: logGroup.name },
       environment: props.environment ? { variables: props.environment } : undefined,
+      dependsOn: [writeLogs],
     });
 
     this.functionUrl = new LambdaFunctionUrl(this, "FunctionUrl", {

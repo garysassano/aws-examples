@@ -44,8 +44,6 @@ Each package is uploaded, and its function gets a new revision, only when the pa
 pnpm destroy
 ```
 
-Destroy removes the functions, the table and its count, their code buckets with every object version, and their log groups. Lambda cannot recreate the log groups afterwards, because the execution roles may write to them but not create them.
-
 ## Application Details
 
 Each function's code bucket is named `<name>-code-<suffix>`, and its execution role `<name>-web-execution-role`, so the roles don't clash with the `lambda-web-adapter` example's in the same account. Each endpoint is named `live`, is a `HomeRegion` endpoint, and sends all traffic to the function's latest revision.

@@ -85,4 +85,26 @@ describe("MyStack", () => {
       "${aws_lambda_function.ECSEventsTagger.arn}",
     );
   });
+
+  it("logs the tagger to a declared log group that its role cannot recreate", () => {
+    const group = parsed.resource.aws_cloudwatch_log_group.ECSEventsTaggerLogGroup;
+    const fn = parsed.resource.aws_lambda_function.ECSEventsTagger;
+    const logsPolicy = parsed.data.aws_iam_policy_document.CWLogsPolicy;
+
+    expect(group).toMatchObject({ name: "/aws/lambda/ecs-events-tagger", retention_in_days: 7 });
+    // biome-ignore lint/suspicious/noTemplateCurlyInString: Terraform interpolation, not a JS template literal
+    expect(fn.logging_config.log_group).toBe(
+      "${aws_cloudwatch_log_group.ECSEventsTaggerLogGroup.name}",
+    );
+    expect(logsPolicy.statement).toEqual([
+      {
+        effect: "Allow",
+        actions: ["logs:CreateLogStream", "logs:PutLogEvents"],
+        // biome-ignore lint/suspicious/noTemplateCurlyInString: Terraform interpolation, not a JS template literal
+        resources: ["${aws_cloudwatch_log_group.ECSEventsTaggerLogGroup.arn}:*"],
+      },
+    ]);
+    // The task's container has no log driver, so its execution role gets no logs access.
+    expect(parsed.resource.aws_iam_role.ECSTaskExecutionRole.inline_policy).toBeUndefined();
+  });
 });

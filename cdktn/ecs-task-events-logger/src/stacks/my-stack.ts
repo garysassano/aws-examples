@@ -140,30 +140,14 @@ export class MyStack extends TerraformStack {
       },
     );
 
-    const cwLogsPolicy = new DataAwsIamPolicyDocument(this, "CWLogsPolicy", {
-      version: "2012-10-17",
-      statement: [
-        {
-          effect: "Allow",
-          actions: ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"],
-          resources: ["*"],
-        },
-      ],
-    });
-
     /*
      * IAM ROLES
      */
 
+    // The container has no log driver, so the role needs no CloudWatch Logs access.
     const ecsTaskExecutionRole = new IamRole(this, "ECSTaskExecutionRole", {
       name: "ecs-task-execution-role",
       assumeRolePolicy: ecsTasksAssumeRolePolicy.json,
-      inlinePolicy: [
-        {
-          name: "cw-logs-policy",
-          policy: cwLogsPolicy.json,
-        },
-      ],
     });
 
     /*

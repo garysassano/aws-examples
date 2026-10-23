@@ -32,3 +32,6 @@ target/
 # python
 __pycache__/
 .venv/
+
+# Packages that the node-lambda-packager provider writes next to each entrypoint.
+index-package.zip
