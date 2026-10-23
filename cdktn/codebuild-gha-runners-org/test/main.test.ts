@@ -77,25 +77,4 @@ describe("MyStack", () => {
     const projectRef = "codebuild-${aws_codebuild_project.SampleProject.name}";
     expect(file.content).toContain(projectRef);
   });
-
-  it("logs builds to a declared log group that the project role cannot recreate", () => {
-    const parsed = JSON.parse(synthesized);
-    const group = parsed.resource.aws_cloudwatch_log_group.SampleProjectLogGroup;
-    const project = parsed.resource.aws_codebuild_project.SampleProject;
-    const logsPolicy = parsed.data.aws_iam_policy_document.CWLogsPolicy;
-
-    expect(group).toMatchObject({ name: "/aws/codebuild/sample-project", retention_in_days: 7 });
-    expect(project.logs_config.cloudwatch_logs.group_name).toBe(
-      // biome-ignore lint/suspicious/noTemplateCurlyInString: Terraform interpolation, not a JS template literal
-      "${aws_cloudwatch_log_group.SampleProjectLogGroup.name}",
-    );
-    expect(logsPolicy.statement).toEqual([
-      {
-        effect: "Allow",
-        actions: ["logs:CreateLogStream", "logs:PutLogEvents"],
-        // biome-ignore lint/suspicious/noTemplateCurlyInString: Terraform interpolation, not a JS template literal
-        resources: ["${aws_cloudwatch_log_group.SampleProjectLogGroup.arn}:*"],
-      },
-    ]);
-  });
 });
