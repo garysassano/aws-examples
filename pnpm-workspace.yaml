@@ -4,6 +4,7 @@ packages:
   - "sst/*"
   # Client apps that ship inside an example, such as a demo CLI or web UI.
   - "cdk/*/src/demo/*"
+  - "cdk/*/src/website"
 
 # Shared versions. Examples reference these as `catalog:`; a dependency only one
 # example uses stays pinned in that example's package.json.
@@ -35,6 +36,9 @@ catalog:
   "@aws-sdk/client-sqs": ^3.1148.0
   "@aws-sdk/client-ssm": ^3.1148.0
   "@aws-sdk/lib-dynamodb": ^3.1148.0
+  # Pinned to the version the other @aws-sdk/client-* entries resolve to: it depends on the same
+  # version of client-s3 exactly, and a newer one would install a second, incompatible client-s3.
+  "@aws-sdk/s3-presigned-post": 3.1148.0
   "@aws-sdk/s3-request-presigner": ^3.1148.0
   "@biomejs/biome": ^2.5.15
   cargo-lambda-cdk: ^0.0.36
