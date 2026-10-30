@@ -1,0 +1,8 @@
+[project]
+name = "modal-detect-labels"
+version = "0.0.0"
+requires-python = ">=3.13"
+dependencies = ["modal>=1.6.3"]
+
+[tool.uv]
+exclude-newer = "3 days"

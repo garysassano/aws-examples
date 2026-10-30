@@ -26,12 +26,14 @@ catalog:
   "@aws-lambda-powertools/idempotency": ^2.35.0
   "@aws-lambda-powertools/jmespath": ^2.35.0
   "@aws-lambda-powertools/logger": ^2.35.0
+  "@aws-lambda-powertools/parameters": ^2.35.0
   "@aws-lambda-powertools/parser": ^2.35.0
   "@aws-sdk/client-bedrock-runtime": ^3.1148.0
   "@aws-sdk/client-dynamodb": ^3.1148.0
   "@aws-sdk/client-ecs": ^3.1148.0
   "@aws-sdk/client-rekognition": ^3.1148.0
   "@aws-sdk/client-s3": ^3.1148.0
+  "@aws-sdk/client-secrets-manager": ^3.1148.0
   "@aws-sdk/client-sns": ^3.1148.0
   "@aws-sdk/client-sqs": ^3.1148.0
   "@aws-sdk/client-ssm": ^3.1148.0

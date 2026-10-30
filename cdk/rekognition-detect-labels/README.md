@@ -2,6 +2,10 @@
 
 CDK app that detects whether an uploaded image contains a cat using Amazon Rekognition, and pushes the result back to the browser with AppSync Events.
 
+### Related Apps
+
+- [cdk/modal-detect-labels](../modal-detect-labels) - Detects the cat with an open model on Modal instead of Amazon Rekognition.
+
 ## Prerequisites
 
 - **_AWS:_**
