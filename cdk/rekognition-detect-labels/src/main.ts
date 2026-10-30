@@ -10,7 +10,7 @@ const devEnv = {
 
 const app = new App();
 
-new MyStack(app, "cdk-cat-rekognizer-dev", { env: devEnv });
+new MyStack(app, "cdk-rekognition-detect-labels-dev", { env: devEnv });
 
 // Delete log groups with their stacks, so nothing is left behind and a redeploy can recreate them.
 RemovalPolicies.of(app).destroy({ applyToResourceTypes: ["AWS::Logs::LogGroup"] });
