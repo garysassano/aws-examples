@@ -1,0 +1,46 @@
+{
+  "name": "cdk-detect-labels",
+  "private": true,
+  "version": "0.0.0",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "build:website": "pnpm -C src/website build",
+    "cdk": "cdk",
+    "check": "pnpm lint && pnpm typecheck && pnpm synth -c detector=all",
+    "deploy": "pnpm build:website && BUILDX_NO_DEFAULT_ATTESTATIONS=1 cdk deploy --all",
+    "destroy": "cdk destroy --all",
+    "diff": "pnpm build:website && cdk diff --all",
+    "format": "biome format --write .",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "synth": "pnpm build:website && cdk synth --strict",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@aws-lambda-powertools/idempotency": "catalog:",
+    "@aws-lambda-powertools/logger": "catalog:",
+    "@aws-lambda-powertools/parser": "catalog:",
+    "@aws-sdk/client-dynamodb": "catalog:",
+    "@aws-sdk/client-rekognition": "catalog:",
+    "@aws-sdk/client-s3": "catalog:",
+    "@aws-sdk/client-sagemaker-runtime": "catalog:",
+    "@aws-sdk/s3-presigned-post": "catalog:",
+    "@middy/core": "catalog:",
+    "@smithy/hash-node": "^4.5.2",
+    "@smithy/protocol-http": "^5.6.2",
+    "@smithy/signature-v4": "^5.7.4",
+    "@types/aws-lambda": "catalog:",
+    "aws-cdk-lib": "catalog:",
+    "constructs": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "catalog:",
+    "@types/node": "catalog:",
+    "aws-cdk": "catalog:",
+    "esbuild": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:"
+  }
+}
