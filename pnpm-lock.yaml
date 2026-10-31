@@ -16,20 +16,20 @@ catalogs:
       specifier: ^4.0.19
       version: 4.0.19
     '@aws-cdk/aws-apprunner-alpha':
-      specifier: 2.273.0-alpha.0
-      version: 2.273.0-alpha.0
+      specifier: 2.275.0-alpha.0
+      version: 2.275.0-alpha.0
     '@aws-cdk/aws-lambda-python-alpha':
-      specifier: 2.273.0-alpha.0
-      version: 2.273.0-alpha.0
+      specifier: 2.275.0-alpha.0
+      version: 2.275.0-alpha.0
     '@aws-cdk/aws-pipes-alpha':
-      specifier: 2.273.0-alpha.0
-      version: 2.273.0-alpha.0
+      specifier: 2.275.0-alpha.0
+      version: 2.275.0-alpha.0
     '@aws-cdk/aws-pipes-sources-alpha':
-      specifier: 2.273.0-alpha.0
-      version: 2.273.0-alpha.0
+      specifier: 2.275.0-alpha.0
+      version: 2.275.0-alpha.0
     '@aws-cdk/aws-pipes-targets-alpha':
-      specifier: 2.273.0-alpha.0
-      version: 2.273.0-alpha.0
+      specifier: 2.275.0-alpha.0
+      version: 2.275.0-alpha.0
     '@aws-lambda-powertools/event-handler':
       specifier: ^2.35.0
       version: 2.35.0
@@ -133,11 +133,11 @@ catalogs:
       specifier: ^3.1.4
       version: 3.1.4
     aws-cdk:
-      specifier: ^2.1145.0
-      version: 2.1145.0
+      specifier: ^2.1146.1
+      version: 2.1146.1
     aws-cdk-lib:
-      specifier: ^2.273.0
-      version: 2.273.0
+      specifier: ^2.275.0
+      version: 2.275.0
     cargo-lambda-cdk:
       specifier: ^0.0.36
       version: 0.0.36
@@ -190,7 +190,7 @@ importers:
         version: 3.1148.0
       aws-cdk-lib:
         specifier: 'catalog:'
-        version: 2.273.0(constructs@10.7.2)
+        version: 2.275.0(constructs@10.7.2)
       constructs:
         specifier: 'catalog:'
         version: 10.7.2
@@ -206,7 +206,7 @@ importers:
         version: 26.6.4
       aws-cdk:
         specifier: 'catalog:'
-        version: 2.1145.0
+        version: 2.1146.1
       esbuild:
         specifier: 'catalog:'
         version: 0.28.2
@@ -224,10 +224,10 @@ importers:
     dependencies:
       '@aws-cdk/aws-apprunner-alpha':
         specifier: 'catalog:'
-        version: 2.273.0-alpha.0(aws-cdk-lib@2.273.0(constructs@10.7.2))(constructs@10.7.2)
+        version: 2.275.0-alpha.0(aws-cdk-lib@2.275.0(constructs@10.7.2))(constructs@10.7.2)
       aws-cdk-lib:
         specifier: 'catalog:'
-        version: 2.273.0(constructs@10.7.2)
+        version: 2.275.0(constructs@10.7.2)
       constructs:
         specifier: 'catalog:'
         version: 10.7.2
@@ -240,7 +240,7 @@ importers:
         version: 26.6.4
       aws-cdk:
         specifier: 'catalog:'
-        version: 2.1145.0
+        version: 2.1146.1
       esbuild:
         specifier: 'catalog:'
         version: 0.28.2
@@ -264,7 +264,7 @@ importers:
         version: 8.10.163
       aws-cdk-lib:
         specifier: 'catalog:'
-        version: 2.273.0(constructs@10.7.2)
+        version: 2.275.0(constructs@10.7.2)
       constructs:
         specifier: 'catalog:'
         version: 10.7.2
@@ -277,7 +277,7 @@ importers:
         version: 26.6.4
       aws-cdk:
         specifier: 'catalog:'
-        version: 2.1145.0
+        version: 2.1146.1
       esbuild:
         specifier: 'catalog:'
         version: 0.28.2
@@ -292,7 +292,7 @@ importers:
     dependencies:
       aws-cdk-lib:
         specifier: 'catalog:'
-        version: 2.273.0(constructs@10.7.2)
+        version: 2.275.0(constructs@10.7.2)
       constructs:
         specifier: 'catalog:'
         version: 10.7.2
@@ -305,7 +305,7 @@ importers:
         version: 26.6.4
       aws-cdk:
         specifier: 'catalog:'
-        version: 2.1145.0
+        version: 2.1146.1
       tsx:
         specifier: 'catalog:'
         version: 4.23.15
@@ -359,7 +359,7 @@ importers:
         version: 8.10.163
       aws-cdk-lib:
         specifier: 'catalog:'
-        version: 2.273.0(constructs@10.7.2)
+        version: 2.275.0(constructs@10.7.2)
       constructs:
         specifier: 'catalog:'
         version: 10.7.2
@@ -375,7 +375,7 @@ importers:
         version: 26.6.4
       aws-cdk:
         specifier: 'catalog:'
-        version: 2.1145.0
+        version: 2.1146.1
       esbuild:
         specifier: 'catalog:'
         version: 0.28.2
@@ -445,10 +445,10 @@ importers:
     dependencies:
       '@aws-cdk/aws-apprunner-alpha':
         specifier: 'catalog:'
-        version: 2.273.0-alpha.0(aws-cdk-lib@2.273.0(constructs@10.7.2))(constructs@10.7.2)
+        version: 2.275.0-alpha.0(aws-cdk-lib@2.275.0(constructs@10.7.2))(constructs@10.7.2)
       aws-cdk-lib:
         specifier: 'catalog:'
-        version: 2.273.0(constructs@10.7.2)
+        version: 2.275.0(constructs@10.7.2)
       constructs:
         specifier: 'catalog:'
         version: 10.7.2
@@ -461,7 +461,7 @@ importers:
         version: 26.6.4
       aws-cdk:
         specifier: 'catalog:'
-        version: 2.1145.0
+        version: 2.1146.1
       tsx:
         specifier: 'catalog:'
         version: 4.23.15
@@ -473,7 +473,7 @@ importers:
     dependencies:
       aws-cdk-lib:
         specifier: 'catalog:'
-        version: 2.273.0(constructs@10.7.2)
+        version: 2.275.0(constructs@10.7.2)
       constructs:
         specifier: 'catalog:'
         version: 10.7.2
@@ -486,7 +486,7 @@ importers:
         version: 26.6.4
       aws-cdk:
         specifier: 'catalog:'
-        version: 2.1145.0
+        version: 2.1146.1
       tsx:
         specifier: 'catalog:'
         version: 4.23.15
@@ -501,7 +501,7 @@ importers:
     dependencies:
       aws-cdk-lib:
         specifier: 'catalog:'
-        version: 2.273.0(constructs@10.7.2)
+        version: 2.275.0(constructs@10.7.2)
       constructs:
         specifier: 'catalog:'
         version: 10.7.2
@@ -514,7 +514,7 @@ importers:
         version: 26.6.4
       aws-cdk:
         specifier: 'catalog:'
-        version: 2.1145.0
+        version: 2.1146.1
       esbuild:
         specifier: 'catalog:'
         version: 0.28.2
@@ -529,16 +529,16 @@ importers:
     dependencies:
       '@aws-cdk/aws-pipes-alpha':
         specifier: 'catalog:'
-        version: 2.273.0-alpha.0(aws-cdk-lib@2.273.0(constructs@10.7.2))(constructs@10.7.2)
+        version: 2.275.0-alpha.0(aws-cdk-lib@2.275.0(constructs@10.7.2))(constructs@10.7.2)
       '@aws-cdk/aws-pipes-sources-alpha':
         specifier: 'catalog:'
-        version: 2.273.0-alpha.0(@aws-cdk/aws-pipes-alpha@2.273.0-alpha.0(aws-cdk-lib@2.273.0(constructs@10.7.2))(constructs@10.7.2))(aws-cdk-lib@2.273.0(constructs@10.7.2))(constructs@10.7.2)
+        version: 2.275.0-alpha.0(@aws-cdk/aws-pipes-alpha@2.275.0-alpha.0(aws-cdk-lib@2.275.0(constructs@10.7.2))(constructs@10.7.2))(aws-cdk-lib@2.275.0(constructs@10.7.2))(constructs@10.7.2)
       '@aws-cdk/aws-pipes-targets-alpha':
         specifier: 'catalog:'
-        version: 2.273.0-alpha.0(@aws-cdk/aws-pipes-alpha@2.273.0-alpha.0(aws-cdk-lib@2.273.0(constructs@10.7.2))(constructs@10.7.2))(aws-cdk-lib@2.273.0(constructs@10.7.2))(constructs@10.7.2)
+        version: 2.275.0-alpha.0(@aws-cdk/aws-pipes-alpha@2.275.0-alpha.0(aws-cdk-lib@2.275.0(constructs@10.7.2))(constructs@10.7.2))(aws-cdk-lib@2.275.0(constructs@10.7.2))(constructs@10.7.2)
       aws-cdk-lib:
         specifier: 'catalog:'
-        version: 2.273.0(constructs@10.7.2)
+        version: 2.275.0(constructs@10.7.2)
       constructs:
         specifier: 'catalog:'
         version: 10.7.2
@@ -551,7 +551,7 @@ importers:
         version: 26.6.4
       aws-cdk:
         specifier: 'catalog:'
-        version: 2.1145.0
+        version: 2.1146.1
       tsx:
         specifier: 'catalog:'
         version: 4.23.15
@@ -643,7 +643,7 @@ importers:
     dependencies:
       aws-cdk-lib:
         specifier: 'catalog:'
-        version: 2.273.0(constructs@10.7.2)
+        version: 2.275.0(constructs@10.7.2)
       constructs:
         specifier: 'catalog:'
         version: 10.7.2
@@ -656,7 +656,7 @@ importers:
         version: 26.6.4
       aws-cdk:
         specifier: 'catalog:'
-        version: 2.1145.0
+        version: 2.1146.1
       tsx:
         specifier: 'catalog:'
         version: 4.23.15
@@ -671,10 +671,10 @@ importers:
     dependencies:
       '@checkmarx/cdk-validator-kics':
         specifier: ^2.0.0
-        version: 2.3.3(aws-cdk-lib@2.273.0(constructs@10.7.2))
+        version: 2.3.3(aws-cdk-lib@2.275.0(constructs@10.7.2))
       aws-cdk-lib:
         specifier: 'catalog:'
-        version: 2.273.0(constructs@10.7.2)
+        version: 2.275.0(constructs@10.7.2)
       constructs:
         specifier: 'catalog:'
         version: 10.7.2
@@ -687,7 +687,7 @@ importers:
         version: 26.6.4
       aws-cdk:
         specifier: 'catalog:'
-        version: 2.1145.0
+        version: 2.1146.1
       esbuild:
         specifier: 'catalog:'
         version: 0.28.2
@@ -714,7 +714,7 @@ importers:
         version: 8.10.163
       aws-cdk-lib:
         specifier: 'catalog:'
-        version: 2.273.0(constructs@10.7.2)
+        version: 2.275.0(constructs@10.7.2)
       constructs:
         specifier: 'catalog:'
         version: 10.7.2
@@ -727,7 +727,7 @@ importers:
         version: 26.6.4
       aws-cdk:
         specifier: 'catalog:'
-        version: 2.1145.0
+        version: 2.1146.1
       esbuild:
         specifier: 'catalog:'
         version: 0.28.2
@@ -748,7 +748,7 @@ importers:
         version: 2.35.0(@aws-lambda-powertools/jmespath@2.35.0)(@middy/core@7.9.2)
       aws-cdk-lib:
         specifier: 'catalog:'
-        version: 2.273.0(constructs@10.7.2)
+        version: 2.275.0(constructs@10.7.2)
       constructs:
         specifier: 'catalog:'
         version: 10.7.2
@@ -764,7 +764,7 @@ importers:
         version: 26.6.4
       aws-cdk:
         specifier: 'catalog:'
-        version: 2.1145.0
+        version: 2.1146.1
       esbuild:
         specifier: 'catalog:'
         version: 0.28.2
@@ -779,7 +779,7 @@ importers:
     dependencies:
       aws-cdk-lib:
         specifier: 'catalog:'
-        version: 2.273.0(constructs@10.7.2)
+        version: 2.275.0(constructs@10.7.2)
       constructs:
         specifier: 'catalog:'
         version: 10.7.2
@@ -792,7 +792,7 @@ importers:
         version: 26.6.4
       aws-cdk:
         specifier: 'catalog:'
-        version: 2.1145.0
+        version: 2.1146.1
       tsx:
         specifier: 'catalog:'
         version: 4.23.15
@@ -804,7 +804,7 @@ importers:
     dependencies:
       aws-cdk-lib:
         specifier: 'catalog:'
-        version: 2.273.0(constructs@10.7.2)
+        version: 2.275.0(constructs@10.7.2)
       constructs:
         specifier: 'catalog:'
         version: 10.7.2
@@ -817,7 +817,7 @@ importers:
         version: 26.6.4
       aws-cdk:
         specifier: 'catalog:'
-        version: 2.1145.0
+        version: 2.1146.1
       esbuild:
         specifier: 'catalog:'
         version: 0.28.2
@@ -853,7 +853,7 @@ importers:
         version: 3.1148.0(@aws-sdk/client-dynamodb@3.1148.0)
       aws-cdk-lib:
         specifier: 'catalog:'
-        version: 2.273.0(constructs@10.7.2)
+        version: 2.275.0(constructs@10.7.2)
       constructs:
         specifier: 'catalog:'
         version: 10.7.2
@@ -869,7 +869,7 @@ importers:
         version: 26.6.4
       aws-cdk:
         specifier: 'catalog:'
-        version: 2.1145.0
+        version: 2.1146.1
       esbuild:
         specifier: 'catalog:'
         version: 0.28.2
@@ -884,7 +884,7 @@ importers:
     dependencies:
       aws-cdk-lib:
         specifier: 'catalog:'
-        version: 2.273.0(constructs@10.7.2)
+        version: 2.275.0(constructs@10.7.2)
       constructs:
         specifier: 'catalog:'
         version: 10.7.2
@@ -897,7 +897,7 @@ importers:
         version: 26.6.4
       aws-cdk:
         specifier: 'catalog:'
-        version: 2.1145.0
+        version: 2.1146.1
       esbuild:
         specifier: 'catalog:'
         version: 0.28.2
@@ -942,7 +942,7 @@ importers:
         version: 8.10.163
       aws-cdk-lib:
         specifier: 'catalog:'
-        version: 2.273.0(constructs@10.7.2)
+        version: 2.275.0(constructs@10.7.2)
       constructs:
         specifier: 'catalog:'
         version: 10.7.2
@@ -955,7 +955,7 @@ importers:
         version: 26.6.4
       aws-cdk:
         specifier: 'catalog:'
-        version: 2.1145.0
+        version: 2.1146.1
       esbuild:
         specifier: 'catalog:'
         version: 0.28.2
@@ -973,10 +973,10 @@ importers:
     dependencies:
       '@aws-cdk/aws-lambda-python-alpha':
         specifier: 'catalog:'
-        version: 2.273.0-alpha.0(aws-cdk-lib@2.273.0(constructs@10.7.2))(constructs@10.7.2)
+        version: 2.275.0-alpha.0(aws-cdk-lib@2.275.0(constructs@10.7.2))(constructs@10.7.2)
       aws-cdk-lib:
         specifier: 'catalog:'
-        version: 2.273.0(constructs@10.7.2)
+        version: 2.275.0(constructs@10.7.2)
       constructs:
         specifier: 'catalog:'
         version: 10.7.2
@@ -989,7 +989,7 @@ importers:
         version: 26.6.4
       aws-cdk:
         specifier: 'catalog:'
-        version: 2.1145.0
+        version: 2.1146.1
       tsx:
         specifier: 'catalog:'
         version: 4.23.15
@@ -1010,10 +1010,10 @@ importers:
         version: 8.10.163
       aws-cdk-lib:
         specifier: 'catalog:'
-        version: 2.273.0(constructs@10.7.2)
+        version: 2.275.0(constructs@10.7.2)
       cargo-lambda-cdk:
         specifier: 'catalog:'
-        version: 0.0.36(aws-cdk-lib@2.273.0(constructs@10.7.2))(constructs@10.7.2)
+        version: 0.0.36(aws-cdk-lib@2.275.0(constructs@10.7.2))(constructs@10.7.2)
       constructs:
         specifier: 'catalog:'
         version: 10.7.2
@@ -1029,7 +1029,7 @@ importers:
         version: 26.6.4
       aws-cdk:
         specifier: 'catalog:'
-        version: 2.1145.0
+        version: 2.1146.1
       esbuild:
         specifier: 'catalog:'
         version: 0.28.2
@@ -1044,7 +1044,7 @@ importers:
     dependencies:
       '@aws-cdk/aws-lambda-python-alpha':
         specifier: 'catalog:'
-        version: 2.273.0-alpha.0(aws-cdk-lib@2.273.0(constructs@10.7.2))(constructs@10.7.2)
+        version: 2.275.0-alpha.0(aws-cdk-lib@2.275.0(constructs@10.7.2))(constructs@10.7.2)
       '@dev7a/lambda-otel-lite':
         specifier: 'catalog:'
         version: 0.16.3(@opentelemetry/otlp-transformer@0.222.0(@opentelemetry/api@1.9.1))
@@ -1062,10 +1062,10 @@ importers:
         version: 8.10.163
       aws-cdk-lib:
         specifier: 'catalog:'
-        version: 2.273.0(constructs@10.7.2)
+        version: 2.275.0(constructs@10.7.2)
       cargo-lambda-cdk:
         specifier: 'catalog:'
-        version: 0.0.36(aws-cdk-lib@2.273.0(constructs@10.7.2))(constructs@10.7.2)
+        version: 0.0.36(aws-cdk-lib@2.275.0(constructs@10.7.2))(constructs@10.7.2)
       constructs:
         specifier: 'catalog:'
         version: 10.7.2
@@ -1081,7 +1081,7 @@ importers:
         version: 26.6.4
       aws-cdk:
         specifier: 'catalog:'
-        version: 2.1145.0
+        version: 2.1146.1
       esbuild:
         specifier: 'catalog:'
         version: 0.28.2
@@ -1096,7 +1096,7 @@ importers:
     dependencies:
       aws-cdk-lib:
         specifier: 'catalog:'
-        version: 2.273.0(constructs@10.7.2)
+        version: 2.275.0(constructs@10.7.2)
       constructs:
         specifier: 'catalog:'
         version: 10.7.2
@@ -1109,7 +1109,7 @@ importers:
         version: 26.6.4
       aws-cdk:
         specifier: 'catalog:'
-        version: 2.1145.0
+        version: 2.1146.1
       esbuild:
         specifier: 'catalog:'
         version: 0.28.2
@@ -1553,45 +1553,45 @@ packages:
   '@aws-cdk/asset-node-proxy-agent-v6@2.1.3':
     resolution: {integrity: sha512-98We1QWfin9vtuuQtNFhIIAEWb8CreyYTAP0Vn8HqSBoNiFJM9nZgifJeQawT9Wq0NX1HCNFlxCyTccIrK1PSA==}
 
-  '@aws-cdk/aws-apprunner-alpha@2.273.0-alpha.0':
-    resolution: {integrity: sha512-qco22FnJ9eqJYJtuMbFrOxPehdL9uKS/KDrEgsk6gD+LzcyrAtAJuqHEO14Wkr/uYkXlymJA9UbQuv1oH9OCEQ==}
+  '@aws-cdk/aws-apprunner-alpha@2.275.0-alpha.0':
+    resolution: {integrity: sha512-aI6jipLYH0RlyN+pXynXImtnLWWGegXeY0MY11S2gz+BKtGB4gLT/RwNoVuEDSX198thb5oww1DOXnNpZJHQRw==}
     engines: {node: '>= 20.0.0'}
     peerDependencies:
-      aws-cdk-lib: ^2.273.0
+      aws-cdk-lib: ^2.275.0
       constructs: ^10.5.0
 
-  '@aws-cdk/aws-lambda-python-alpha@2.273.0-alpha.0':
-    resolution: {integrity: sha512-pS+GW4KrdzTgY0LDA0EZb2eDgPVoyeR9Ql9yhsYqNDBHCfXOOIRGHxCBN1ud8OfSGZMkUQU8q6sxBOR7V3xTpQ==}
+  '@aws-cdk/aws-lambda-python-alpha@2.275.0-alpha.0':
+    resolution: {integrity: sha512-dKgtyG3HPyOAI1tNB1/eBKDfUYgm5vMN+yf6iLrx8fIQduC1eGwxvI2tLgkplcfi6G/onYA7SJov31uZRZbBDA==}
     engines: {node: '>= 20.0.0'}
     peerDependencies:
-      aws-cdk-lib: ^2.273.0
+      aws-cdk-lib: ^2.275.0
       constructs: ^10.5.0
 
-  '@aws-cdk/aws-pipes-alpha@2.273.0-alpha.0':
-    resolution: {integrity: sha512-RlsRZJ3dpRKXPP7ct6t1iHXL4sv6mIG4BYKHcvoi5aU424TJASVqfrDzhwffYtEO/2KOLLxkLPb5pUvdfrFDyA==}
+  '@aws-cdk/aws-pipes-alpha@2.275.0-alpha.0':
+    resolution: {integrity: sha512-9cPgmD6sarofhrKOTk7S41w3woZB+41FOrOdoi3Ug3TX/XY0XCglc1nTCtCzJ8omdjbyamoo3lJx7DCMrKdY9A==}
     engines: {node: '>= 20.0.0'}
     peerDependencies:
-      aws-cdk-lib: ^2.273.0
+      aws-cdk-lib: ^2.275.0
       constructs: ^10.5.0
 
-  '@aws-cdk/aws-pipes-sources-alpha@2.273.0-alpha.0':
-    resolution: {integrity: sha512-RedQmlvC8+/kU9TbE7RLb+LVorxnu/LTrmRst/GrLy0TT97zxwn+4tAAR5/f4VASd4MAdvWoHlhFt3daPxWq0Q==}
+  '@aws-cdk/aws-pipes-sources-alpha@2.275.0-alpha.0':
+    resolution: {integrity: sha512-QezGxrPGhaqKDW/KnlXtF9Airi9oWMgUZBfOfXsKakqHM+V6KG6puod5pBeHXMW1PchldZOfmzt00hadmcG9Kw==}
     engines: {node: '>= 20.0.0'}
     peerDependencies:
-      '@aws-cdk/aws-pipes-alpha': 2.273.0-alpha.0
-      aws-cdk-lib: ^2.273.0
+      '@aws-cdk/aws-pipes-alpha': 2.275.0-alpha.0
+      aws-cdk-lib: ^2.275.0
       constructs: ^10.5.0
 
-  '@aws-cdk/aws-pipes-targets-alpha@2.273.0-alpha.0':
-    resolution: {integrity: sha512-O2/ET06P5oXtXwKl9BisIQ7iCUZOnxxrITYsVzJHPbtuMBVuxeahgmYv8LbrZdaNq4iolPUlAo1O6QCqUf7OHQ==}
+  '@aws-cdk/aws-pipes-targets-alpha@2.275.0-alpha.0':
+    resolution: {integrity: sha512-9gmGbUBJvokOF7HgB40yOCehfXgX/DepjP3cKjCbvLD/PEGVTHHBiojMVzKZHO54EyolUBFAA8io+wC+tf9e4A==}
     engines: {node: '>= 20.0.0'}
     peerDependencies:
-      '@aws-cdk/aws-pipes-alpha': 2.273.0-alpha.0
-      aws-cdk-lib: ^2.273.0
+      '@aws-cdk/aws-pipes-alpha': 2.275.0-alpha.0
+      aws-cdk-lib: ^2.275.0
       constructs: ^10.5.0
 
-  '@aws-cdk/cloud-assembly-schema@54.24.0':
-    resolution: {integrity: sha512-9sH1pBpWuqZR/9rYAveNi62B/jDrc9BNOL83alD/wtIUSbRkg1aj6JX2r1cSugQwLBjCizQscQZgAb5wWnTTMg==}
+  '@aws-cdk/cloud-assembly-schema@55.2.0':
+    resolution: {integrity: sha512-DHfYrZdyJZwWlI5sOK97X7SDc5Ow+uH3w3/qnB/ZYtY530lEsLObOoq/Z8BcJM6bAwJI6ozIgg9VYg2ot+A1jQ==}
     engines: {node: '>= 18.0.0'}
     bundledDependencies:
       - jsonschema
@@ -3825,8 +3825,8 @@ packages:
     resolution: {integrity: sha512-wvUjBtSGN7+7SjNpq/9M2Tg350UZD3q62IFZLbRAR1bSMlCo1ZaeW+BJ+D090e4hIIZLBcTDWe4Mh4jvUDajzQ==}
     engines: {node: '>= 0.4'}
 
-  aws-cdk-lib@2.273.0:
-    resolution: {integrity: sha512-H7hBQHnKn0ZBbpnWRL1Hn0GunSQUsYaLqOk2xIqV0HWr3qbYMwTEZT0HbJBUSxeUdzp1nz0AE2LN3K6qvYr4Zg==}
+  aws-cdk-lib@2.275.0:
+    resolution: {integrity: sha512-Gjj1tM3dQedhsI7MdwMvULF1PzgEO/zX0KFHU9xwZskkSL9057IZB4fJWm9nL+aaNU3TU+lNt8uB6d8QcZtUpQ==}
     engines: {node: '>= 20.0.0'}
     peerDependencies:
       constructs: ^10.5.0
@@ -3844,8 +3844,8 @@ packages:
       - yaml
       - mime-types
 
-  aws-cdk@2.1145.0:
-    resolution: {integrity: sha512-kV3vJCQX5XvlyVvmRHH79Nn2kOmDicN1WSFGkSaZXsNaDdNj2Re25yehsp+L2ixv0VCm0/HLLmYSoehmVPDkJg==}
+  aws-cdk@2.1146.1:
+    resolution: {integrity: sha512-Sb3RHuPt8yLP4BPFNl+D2li5wI9h4UL/+NYVq8FCxmDfUJwayzEOc/Tgb4wcixB8naOmPOLzhWkdbFx17tuhSg==}
     engines: {node: '>= 18.0.0'}
     hasBin: true
 
@@ -6169,34 +6169,34 @@ snapshots:
 
   '@aws-cdk/asset-node-proxy-agent-v6@2.1.3': {}
 
-  '@aws-cdk/aws-apprunner-alpha@2.273.0-alpha.0(aws-cdk-lib@2.273.0(constructs@10.7.2))(constructs@10.7.2)':
+  '@aws-cdk/aws-apprunner-alpha@2.275.0-alpha.0(aws-cdk-lib@2.275.0(constructs@10.7.2))(constructs@10.7.2)':
     dependencies:
-      aws-cdk-lib: 2.273.0(constructs@10.7.2)
+      aws-cdk-lib: 2.275.0(constructs@10.7.2)
       constructs: 10.7.2
 
-  '@aws-cdk/aws-lambda-python-alpha@2.273.0-alpha.0(aws-cdk-lib@2.273.0(constructs@10.7.2))(constructs@10.7.2)':
+  '@aws-cdk/aws-lambda-python-alpha@2.275.0-alpha.0(aws-cdk-lib@2.275.0(constructs@10.7.2))(constructs@10.7.2)':
     dependencies:
-      aws-cdk-lib: 2.273.0(constructs@10.7.2)
+      aws-cdk-lib: 2.275.0(constructs@10.7.2)
       constructs: 10.7.2
 
-  '@aws-cdk/aws-pipes-alpha@2.273.0-alpha.0(aws-cdk-lib@2.273.0(constructs@10.7.2))(constructs@10.7.2)':
+  '@aws-cdk/aws-pipes-alpha@2.275.0-alpha.0(aws-cdk-lib@2.275.0(constructs@10.7.2))(constructs@10.7.2)':
     dependencies:
-      aws-cdk-lib: 2.273.0(constructs@10.7.2)
+      aws-cdk-lib: 2.275.0(constructs@10.7.2)
       constructs: 10.7.2
 
-  '@aws-cdk/aws-pipes-sources-alpha@2.273.0-alpha.0(@aws-cdk/aws-pipes-alpha@2.273.0-alpha.0(aws-cdk-lib@2.273.0(constructs@10.7.2))(constructs@10.7.2))(aws-cdk-lib@2.273.0(constructs@10.7.2))(constructs@10.7.2)':
+  '@aws-cdk/aws-pipes-sources-alpha@2.275.0-alpha.0(@aws-cdk/aws-pipes-alpha@2.275.0-alpha.0(aws-cdk-lib@2.275.0(constructs@10.7.2))(constructs@10.7.2))(aws-cdk-lib@2.275.0(constructs@10.7.2))(constructs@10.7.2)':
     dependencies:
-      '@aws-cdk/aws-pipes-alpha': 2.273.0-alpha.0(aws-cdk-lib@2.273.0(constructs@10.7.2))(constructs@10.7.2)
-      aws-cdk-lib: 2.273.0(constructs@10.7.2)
+      '@aws-cdk/aws-pipes-alpha': 2.275.0-alpha.0(aws-cdk-lib@2.275.0(constructs@10.7.2))(constructs@10.7.2)
+      aws-cdk-lib: 2.275.0(constructs@10.7.2)
       constructs: 10.7.2
 
-  '@aws-cdk/aws-pipes-targets-alpha@2.273.0-alpha.0(@aws-cdk/aws-pipes-alpha@2.273.0-alpha.0(aws-cdk-lib@2.273.0(constructs@10.7.2))(constructs@10.7.2))(aws-cdk-lib@2.273.0(constructs@10.7.2))(constructs@10.7.2)':
+  '@aws-cdk/aws-pipes-targets-alpha@2.275.0-alpha.0(@aws-cdk/aws-pipes-alpha@2.275.0-alpha.0(aws-cdk-lib@2.275.0(constructs@10.7.2))(constructs@10.7.2))(aws-cdk-lib@2.275.0(constructs@10.7.2))(constructs@10.7.2)':
     dependencies:
-      '@aws-cdk/aws-pipes-alpha': 2.273.0-alpha.0(aws-cdk-lib@2.273.0(constructs@10.7.2))(constructs@10.7.2)
-      aws-cdk-lib: 2.273.0(constructs@10.7.2)
+      '@aws-cdk/aws-pipes-alpha': 2.275.0-alpha.0(aws-cdk-lib@2.275.0(constructs@10.7.2))(constructs@10.7.2)
+      aws-cdk-lib: 2.275.0(constructs@10.7.2)
       constructs: 10.7.2
 
-  '@aws-cdk/cloud-assembly-schema@54.24.0': {}
+  '@aws-cdk/cloud-assembly-schema@55.2.0': {}
 
   '@aws-lambda-powertools/commons@2.35.0':
     dependencies:
@@ -7022,9 +7022,9 @@ snapshots:
       - debug
       - supports-color
 
-  '@checkmarx/cdk-validator-kics@2.3.3(aws-cdk-lib@2.273.0(constructs@10.7.2))':
+  '@checkmarx/cdk-validator-kics@2.3.3(aws-cdk-lib@2.275.0(constructs@10.7.2))':
     dependencies:
-      aws-cdk-lib: 2.273.0(constructs@10.7.2)
+      aws-cdk-lib: 2.275.0(constructs@10.7.2)
 
   '@clack/core@1.5.1':
     dependencies:
@@ -8489,14 +8489,14 @@ snapshots:
     dependencies:
       possible-typed-array-names: 1.1.0
 
-  aws-cdk-lib@2.273.0(constructs@10.7.2):
+  aws-cdk-lib@2.275.0(constructs@10.7.2):
     dependencies:
       '@aws-cdk/asset-awscli-v1': 2.2.292
       '@aws-cdk/asset-node-proxy-agent-v6': 2.1.3
-      '@aws-cdk/cloud-assembly-schema': 54.24.0
+      '@aws-cdk/cloud-assembly-schema': 55.2.0
       constructs: 10.7.2
 
-  aws-cdk@2.1145.0: {}
+  aws-cdk@2.1146.1: {}
 
   aws4fetch@1.0.18: {}
 
@@ -8560,9 +8560,9 @@ snapshots:
 
   caniuse-lite@1.0.30001810: {}
 
-  cargo-lambda-cdk@0.0.36(aws-cdk-lib@2.273.0(constructs@10.7.2))(constructs@10.7.2):
+  cargo-lambda-cdk@0.0.36(aws-cdk-lib@2.275.0(constructs@10.7.2))(constructs@10.7.2):
     dependencies:
-      aws-cdk-lib: 2.273.0(constructs@10.7.2)
+      aws-cdk-lib: 2.275.0(constructs@10.7.2)
       constructs: 10.7.2
 
   case@1.6.3: {}
