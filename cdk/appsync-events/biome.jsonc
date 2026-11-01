@@ -6,6 +6,7 @@
     "includes": [
       "src/**",
       "!src/assets",
+      "!src/demo",
       "package.json",
       "cdk.json"
     ]
