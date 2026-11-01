@@ -22,10 +22,6 @@ cdktf.out/
 .terraform.lock.hcl
 terraform.tfstate.d/
 
-# sst and astro
-.sst/
-.astro/
-
 # rust
 target/
 
