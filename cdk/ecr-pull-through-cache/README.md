@@ -1,4 +1,4 @@
-# cdk-ecr-docker-hub-pull-through-cache
+# cdk-ecr-pull-through-cache
 
 CDK app that caches the NGINX image from Docker Hub in Amazon ECR with a [pull-through cache rule](https://docs.aws.amazon.com/AmazonECR/latest/userguide/pull-through-cache.html), then runs it on [Amazon ECS Express Mode](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/express-service-work.html), Amazon ECS on Fargate behind an Application Load Balancer, or [AWS App Runner](https://docs.aws.amazon.com/apprunner/latest/dg/what-is-apprunner.html).
 
