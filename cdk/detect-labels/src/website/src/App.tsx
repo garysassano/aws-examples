@@ -17,15 +17,15 @@ type State =
   | { step: "done"; result: Result }
   | { step: "failed"; message: string };
 
+const TITLE = "Cat Detector";
+
 // The wording for each detector the stack can deploy
 const COPY = {
   rekognition: {
-    title: "Cat Rekognizer",
     description: "Upload a photo and Amazon Rekognition tells you if it shows a cat.",
     reader: "Rekognition",
   },
   sagemaker: {
-    title: "Cat Detector",
     description: "Upload a photo and an open model on SageMaker tells you if it shows a cat.",
     reader: "The model",
   },
@@ -55,6 +55,23 @@ export function App({ config }: { config: Config }) {
     setFile(undefined);
     setState({ step: "idle" });
     if (input.current) input.current.value = "";
+  };
+
+  const browse = () => input.current?.click();
+
+  // The empty drop zone and the preview both take a click or a dropped file.
+  const dropTarget = {
+    onClick: browse,
+    onDragOver: (event: React.DragEvent) => {
+      event.preventDefault();
+      setDragging(true);
+    },
+    onDragLeave: () => setDragging(false),
+    onDrop: (event: React.DragEvent) => {
+      event.preventDefault();
+      setDragging(false);
+      choose(event.dataTransfer.files[0]);
+    },
   };
 
   const choose = (chosen: File | undefined) => {
@@ -92,12 +109,10 @@ export function App({ config }: { config: Config }) {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-xl items-center px-4 py-10">
-      {/* The only title: index.html has none, so the page says which detector it uses. */}
-      <title>{copy.title}</title>
       <Card className="w-full">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Cat className="size-5 text-primary" aria-hidden /> {copy.title}
+            <Cat className="size-5 text-primary" aria-hidden /> {TITLE}
           </CardTitle>
           <CardDescription>{copy.description}</CardDescription>
         </CardHeader>
@@ -111,21 +126,23 @@ export function App({ config }: { config: Config }) {
           />
 
           {previewUrl ? (
-            <Preview url={previewUrl} result={state.step === "done" ? state.result : undefined} />
+            <button
+              type="button"
+              aria-label="Replace the photo"
+              title="Click or drop an image to replace the photo"
+              disabled={busy}
+              {...dropTarget}
+              className={cn(
+                "block w-full rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring enabled:cursor-pointer",
+                dragging && "outline-2 outline-offset-2 outline-primary",
+              )}
+            >
+              <Preview url={previewUrl} result={state.step === "done" ? state.result : undefined} />
+            </button>
           ) : (
             <button
               type="button"
-              onClick={() => input.current?.click()}
-              onDragOver={(event) => {
-                event.preventDefault();
-                setDragging(true);
-              }}
-              onDragLeave={() => setDragging(false)}
-              onDrop={(event) => {
-                event.preventDefault();
-                setDragging(false);
-                choose(event.dataTransfer.files[0]);
-              }}
+              {...dropTarget}
               className={cn(
                 "flex h-64 w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border text-muted-foreground transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
                 dragging && "border-primary bg-muted",
@@ -159,19 +176,30 @@ export function App({ config }: { config: Config }) {
           </div>
 
           <div className="flex gap-2">
-            <Button
-              className="flex-1"
-              size="lg"
-              disabled={!file || busy || state.step === "done"}
-              onClick={analyze}
-            >
-              {busy ? <LoaderCircle className="size-4 animate-spin" aria-hidden /> : null}
-              Analyze
-            </Button>
-            {file && (
-              <Button variant="outline" size="lg" disabled={busy} onClick={reset}>
-                <RotateCcw className="size-4" aria-hidden /> Reset
+            {/* Once a photo has its answer, the next step is another photo; a failed analysis can be retried. */}
+            {state.step === "done" && state.result.status !== "error" ? (
+              <Button
+                className="flex-1"
+                size="lg"
+                onClick={() => {
+                  reset();
+                  browse();
+                }}
+              >
+                <ImageUp className="size-4" aria-hidden /> Try another photo
               </Button>
+            ) : (
+              <>
+                <Button className="flex-1" size="lg" disabled={!file || busy} onClick={analyze}>
+                  {busy ? <LoaderCircle className="size-4 animate-spin" aria-hidden /> : null}
+                  Analyze
+                </Button>
+                {file && (
+                  <Button variant="outline" size="lg" disabled={busy} onClick={reset}>
+                    <RotateCcw className="size-4" aria-hidden /> Reset
+                  </Button>
+                )}
+              </>
             )}
           </div>
         </CardContent>
@@ -223,7 +251,8 @@ function Verdict({ result, reader }: { result: Result; reader: string }) {
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-2">
-        <Badge variant={result.isCat ? "success" : "destructive"} className="px-3 py-1 text-sm">
+        {/* Finding no cat is an answer, not an error, so it isn't red. */}
+        <Badge variant={result.isCat ? "success" : "default"} className="px-3 py-1 text-sm">
           {result.isCat ? "It's a cat" : "No cat found"}
         </Badge>
         {result.confidence !== null && (
@@ -240,7 +269,7 @@ function Verdict({ result, reader }: { result: Result; reader: string }) {
           {result.labels.map((label) => (
             <li key={label.name}>
               <Badge variant="outline">
-                {label.name} <span className="opacity-70">{Math.round(label.confidence)}%</span>
+                {label.name} <span className="opacity-70">{label.confidence}%</span>
               </Badge>
             </li>
           ))}
