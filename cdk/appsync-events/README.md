@@ -29,27 +29,16 @@ pnpm run deploy
 
 ## Usage
 
-1. Once deployed, test publishing and subscribing in both namespaces:
-   - In AWS Console, `AppSync` ➜ `events-api` ➜ `Pub/Sub Editor`.
-   - To **subscribe to events**:
-     1. Select a namespace.
-     2. Provide a channel name (e.g., `/ch1`) or leave the default (`/*`) to subscribe to all channels.
-     3. Click `Subscribe`.
-   - To **publish an event**:
-     1. Select a namespace.
-     2. Provide a channel name (e.g., `/ch1`).
-     3. Leave the default JSON payload or provide a custom one.
-     4. Click `Publish`.
-2. For the `lambda` namespace:
-   - Subscribers receive each payload wrapped by the function, as `{ processed: true, originalPayload: ... }`.
-   - To see what the function logged:
-     - In AWS Console, `CloudWatch` ➜ `Log groups` ➜ `/aws/lambda/events-function`.
-3. For the `dynamodb` namespace:
-   - Subscribers receive each payload unchanged.
-   - To see what was stored:
-     - In AWS Console, `DynamoDB` ➜ `Tables` ➜ `events-table`.
+```sh
+pnpm -C src/demo/cli start
+```
 
-Clients outside the console connect to the `HttpEndpoint` and `RealtimeEndpoint` stack outputs, with the key that `aws appsync list-api-keys` returns for the API.
+The demo finds the API with your default AWS credentials, subscribes to both namespaces over WebSocket, and publishes one event to each over HTTP. It prints what subscribers receive and the item stored in the table:
+
+- `lambda`: subscribers receive the payload wrapped by the function, as `{ processed: true, originalPayload: ... }`. The function logs to `/aws/lambda/events-function`.
+- `dynamodb`: subscribers receive the payload unchanged, and `events-table` stores it.
+
+To try your own payloads, go to `AppSync` ➜ `events-api` ➜ `Pub/Sub Editor` in AWS Console.
 
 ## Cleanup
 

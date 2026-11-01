@@ -3,7 +3,7 @@ import { Code, EventApi, type HandlerConfig, LambdaInvokeType } from "aws-cdk-li
 import { AttributeType, TableV2 } from "aws-cdk-lib/aws-dynamodb";
 import { Architecture, LoggingFormat, Runtime } from "aws-cdk-lib/aws-lambda";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
-import { CfnOutput, Duration, RemovalPolicy, Stack, type StackProps } from "aws-cdk-lib/core";
+import { Duration, RemovalPolicy, Stack, type StackProps } from "aws-cdk-lib/core";
 import type { Construct } from "constructs";
 
 export class MyStack extends Stack {
@@ -55,13 +55,6 @@ export class MyStack extends Stack {
       code: Code.fromAsset(join(import.meta.dirname, "../handlers", "dynamodb-namespace.js")),
       publishHandlerConfig: { dataSource: dynamoDbDataSource },
       subscribeHandlerConfig: { dataSource: dynamoDbDataSource },
-    });
-
-    new CfnOutput(this, "HttpEndpoint", {
-      value: `https://${eventsApi.httpDns}/event`,
-    });
-    new CfnOutput(this, "RealtimeEndpoint", {
-      value: `wss://${eventsApi.realtimeDns}/event/realtime`,
     });
   }
 }
