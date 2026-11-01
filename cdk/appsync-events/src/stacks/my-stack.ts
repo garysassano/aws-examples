@@ -3,33 +3,28 @@ import { Code, EventApi, type HandlerConfig, LambdaInvokeType } from "aws-cdk-li
 import { AttributeType, TableV2 } from "aws-cdk-lib/aws-dynamodb";
 import { Architecture, LoggingFormat, Runtime } from "aws-cdk-lib/aws-lambda";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
-import { Duration, RemovalPolicy, Stack, type StackProps } from "aws-cdk-lib/core";
+import { CfnOutput, Duration, RemovalPolicy, Stack, type StackProps } from "aws-cdk-lib/core";
 import type { Construct } from "constructs";
 
 export class MyStack extends Stack {
   constructor(scope: Construct, id: string, props: StackProps = {}) {
     super(scope, id, props);
 
-    //==============================================================================
-    // SAMPLE FUNCTION (LAMBDA)
-    //==============================================================================
-
-    const sampleFunction = new NodejsFunction(this, `SampleFunction`, {
-      functionName: "sample-function",
-      entry: join(import.meta.dirname, "../functions/sample", "index.ts"),
+    // Lambda function that handles the events of the `lambda` namespace
+    const eventsFunction = new NodejsFunction(this, "EventsFunction", {
+      functionName: "events-function",
+      entry: join(import.meta.dirname, "../functions/events", "index.ts"),
       runtime: Runtime.NODEJS_24_X,
       architecture: Architecture.ARM_64,
-      memorySize: 1024,
-      timeout: Duration.minutes(1),
+      memorySize: 256,
+      timeout: Duration.seconds(10),
       loggingFormat: LoggingFormat.JSON,
     });
 
-    //==============================================================================
-    // SAMPLE TABLE (DDB)
-    //==============================================================================
-
-    const sampleTable = new TableV2(this, "SampleTable", {
-      tableName: "sample-table",
+    // DynamoDB table that stores the events of the `dynamodb` namespace. The handler in
+    // `src/handlers/dynamodb-namespace.js` repeats this table name.
+    const eventsTable = new TableV2(this, "EventsTable", {
+      tableName: "events-table",
       partitionKey: {
         name: "id",
         type: AttributeType.STRING,
@@ -37,83 +32,36 @@ export class MyStack extends Stack {
       removalPolicy: RemovalPolicy.DESTROY,
     });
 
-    //==============================================================================
-    // SAMPLE API (APPSYNC EVENTS)
-    //==============================================================================
-
-    // Sample API
-    const sampleApi = new EventApi(this, "SampleApi", {
-      apiName: "sample-api",
+    // AppSync Events API, authorized with an API key
+    const eventsApi = new EventApi(this, "EventsApi", {
+      apiName: "events-api",
     });
+    const lambdaDataSource = eventsApi.addLambdaDataSource("LambdaDataSource", eventsFunction);
+    const dynamoDbDataSource = eventsApi.addDynamoDbDataSource("DynamoDbDataSource", eventsTable);
 
-    // Sample API Data Sources
-    const sampleApiLambdaDs = sampleApi.addLambdaDataSource("SampleApiLambdaDs", sampleFunction);
-    const sampleApiDdbDs = sampleApi.addDynamoDbDataSource("SampleApiDdbDs", sampleTable);
-
-    // Lambda Channel Namespace
-    const sampleApiLambdaHandlerConfig: HandlerConfig = {
-      dataSource: sampleApiLambdaDs,
+    // Namespace that calls the Lambda function directly, with no handler code in AppSync
+    const lambdaHandlerConfig: HandlerConfig = {
+      dataSource: lambdaDataSource,
       direct: true,
       lambdaInvokeType: LambdaInvokeType.REQUEST_RESPONSE,
     };
-    sampleApi.addChannelNamespace("foo", {
-      publishHandlerConfig: sampleApiLambdaHandlerConfig,
-      subscribeHandlerConfig: sampleApiLambdaHandlerConfig,
+    eventsApi.addChannelNamespace("lambda", {
+      publishHandlerConfig: lambdaHandlerConfig,
+      subscribeHandlerConfig: lambdaHandlerConfig,
     });
 
-    // DDB Channel Namespace
-    sampleApi.addChannelNamespace("bar", {
-      code: Code.fromInline(`import * as ddb from '@aws-appsync/utils/dynamodb'
-import { util } from '@aws-appsync/utils'
+    // Namespace whose APPSYNC_JS handler writes to the DynamoDB table
+    eventsApi.addChannelNamespace("dynamodb", {
+      code: Code.fromAsset(join(import.meta.dirname, "../handlers", "dynamodb-namespace.js")),
+      publishHandlerConfig: { dataSource: dynamoDbDataSource },
+      subscribeHandlerConfig: { dataSource: dynamoDbDataSource },
+    });
 
-const TABLE = '${sampleTable.tableName}'
-
-export const onPublish = {
-  request(ctx) {
-    const channel = ctx.info.channel.path
-    const timestamp = util.time.nowISO8601()
-    return ddb.batchPut({
-      tables: {
-        [TABLE]: ctx.events.map(({id, payload}) => ({
-          channel, id, timestamp, ...payload,
-        })),
-      },
-    })
-  },
-  response(ctx) {
-    if (ctx.result && ctx.result.data && ctx.result.data[TABLE]) {
-      return ctx.result.data[TABLE].map(({ id, ...payload }) => ({ id, payload }))
-    } else {
-      console.log('Unexpected response structure or missing data for table:', TABLE, JSON.stringify(ctx.result))
-      return []
-    }
-  },
-}
-
-export const onSubscribe = {
-  request(ctx) {
-    const channel = ctx.info.channel.path
-    const timestamp = util.time.nowISO8601()
-    const id = util.autoId()
-    return ddb.batchPut({
-      tables: {
-        [TABLE]: [{
-          channel, id, timestamp
-        }],
-      },
-    })
-  },
-  response(ctx) {
-    return null
-  },
-}
-`),
-      publishHandlerConfig: {
-        dataSource: sampleApiDdbDs,
-      },
-      subscribeHandlerConfig: {
-        dataSource: sampleApiDdbDs,
-      },
+    new CfnOutput(this, "HttpEndpoint", {
+      value: `https://${eventsApi.httpDns}/event`,
+    });
+    new CfnOutput(this, "RealtimeEndpoint", {
+      value: `wss://${eventsApi.realtimeDns}/event/realtime`,
     });
   }
 }

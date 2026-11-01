@@ -259,6 +259,9 @@ importers:
       '@aws-lambda-powertools/logger':
         specifier: 'catalog:'
         version: 2.35.0(@aws-lambda-powertools/jmespath@2.35.0)(@middy/core@7.9.2)
+      '@middy/core':
+        specifier: 'catalog:'
+        version: 7.9.2
       '@types/aws-lambda':
         specifier: 'catalog:'
         version: 8.10.163
