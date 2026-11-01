@@ -36,11 +36,10 @@ catalog:
   "@aws-sdk/s3-presigned-post": 3.1148.0
   "@biomejs/biome": ^2.5.15
   cargo-lambda-cdk: ^0.0.36
-  cdktn: ^0.24.0
-  cdktn-cli: ^0.24.0
-  # cdktn 0.24 peers on constructs ">=10.6.0 <10.8.0"; 0.25 widens it to ^10.6.0.
-  # aws-cdk-lib accepts ^10.5.0, so one version serves both.
-  constructs: ~10.7.2
+  cdktn: ^0.25.0
+  cdktn-cli: ^0.25.0
+  # cdktn peers on ^10.6.0 and aws-cdk-lib on ^10.5.0, so one version serves both.
+  constructs: ^10.8.1
   "@dev7a/lambda-otel-lite": ^0.16.3
   esbuild: ^0.28.2
   "@middy/core": ^7.9.2
@@ -63,14 +62,18 @@ catalog:
   "@types/aws-lambda": ^8.10.163
   "@types/node": ^26.6.4
   typescript: ^7.0.2
-  vitest: ^5.0.1
+  vitest: ^5.0.5
   yaml: ^2.9.1
-  zod: ^4.6.5
+  zod: ^4.6.7
 
 overrides:
   # @gomomento/sdk 1.118.1, still the latest, pins @grpc/grpc-js 1.13.5, which
   # GHSA advisories fix in 1.13.6. Drop this once the SDK moves past 1.13.5.
   "@gomomento/sdk>@grpc/grpc-js": 1.13.6
+  # cdktn-cli 0.25.0, still the latest, asks for glob ^13 through @cdktn/hcl2cdk and
+  # @cdktn/provider-generator, and glob 13 has no fix for GHSA-3g3m-2fjr-6pw4. glob 14
+  # brings minimatch 11, which fixes GHSA-g3hv-75wg-m249. Drop this once cdktn allows glob 14.
+  glob: ^14.0.3
 
 peerDependencyRules:
   allowedVersions:
