@@ -7,9 +7,8 @@ CDK app that detects whether an uploaded image contains a cat, with Amazon Rekog
 - **_AWS:_**
   - Must have authenticated with [Default Credentials](https://docs.aws.amazon.com/cdk/v2/guide/cli.html#cli_auth) in your local environment.
   - Must have completed the [CDK bootstrapping](https://docs.aws.amazon.com/cdk/v2/guide/bootstrapping.html) for the target AWS environment.
-  - For `-c detector=sagemaker` or `all`, must deploy to a Region that offers [Serverless Inference](https://docs.aws.amazon.com/sagemaker/latest/dg/serverless-endpoints.html).
 - **_Docker:_**
-  - For `-c detector=sagemaker` or `all`, must be running, to build the model's container image.
+  - Must be running for the SageMaker detector, to build the model's container image.
 - **_mise:_**
   - [Install mise](https://mise.jdx.dev/installing-mise.html), which manages the required toolchain.
 
@@ -26,13 +25,13 @@ pnpm install
 pnpm run deploy
 ```
 
-This deploys the Rekognition detector, which needs no Docker. To use the open model on SageMaker instead, or to deploy both side by side as two independent stacks, pass `-c detector=sagemaker` or `-c detector=all`:
+This deploys the Rekognition detector. Pass `-c detector=sagemaker` for the open model on SageMaker, or `-c detector=all` for both as two independent stacks:
 
 ```sh
 pnpm run deploy -c detector=sagemaker
 ```
 
-Deploying builds the React site in `src/website` first. For SageMaker it also builds the model image in `src/model`, and the stack takes about 13 minutes, most of it creating the endpoint. The script sets `BUILDX_NO_DEFAULT_ATTESTATIONS=1`, because SageMaker only accepts images with Docker v2 manifests, which BuildKit can't produce while it adds its default attestations; deploy with the script rather than with `cdk deploy`.
+Deploy with the script rather than with `cdk deploy`: it builds the website first, and sets `BUILDX_NO_DEFAULT_ATTESTATIONS=1` so that the model image has the Docker v2 manifest SageMaker requires.
 
 ## Usage
 
@@ -43,52 +42,40 @@ Deploying builds the React site in `src/website` first. For SageMaker it also bu
    WebsiteDistributionUrl = <CLOUDFRONT_DISTRIBUTION_URL>
    ```
 
-2. Drop a JPEG or PNG of up to 15 MB on the page and click `Analyze`. The page shows the upload progress, then the verdict, the detected labels, and a box around each cat:
+2. Drop a JPEG or PNG of up to 15 MB on the page and click `Analyze`. The page shows the verdict, the detected labels, and a box around each cat:
 
    | Rekognition                                                | SageMaker                                              |
    | ---------------------------------------------------------- | ------------------------------------------------------ |
    | ![Rekognition result](./src/assets/result-rekognition.png) | ![SageMaker result](./src/assets/result-sagemaker.png) |
 
-## How it works
+## Rekognition vs SageMaker
 
-The browser asks the API for a presigned `POST` form for one `image/jpeg` or `image/png` object. The form's policy caps the size at 15 MB, which a presigned `PUT` URL cannot do, and the key is `uploads/<uploadId>`. Before uploading, the browser subscribes to the AppSync Events channel `/results/<uploadId>` with a subscribe-only API key.
+Measured by uploading the same 51 photos (33 cats, 17 other animals, and a European wildcat left out of the counts) through each deployed stack in `eu-central-1`, one at a time.
 
-S3 invokes the detect function for each new object under `uploads/`. The function asks the detector for the labels, keeps the boxes of the cats, and publishes the result to the channel with its IAM role. The browser draws it as soon as it arrives.
+### Cost
 
-- The channel handler only lets a client subscribe to an exact `/results/<uploadId>`, never to a wildcard, so the public API key cannot read other uploads' results. The key expires after 365 days, the longest AppSync allows; redeploy to issue a new one.
-- Results are cached by the image's ETag for a day, so uploading the same image again skips the detector, and the page says the result was reused. A second upload that arrives while the first is still being detected waits for its result.
-- A file that is not a readable JPEG or PNG is published as `unsupported`, instead of failing and being retried.
-- The function keeps 3 seconds of its timeout back, so a detection that runs too long is published as an error rather than left unanswered. Events that still fail after one retry go to the `detect-labels-failures` queue, and events older than 5 minutes are dropped, since the page stopped waiting long before.
-- Uploads expire after a day, and the API allows 5 requests per second, which still allows about 432,000 detections a day on a public URL. SageMaker is also capped by the endpoint's 5 concurrent requests.
-- CloudFront redirects HTTP to HTTPS and adds the managed security headers. The hashed files under `assets/` are cached for a year, and `index.html` and `config.json` are revalidated on every load, so a deploy takes effect at once.
+For the 51 photos, with `eu-central-1` list prices as of 31 October 2026:
 
-### Rekognition
+|                | Rekognition | SageMaker Serverless                       |
+| -------------- | ----------- | ------------------------------------------ |
+| Billing unit   | One image   | One second of inference, at 6 GB of memory |
+| Units billed   | 51 images   | 43 seconds                                 |
+| Price per unit | $0.0012     | $0.00012                                   |
+| Total cost     | $0.061      | $0.0052                                    |
+| Cost per photo | $0.0012     | $0.0001                                    |
 
-The function calls `DetectLabels` with a minimum confidence of 75 and takes the cat's bounding boxes from the `Cat` label, its aliases, and its children, such as breeds.
+The rest of each stack, everything but the detector, cost under $0.002.
 
-### SageMaker
+### Behavior
 
-The function invokes a SageMaker Serverless Inference endpoint with the object's bucket and key, and the model container reads the image from S3 itself: serverless endpoints accept at most 4 MB per request, and uploads can be 15 MB.
-
-- **Model:** [`ustc-community/dfine-large-coco`](https://huggingface.co/ustc-community/dfine-large-coco), D-FINE-L, an Apache-2.0 COCO object detector with 31M parameters. Its weights are pinned to a commit and baked into the image, so a container downloads nothing when it starts. Objects below a score of 0.5 are dropped, and each `cat` gets a bounding box.
-- **Container:** `src/model` is a uv project with the CPU build of PyTorch and Transformers, and `serve.py` answers SageMaker's `/ping` and `/invocations` on port 8080. It turns each image upright by its EXIF orientation, as the browser shows it, and decodes large JPEGs at a reduced scale, since the model sees 640×640 pixels. The image is about 0.5 GB compressed in ECR.
-- **Endpoint:** 6 GB of memory, the most Serverless Inference offers, which also gives the most vCPUs, and at most 5 concurrent requests. It scales to zero when idle, so the first request after a while waits about 16 seconds for a new container. Provisioned concurrency in the serverless config would remove that wait, but is billed while idle.
-- **Permissions:** the endpoint's role can pull the image, read `uploads/*`, and write to its own log group, which the stack creates so that it is deleted with the stack.
-
-Unlike Rekognition, the model only knows the 80 COCO classes. Like Rekognition, it calls a lynx a cat.
-
-### Rekognition vs SageMaker
-
-|                         | Rekognition                                                               | SageMaker Serverless                                                                    |
-| ----------------------- | ------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| Price in `eu-central-1` | $0.001 per image                                                          | $0.00012 per second of inference at 6 GB, plus $0.016 per GB of payload                 |
-| Free tier               | 1,000 images a month for 12 months, on accounts created before 2025-07-15 | 150,000 seconds a month for the first 2 months, on accounts created before 2025-07-15   |
-| Cost of one warm image  | $0.001                                                                    | about $0.0001, for 0.75 to 1 s of model time                                            |
-| Latency                 | 1.5 to 2 s end to end                                                     | 1.6 to 3 s end to end when warm; 16 s for the first request after the endpoint was idle |
-| Labels                  | Thousands, with parents and aliases                                       | 80 COCO classes                                                                         |
-| Deploy                  | About 4 minutes, no Docker                                                | About 13 minutes, with Docker                                                           |
-
-Prices are from the [Rekognition](https://aws.amazon.com/rekognition/pricing/) and [SageMaker AI](https://aws.amazon.com/sagemaker/ai/pricing/) pricing pages as of October 2026. Accounts created since 2025-07-15 get the credit-based [AWS Free Tier](https://aws.amazon.com/free/) instead.
+|                              | Rekognition                         | SageMaker Serverless                        |
+| ---------------------------- | ----------------------------------- | ------------------------------------------- |
+| Upload to result, warm       | 2.5 s median                        | 3.1 s median                                |
+| Upload to result, cold start | No cold start                       | About 16 s                                  |
+| Labels                       | Thousands, with parents and aliases | The 80 COCO classes, so any feline is a cat |
+| Cats found                   | 31 of 33                            | 32 of 33                                    |
+| Other animals called a cat   | 5 of 17                             | 10 of 17                                    |
+| Deploy time                  | About 4 minutes                     | About 13 minutes                            |
 
 ## Cleanup
 
@@ -96,14 +83,41 @@ Prices are from the [Rekognition](https://aws.amazon.com/rekognition/pricing/) a
 pnpm destroy -c detector=all
 ```
 
-With `-c detector=all` the app includes both stacks, so this removes whichever you deployed. It deletes every resource, including the buckets and their objects, and for SageMaker the endpoint and its log group. It leaves the two log groups that Lambda creates for CDK's own helper functions in each stack, `/aws/lambda/cdk-detect-labels-rekogni-BucketNotificationsHandl-*` and `/aws/lambda/cdk-detect-labels-rekogni-CustomS3AutoDeleteObject-*`, or `sagemak` in place of `rekogni`, and the model image in the CDK bootstrap's container assets repository.
+This removes whichever stacks you deployed, including the buckets and their objects. It leaves the log groups that Lambda creates for CDK's helper functions, `/aws/lambda/cdk-detect-labels-<rekogni|sagemak>-BucketNotificationsHandl-*` and `-CustomS3AutoDeleteObject-*`, and for SageMaker the model image in the CDK bootstrap's container assets repository.
 
-## Architecture Diagrams
+## Architecture Diagram
 
-### Rekognition
+![Architecture Diagram](./src/assets/arch-diagram.svg)
 
-![Rekognition architecture diagram](./src/assets/arch-rekognition.svg)
+1. **Loading the site**
+   - CloudFront serves the React build from the website bucket.
 
-### SageMaker
+2. **Getting an upload form**
+   - The site asks the HTTP API for a presigned `POST` form, which caps the upload at 15 MB.
 
-![SageMaker architecture diagram](./src/assets/arch-sagemaker.svg)
+3. **Subscribing to the result**
+   - The site subscribes to the AppSync Events channel `/results/<uploadId>`.
+
+4. **Uploading the image**
+   - The browser posts the image straight to the uploads bucket with the form.
+
+5. **Invoking the detect function**
+   - S3 invokes the detect function for the new object.
+
+6. **Detecting the labels**
+   - **Rekognition:** the function calls `DetectLabels` and keeps the boxes of the `Cat` label and its breeds.
+   - **SageMaker:** the function invokes the endpoint with the image's S3 location, and the [model container](./src/model) reads the image and runs D-FINE-L. The endpoint scales to zero when idle.
+
+7. **Caching the result**
+   - The function stores the result in the idempotency table, keyed by the image's ETag.
+
+8. **Publishing the result**
+   - The function publishes the result, or an error, to the channel, and the page shows it.
+
+### Design Notes
+
+- **One detector per stack.** The detect function calls Rekognition or the SageMaker endpoint, chosen at deploy time with `-c detector`. `-c detector=all` deploys two separate stacks, each with its own copy of every resource.
+- **Subscribing before uploading.** AppSync Events delivers an event only to the subscribers connected when it is published, and the result can follow the upload within seconds, so the site subscribes first.
+- **The image by reference.** Serverless Inference caps a request at 4 MB and an upload can be 15 MB, so the function sends the endpoint the image's S3 location and the container reads the image itself.
+- **Results cached by ETag.** A result is kept for a day, so uploading the same image again skips the detector, and two uploads of the same image at the same time share one detection. The SageMaker stack includes the model version in the key, so a new model doesn't reuse old results.
+- **An error instead of silence.** The function keeps 3 seconds of its timeout back, so when detection fails or runs out of time it still publishes an error, and the page shows it rather than waiting for its own timeout.
