@@ -1,6 +1,6 @@
 # cdk-lambda-dynamic-provisioned-concurrency
 
-CDK app that deploys a Lambda function with provisioned concurrency managed by Application Auto Scaling, twice, so you can compare the CDK default scaling policy with one tuned for bursty and idle traffic. With steady traffic plus bursts, the tuned policy scaled out where the default did not, and once traffic stopped it returned to the minimum while the default kept its peak capacity.
+CDK app that deploys a Lambda function with provisioned concurrency managed by Application Auto Scaling, twice, so you can compare the CDK default scaling policy with one tuned for bursty and idle traffic.
 
 ## Prerequisites
 
