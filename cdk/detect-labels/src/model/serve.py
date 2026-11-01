@@ -69,7 +69,8 @@ def detect(image: Image.Image) -> dict:
         "isCat": "cat" in best,
         "confidence": round(best["cat"] * 100, 1) if "cat" in best else None,
         "labels": [
-            {"name": name, "confidence": round(score * 100, 1)}
+            # Title case, as Rekognition names its labels.
+            {"name": name.title(), "confidence": round(score * 100, 1)}
             for name, score in sorted(best.items(), key=lambda item: -item[1])
         ],
         "boxes": boxes,
