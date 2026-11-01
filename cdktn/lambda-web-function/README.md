@@ -2,13 +2,13 @@
 
 CDKTN app that runs a SvelteKit frontend and a Hono backend as [AWS Lambda Web Functions](https://docs.aws.amazon.com/lambda/latest/dg/web-functions.html), with a DynamoDB table for state.
 
-### Related Apps
-
-- [cdktn/lambda-web-adapter](../lambda-web-adapter) - Runs the same app through the Lambda Web Adapter in container images, with Upstash Redis for state.
-
 Each app is an ordinary Node web server. Lambda starts it, waits for it to listen on the address in `AWS_LAMBDA_HTTP_ENDPOINT`, and sends it HTTP requests directly: there is no adapter, no event-to-HTTP translation, and no container image. Each function is a `.zip` package in a versioned S3 bucket, an immutable revision that pins that package's object version, and an HTTPS endpoint that routes to the revision.
 
 The frontend's endpoint is public (`ApplicationManaged`). The backend's endpoint uses `IamAuth`, so only the frontend can call it: the frontend signs each request with SigV4 using its execution role, and that role is the only one granted `lambda:InvokeWebFunctionEndpoint` on the backend's endpoint. Each function has its own execution role, and only the backend's role may read and update the table.
+
+### Related Apps
+
+- [cdktn/lambda-web-adapter](../lambda-web-adapter) - Runs the same app through the Lambda Web Adapter in container images, with Upstash Redis for state.
 
 ## Prerequisites
 
@@ -44,6 +44,15 @@ Each package is uploaded, and its function gets a new revision, only when the pa
 pnpm destroy
 ```
 
+## Architecture Diagram
+
+![Architecture Diagram](./src/assets/arch-diagram.svg)
+
+### Design Notes
+
+- **Revisions.** A revision is immutable, so every code or configuration change creates a new one. The stack creates it before deleting the old one, and the endpoint's revision weights point at it, so traffic always has a revision to go to. Canary splits between two revisions are possible with `revision_weights`, but a stack that replaces revisions on every change makes them awkward to hold.
+- **Lambda-to-Lambda call.** The frontend calls the backend synchronously, so a request can meet two cold starts. Unlike with the adapter, waiting on the backend is cheap: it uses little of the frontend's CPU, which is what Web Functions bill, and the frontend's environment keeps serving other requests meanwhile. The split is the point of the example: two independently deployed web apps. In a product, the browser would usually call the API directly with user authentication, or the frontend would talk to DynamoDB itself.
+
 ## Application Details
 
 Each function's code bucket is named `<name>-code-<suffix>`, and its execution role `<name>-web-execution-role`, so the roles don't clash with the `lambda-web-adapter` example's in the same account. Each endpoint is named `live`, is a `HomeRegion` endpoint, and sends all traffic to the function's latest revision.
@@ -70,16 +79,7 @@ Signed requests to an `IamAuth` endpoint must carry an `X-Amz-Content-SHA256` he
 
 The page draws the request path from SvelteKit through Hono to DynamoDB with each hop's time on the last request, split using the backend's `Server-Timing` header. It reloads its data when its tab is shown again or the browser regains focus, so counts made elsewhere appear. The Svelte and Hono logos are copied unchanged from [sveltejs/branding](https://github.com/sveltejs/branding) and [honojs/hono](https://github.com/honojs/hono), and the DynamoDB icon from the [AWS Architecture Icons](https://aws.amazon.com/architecture/icons/), into `src/assets`.
 
-## Architecture Diagram
-
-![Architecture Diagram](./src/assets/arch-diagram.svg)
-
-### Design Notes
-
-- **Revisions.** A revision is immutable, so every code or configuration change creates a new one. The stack creates it before deleting the old one, and the endpoint's revision weights point at it, so traffic always has a revision to go to. Canary splits between two revisions are possible with `revision_weights`, but a stack that replaces revisions on every change makes them awkward to hold.
-- **Lambda-to-Lambda call.** The frontend calls the backend synchronously, so a request can meet two cold starts. Unlike with the adapter, waiting on the backend is cheap: it uses little of the frontend's CPU, which is what Web Functions bill, and the frontend's environment keeps serving other requests meanwhile. The split is the point of the example: two independently deployed web apps. In a product, the browser would usually call the API directly with user authentication, or the frontend would talk to DynamoDB itself.
-
-### Compared with the Lambda Web Adapter
+## Comparison
 
 Both examples run the same Node servers unchanged. This example runs them natively as Web Functions; the adapter example wraps them in container images with the adapter as an extension.
 
@@ -97,7 +97,7 @@ Both examples run the same Node servers unchanged. This example runs them native
 | Extensions               | None                                                                            | Supported; the adapter is one                           |
 | Regions                  | A subset, starting with five at launch                                          | Every Region                                            |
 
-#### Measured Latency
+### Measured Latency
 
 | Frontend → backend hop | p50      | p95      |
 | ---------------------- | -------- | -------- |

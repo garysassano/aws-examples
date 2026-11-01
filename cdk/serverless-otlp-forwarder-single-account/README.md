@@ -94,7 +94,9 @@ aws secretsmanager delete-secret --secret-id otlp-headers --force-delete-without
 aws secretsmanager delete-secret --secret-id clickhouse-config --force-delete-without-recovery
 ```
 
-## Transports
+## Application Details
+
+### Transports
 
 Between them, the single-account and cross-account apps cover five transports:
 
@@ -108,7 +110,7 @@ Between them, the single-account and cross-account apps cover five transports:
 
 Each transport wraps the same gzipped OTLP protobuf in its own layers, which the forwarder peels off in order.
 
-### `logs-subscription`
+#### `logs-subscription`
 
 The default. The functions write their spans to stdout, and an account-level CloudWatch Logs subscription filter delivers those log lines to the forwarder.
 
@@ -116,7 +118,7 @@ The default. The functions write their spans to stdout, and an account-level Clo
 
 The forwarder unwraps `awslogs.data` → base64 → gzip → CloudWatch Logs batch → log line → base64 → gzip → protobuf.
 
-### `kinesis`
+#### `kinesis`
 
 Every function except the forwarder carries the `otlp-stdout-kinesis-extension` layer, which reads the spans from a pipe and puts them, together with spans it builds from the Lambda platform's telemetry such as `Lambda/Init`, into the `otlp-stream` Kinesis data stream. The forwarder reads the stream through an event source mapping.
 
@@ -124,7 +126,7 @@ Every function except the forwarder carries the `otlp-stdout-kinesis-extension` 
 
 The forwarder unwraps Kinesis record → JSON line → base64 → gzip → protobuf.
 
-## Sample Application
+### Sample Application
 
 Every function exports its spans the same way, so each one shows a different side of the instrumentation instead:
 

@@ -52,35 +52,6 @@ Deploy with the script rather than with `cdk deploy`: it builds the website firs
    | ---------------------------------------------------------- | ------------------------------------------------------ |
    | ![Rekognition result](./src/assets/result-rekognition.png) | ![SageMaker result](./src/assets/result-sagemaker.png) |
 
-## Rekognition vs SageMaker
-
-Measured by uploading the same 51 photos (33 cats, 17 other animals, and a European wildcat left out of the counts) through each deployed stack in `eu-central-1`, one at a time.
-
-### Cost
-
-For the 51 photos, with `eu-central-1` list prices as of 31 October 2026:
-
-|                | Rekognition | SageMaker Serverless                       |
-| -------------- | ----------- | ------------------------------------------ |
-| Billing unit   | One image   | One second of inference, at 6 GB of memory |
-| Units billed   | 51 images   | 43 seconds                                 |
-| Price per unit | $0.0012     | $0.00012                                   |
-| Total cost     | $0.061      | $0.0052                                    |
-| Cost per photo | $0.0012     | $0.0001                                    |
-
-The rest of each stack, everything but the detector, cost under $0.002.
-
-### Behavior
-
-|                              | Rekognition                         | SageMaker Serverless                        |
-| ---------------------------- | ----------------------------------- | ------------------------------------------- |
-| Upload to result, warm       | 2.5 s median                        | 3.1 s median                                |
-| Upload to result, cold start | No cold start                       | About 16 s                                  |
-| Labels                       | Thousands, with parents and aliases | The 80 COCO classes, so any feline is a cat |
-| Cats found                   | 31 of 33                            | 32 of 33                                    |
-| Other animals called a cat   | 5 of 17                             | 10 of 17                                    |
-| Deploy time                  | About 4 minutes                     | About 13 minutes                            |
-
 ## Cleanup
 
 ```sh
@@ -125,3 +96,32 @@ This removes whichever stacks you deployed, including the buckets and their obje
 - **The image by reference.** Serverless Inference caps a request at 4 MB and an upload can be 15 MB, so the function sends the endpoint the image's S3 location and the container reads the image itself.
 - **Results cached by ETag.** A result is kept for a day, so uploading the same image again skips the detector, and two uploads of the same image at the same time share one detection. The SageMaker stack includes the model version in the key, so a new model doesn't reuse old results.
 - **An error instead of silence.** The function keeps 3 seconds of its timeout back, so when detection fails or runs out of time it still publishes an error, and the page shows it rather than waiting for its own timeout.
+
+## Comparison
+
+Measured by uploading the same 51 photos (33 cats, 17 other animals, and a European wildcat left out of the counts) through each deployed stack in `eu-central-1`, one at a time.
+
+### Cost
+
+For the 51 photos, with `eu-central-1` list prices as of 31 October 2026:
+
+|                | Rekognition | SageMaker Serverless                       |
+| -------------- | ----------- | ------------------------------------------ |
+| Billing unit   | One image   | One second of inference, at 6 GB of memory |
+| Units billed   | 51 images   | 43 seconds                                 |
+| Price per unit | $0.0012     | $0.00012                                   |
+| Total cost     | $0.061      | $0.0052                                    |
+| Cost per photo | $0.0012     | $0.0001                                    |
+
+The rest of each stack, everything but the detector, cost under $0.002.
+
+### Behavior
+
+|                              | Rekognition                         | SageMaker Serverless                        |
+| ---------------------------- | ----------------------------------- | ------------------------------------------- |
+| Upload to result, warm       | 2.5 s median                        | 3.1 s median                                |
+| Upload to result, cold start | No cold start                       | About 16 s                                  |
+| Labels                       | Thousands, with parents and aliases | The 80 COCO classes, so any feline is a cat |
+| Cats found                   | 31 of 33                            | 32 of 33                                    |
+| Other animals called a cat   | 5 of 17                             | 10 of 17                                    |
+| Deploy time                  | About 4 minutes                     | About 13 minutes                            |

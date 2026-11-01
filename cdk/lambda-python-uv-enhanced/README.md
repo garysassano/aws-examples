@@ -2,7 +2,60 @@
 
 CDK app that deploys the same Python handler from the same [uv](https://docs.astral.sh/uv/) project twice: with `UvPythonFunction`, a construct in this example that follows uv's [AWS Lambda guide](https://docs.astral.sh/uv/guides/integration/aws-lambda/) and adds what the guide leaves out, and with the official [`PythonFunction`](https://github.com/aws/aws-cdk/tree/main/packages/%40aws-cdk/aws-lambda-python-alpha) from `@aws-cdk/aws-lambda-python-alpha`.
 
-Both functions use the same runtime, architecture, memory, logging and uv version. Each returns a report of how its package was loaded: the interpreter, the CPU, where each module came from, and whether Python could use its shipped bytecode.
+Both functions use the same runtime, architecture, memory, logging and uv version. Each returns a report of how its package was loaded: the interpreter, the CPU, where each module came from, and whether Python could use its shipped bytecode. Over 30 forced cold starts, the median init was 266 ms with `UvPythonFunction` and 495 ms with `PythonFunction`.
+
+## Prerequisites
+
+- **_AWS:_**
+  - Must have authenticated with [Default Credentials](https://docs.aws.amazon.com/cdk/v2/guide/cli.html#cli-auth) in your local environment.
+  - Must have completed the [CDK bootstrapping](https://docs.aws.amazon.com/cdk/v2/guide/bootstrapping.html) for the target AWS environment.
+- **_mise:_**
+  - [Install mise](https://mise.jdx.dev/installing-mise.html), which manages the required toolchain, including uv.
+- **_Docker:_**
+  - Must be [installed](https://docs.docker.com/get-docker/) in your system and running at deployment, for the official construct.
+
+## Installation
+
+```sh
+mise install
+pnpm install
+```
+
+## Deployment
+
+```sh
+pnpm run deploy
+```
+
+## Usage
+
+Invoke either function:
+
+```sh
+aws lambda invoke --function-name lambda-python-uv-enhanced \
+  --cli-binary-format raw-in-base64-out --payload '{"name": "uv"}' response.json
+aws lambda invoke --function-name lambda-python-uv-alpha \
+  --cli-binary-format raw-in-base64-out --payload '{"name": "uv"}' response.json
+```
+
+## Cleanup
+
+```sh
+pnpm destroy
+```
+
+## Application Details
+
+### What `UvPythonFunction` does
+
+- **Builds on the host, without Docker.** `uv pip install --python-platform aarch64-manylinux_2_34` installs wheels for Lambda's CPU and Amazon Linux 2023's glibc, whatever the host runs. When uv is missing, the same commands run in the `ghcr.io/astral-sh/uv` image.
+- **Installs the project from its current source.** Third-party packages (`uv export --no-emit-local`) and then the project with any workspace members (`--only-emit-local`) install into one zip, like the official construct's. uv reuses a local package's cached build until its `pyproject.toml` changes, so the project installs with `--refresh`; otherwise a handler-only change would deploy the previous code.
+- **Ships bytecode Lambda can use.** The CDK CLI zips assets with every file's mtime reset to the same fixed date, so timestamp-based `.pyc` files never match their source on Lambda. They are ignored, and the read-only code directories mean Python compiles every module again on each cold start. The construct compiles with `PYC_INVALIDATION_MODE=UNCHECKED_HASH`, which Python trusts without checking the source.
+- **Installs only what the lockfile pins.** `uv export --locked` fails when `uv.lock` no longer matches `pyproject.toml`, dependencies install as wheels only (`--no-build`) and with `--require-hashes`, and `--no-installer-metadata` leaves out the files that would differ between builds.
+
+The bytecode mode is what makes the difference in init time without SnapStart. With `UvPythonFunction` and nothing else changed, the median init over 30 forced cold starts was 266 ms with hash-based `.pyc` files, 494 ms with none, and 532 ms with timestamp-based ones, which the function's report shows as stale. Without bytecode, it initializes as slowly as the official construct.
+
+The Python project sets `exclude-newer = "3 days"`, uv's [dependency cooldown](https://docs.astral.sh/uv/concepts/resolution/#dependency-cooldowns), to match the workspace's pnpm `minimumReleaseAge`. It keeps its package at the project root, because the official construct copies the project directory as-is rather than installing the project.
 
 ## Comparison
 
@@ -86,52 +139,3 @@ xychart-beta
 On an arm64 host, such as Apple silicon or Graviton, the emulation cost moves to the x86_64 target instead, so the official construct is fastest when the target matches the host. With a matching target here, its first synth still took more than ten times as long as `UvPythonFunction`'s, and every later one nearly twice as long. The first synth on a new machine also pulls the SAM build image, a 0.9 GB download that these times leave out.
 
 The official construct's default image needs a SAM build image for the function's runtime, which AWS publishes some time after the runtime itself. On the `python3.15` preview runtime, which has none yet, this example had to give the official construct a stand-in image, while `UvPythonFunction` worked unchanged.
-
-## What `UvPythonFunction` does
-
-- **Builds on the host, without Docker.** `uv pip install --python-platform aarch64-manylinux_2_34` installs wheels for Lambda's CPU and Amazon Linux 2023's glibc, whatever the host runs. When uv is missing, the same commands run in the `ghcr.io/astral-sh/uv` image.
-- **Installs the project from its current source.** Third-party packages (`uv export --no-emit-local`) and then the project with any workspace members (`--only-emit-local`) install into one zip, like the official construct's. uv reuses a local package's cached build until its `pyproject.toml` changes, so the project installs with `--refresh`; otherwise a handler-only change would deploy the previous code.
-- **Ships bytecode Lambda can use.** The CDK CLI zips assets with every file's mtime reset to the same fixed date, so timestamp-based `.pyc` files never match their source on Lambda. They are ignored, and the read-only code directories mean Python compiles every module again on each cold start. The construct compiles with `PYC_INVALIDATION_MODE=UNCHECKED_HASH`, which Python trusts without checking the source.
-- **Installs only what the lockfile pins.** `uv export --locked` fails when `uv.lock` no longer matches `pyproject.toml`, dependencies install as wheels only (`--no-build`) and with `--require-hashes`, and `--no-installer-metadata` leaves out the files that would differ between builds.
-
-The bytecode mode is what makes the difference in init time without SnapStart. With `UvPythonFunction` and nothing else changed, the median init over 30 forced cold starts was 266 ms with hash-based `.pyc` files, 494 ms with none, and 532 ms with timestamp-based ones, which the function's report shows as stale. Without bytecode, it initializes as slowly as the official construct.
-
-The Python project sets `exclude-newer = "3 days"`, uv's [dependency cooldown](https://docs.astral.sh/uv/concepts/resolution/#dependency-cooldowns), to match the workspace's pnpm `minimumReleaseAge`. It keeps its package at the project root, because the official construct copies the project directory as-is rather than installing the project.
-
-## Prerequisites
-
-- **_AWS:_**
-  - Must have authenticated with [Default Credentials](https://docs.aws.amazon.com/cdk/v2/guide/cli.html#cli-auth) in your local environment.
-  - Must have completed the [CDK bootstrapping](https://docs.aws.amazon.com/cdk/v2/guide/bootstrapping.html) for the target AWS environment.
-- **_mise:_**
-  - [Install mise](https://mise.jdx.dev/installing-mise.html), which manages the required toolchain, including uv.
-- **_Docker:_**
-  - Must be [installed](https://docs.docker.com/get-docker/) in your system and running at deployment, for the official construct.
-
-## Installation
-
-```sh
-mise install
-pnpm install
-```
-
-## Deployment
-
-```sh
-pnpm run deploy
-```
-
-Then invoke either function:
-
-```sh
-aws lambda invoke --function-name lambda-python-uv-enhanced \
-  --cli-binary-format raw-in-base64-out --payload '{"name": "uv"}' response.json
-aws lambda invoke --function-name lambda-python-uv-alpha \
-  --cli-binary-format raw-in-base64-out --payload '{"name": "uv"}' response.json
-```
-
-## Cleanup
-
-```sh
-pnpm destroy
-```

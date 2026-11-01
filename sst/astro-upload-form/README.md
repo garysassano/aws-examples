@@ -48,6 +48,6 @@ pnpm destroy
 
 This removes the stage's resources, including the bucket and its uploads, along with the stage's state and passphrase. SST's bootstrap for the account and Region stays for other SST apps: the `sst-asset-*` and `sst-state-*` buckets, the `sst-asset` ECR repository, the `/sst/bootstrap` SSM parameter, and, once you've run `sst dev`, the `sst` AppSync Events API.
 
-## How it works
+## Application Details
 
 The Astro site is static. When a file is submitted, the page asks the `Presign` function, a Lambda with a function URL linked to the bucket, for a one-off presigned `PUT` URL, then uploads the file straight to S3 with it. SST passes the function's URL to the site at build time as `PUBLIC_PRESIGN_URL`.

@@ -87,7 +87,9 @@ pnpm destroy --all -c transport=logs-destination
 
 With `logs-centralization`, CloudWatch Logs creates the centralized log groups in the target account itself, so they remain after the stacks are destroyed. Delete the log groups under `/centralized/` in the target account to remove them.
 
-## Transports
+## Application Details
+
+### Transports
 
 Between them, the single-account and cross-account apps cover five transports:
 
@@ -101,7 +103,7 @@ Between them, the single-account and cross-account apps cover five transports:
 
 Each transport wraps the same gzipped OTLP protobuf in its own layers, which the forwarder peels off in order.
 
-### `logs-destination`
+#### `logs-destination`
 
 The function writes its spans to stdout. An account-level subscription filter in the source account sends them to a [CloudWatch Logs destination](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/CrossAccountSubscriptions-Kinesis-Account.html) in the target account, which writes them to Kinesis Data Streams.
 
@@ -109,7 +111,7 @@ The function writes its spans to stdout. An account-level subscription filter in
 
 The forwarder unwraps Kinesis record → gzip → CloudWatch Logs batch → log line → base64 → gzip → protobuf.
 
-### `logs-centralization`
+#### `logs-centralization`
 
 The function writes its spans to stdout. A [centralization rule](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/CloudWatchLogs_Centralization.html) copies the source account's Lambda log groups into the target account, where an account-level subscription filter sends them to the forwarder.
 
@@ -117,13 +119,15 @@ The function writes its spans to stdout. A [centralization rule](https://docs.aw
 
 The forwarder unwraps `awslogs.data` → base64 → gzip → CloudWatch Logs batch → log line → base64 → gzip → protobuf.
 
-### `event-bus`
+#### `event-bus`
 
 The `otlp-stdout-eventbus-extension` layer reads the spans from a pipe and publishes them with `PutRawEvents` to a [Custom Event Bus](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-custom-bus-sharing.html) the target account shares through AWS RAM. A subscriber delivers them to the forwarder.
 
 ![Shared Custom Event Bus transport](./src/assets/event-bus-diagram.svg)
 
 The forwarder unwraps event data → base64 → gzip → protobuf.
+
+## Comparison
 
 ### Onboarding a source account
 
@@ -134,8 +138,6 @@ Each transport admits every account in the organization, so the comparison that 
 | `logs-destination` | An `aws:PrincipalOrgID` condition on the destination's access policy | An account-level subscription filter, and the IAM role CloudWatch Logs assumes to check the account's organization |
 | `logs-centralization` | The centralization rule's `OrganizationId` scope | Nothing: the rule copies the log groups of every account in the organization |
 | `event-bus` | An AWS RAM share with the organization | The extension layer and the bus ARN on every function that sends spans |
-
-## Comparison
 
 ### Delivery latency
 

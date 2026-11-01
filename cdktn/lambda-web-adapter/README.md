@@ -2,13 +2,13 @@
 
 CDKTN app that runs a SvelteKit frontend and a Hono backend as Lambdaliths on AWS Lambda through the [AWS Lambda Web Adapter](https://github.com/awslabs/aws-lambda-web-adapter), with an Upstash Redis database for state.
 
-### Related Apps
-
-- [cdktn/lambda-web-function](../lambda-web-function) - Runs the same app as Lambda Web Functions, with DynamoDB for state.
-
 Each app is an ordinary Node web server in an arm64 container image. The adapter runs as a Lambda extension inside the image, turns each invocation into an HTTP request to the server, and each function is exposed over a Lambda function URL.
 
 The frontend's URL is public. The backend's URL uses `AWS_IAM` auth, so only the frontend can call it: the frontend signs each request with SigV4 using its execution role, and that role is the only one granted `lambda:InvokeFunctionUrl` and `lambda:InvokeFunction` on the backend function. Each function has its own execution role, and the Upstash REST token is kept in an SSM SecureString that only the backend's role can read.
+
+### Related Apps
+
+- [cdktn/lambda-web-function](../lambda-web-function) - Runs the same app as Lambda Web Functions, with DynamoDB for state.
 
 ## Prerequisites
 
@@ -49,6 +49,15 @@ Each image is rebuilt and pushed only when a file in its build context changes.
 pnpm destroy
 ```
 
+## Architecture Diagram
+
+![Architecture Diagram](./src/assets/arch-diagram.svg)
+
+### Design Notes
+
+- **Hono without the adapter.** Hono also runs on Lambda natively through `hono/aws-lambda`, which handles function URL, API Gateway, ALB, and VPC Lattice events with no adapter or HTTP server in the function. For a Hono-only service that is usually the leaner choice, with faster cold starts and an optional zip deployment, and the frontend could then call it with the Lambda Invoke API instead of a function URL. The Lambda Web Adapter earns its place with frameworks that lack an official Lambda adapter, such as SvelteKit, whose Node build runs here unchanged. Lambda Web Functions run that build unchanged too, without an adapter, but only on Node.js 24 and in the Regions that offer them.
+- **Lambda-to-Lambda call.** The frontend calls the backend synchronously, so a request can meet two cold starts. Unlike with Web Functions, the frontend waits, and is billed, while the backend runs, though the hop is short: a p50 of about 15–17 ms. The split is the point of the example: two independently deployed web apps. In a product, the browser would usually call the API directly with user authentication, or the frontend would talk to Redis itself.
+
 ## Application Details
 
 Each function shares its name with the ECR repository that holds its image, and has its own `<name>-execution-role`. Each runs on arm64 with 1,769 MB of memory and a 10-second timeout, and its function URL invokes the function's latest image.
@@ -77,16 +86,7 @@ The page draws the request path from SvelteKit through Hono to Upstash Redis wit
 
 The SecureString uses the AWS managed key `aws/ssm`, which any principal in the account can decrypt with, so the `ssm:GetParameter` grant is what limits who reads the token; a customer managed KMS key would add a second, key-level grant. Terraform state still holds the token, as it holds every secret Terraform manages, so keep the state private.
 
-## Architecture Diagram
-
-![Architecture Diagram](./src/assets/arch-diagram.svg)
-
-### Design Notes
-
-- **Hono without the adapter.** Hono also runs on Lambda natively through `hono/aws-lambda`, which handles function URL, API Gateway, ALB, and VPC Lattice events with no adapter or HTTP server in the function. For a Hono-only service that is usually the leaner choice, with faster cold starts and an optional zip deployment, and the frontend could then call it with the Lambda Invoke API instead of a function URL. The Lambda Web Adapter earns its place with frameworks that lack an official Lambda adapter, such as SvelteKit, whose Node build runs here unchanged. Lambda Web Functions run that build unchanged too, without an adapter, but only on Node.js 24 and in the Regions that offer them.
-- **Lambda-to-Lambda call.** The frontend calls the backend synchronously, so a request can meet two cold starts. Unlike with Web Functions, the frontend waits, and is billed, while the backend runs, though the hop is short: a p50 of about 15–17 ms. The split is the point of the example: two independently deployed web apps. In a product, the browser would usually call the API directly with user authentication, or the frontend would talk to Redis itself.
-
-### Compared with Lambda Web Functions
+## Comparison
 
 Both examples run the same Node servers unchanged. This example wraps them in container images with the adapter as an extension; the Web Functions example runs them natively.
 
@@ -104,7 +104,7 @@ Both examples run the same Node servers unchanged. This example wraps them in co
 | Extensions               | Supported; the adapter is one                           | None                                                                            |
 | Regions                  | Every Region                                            | A subset, starting with five at launch                                          |
 
-#### Measured Latency
+### Measured Latency
 
 | Frontend → backend hop | p50      | p95      |
 | ---------------------- | -------- | -------- |

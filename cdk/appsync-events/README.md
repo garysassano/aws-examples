@@ -46,6 +46,10 @@ To try your own payloads, go to `AppSync` ➜ `events-api` ➜ `Pub/Sub Editor` 
 pnpm destroy
 ```
 
+## Architecture Diagram
+
+![Architecture Diagram](./src/assets/arch-diagram.svg)
+
 ## Application Details
 
 - `lambda`
@@ -54,7 +58,3 @@ pnpm destroy
 - `dynamodb`
   - A channel namespace with a DynamoDB data source and an [`APPSYNC_JS` handler](./src/handlers/dynamodb-namespace.js).
   - Publishing writes one item per event with `type` set to `publish`, and subscribing writes one item with `type` set to `subscribe`.
-
-## Architecture Diagram
-
-![Architecture Diagram](./src/assets/arch-diagram.svg)

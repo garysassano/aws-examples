@@ -19,6 +19,14 @@ mise install
 pnpm install
 ```
 
+## Development
+
+```sh
+pnpm check
+```
+
+This lints, typechecks, and synthesizes the app, tests the synth-time window validation with the Node.js test runner, and runs the maintenance-window gate's regression tests on Python 3.15 through `uv`, with AWS calls stubbed.
+
 ## Deployment
 
 ```sh
@@ -31,27 +39,21 @@ Every deployment writes the `maintenance-window` parameter, replacing any value 
 pnpm run deploy -c maintenanceWindow=2026-10-01T02:00:00Z,2026-10-01T04:00:00Z
 ```
 
-## Testing
-
-```sh
-pnpm check
-```
-
-This lints, typechecks, and synthesizes the app, tests the synth-time window validation with the Node.js test runner, and runs the maintenance-window gate's regression tests on Python 3.15 through `uv`, with AWS calls stubbed.
-
 ## Cleanup
 
 ```sh
 pnpm destroy
 ```
 
-## Architecture Diagram - High Level
+## Architecture Diagram
+
+### High Level
 
 ![Architecture Diagram - High Level](./src/assets/arch-hld.svg)
 
 Every invocation of the `current-time` function passes through the maintenance gate, which archives the event in DynamoDB while a maintenance window is active and calls the original handler otherwise.
 
-## Architecture Diagram - Low Level
+### Low Level
 
 ![Architecture Diagram - Low Level](./src/assets/arch-lld.svg)
 
