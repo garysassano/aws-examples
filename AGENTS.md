@@ -4,20 +4,7 @@ For CDK examples under `cdk/`, use `cdk/AGENTS.md`. For CDKTN examples under `cd
 
 ## Example READMEs
 
-Give every example's README these sections in this order, leaving out any that don't apply:
-
-1. Title and intro, which says what the app does and, when the example exists to compare things, the headline result
-2. `### Related Apps`, after the whole intro
-3. `## Prerequisites`
-4. `## Configuration` - Manual setup before installing, such as bootstrapping several accounts
-5. `## Installation`
-6. `## Development` - Running locally and testing
-7. `## Deployment` - Deploy commands and their options
-8. `## Usage` - Exercising what was deployed
-9. `## Cleanup`
-10. `## Architecture Diagram` - The diagram and numbered flow, with `### High Level` and `### Low Level` when there are two diagrams, then `### Design Notes`
-11. `## Application Details` - Functions, endpoints, environment variables, and how the app works
-12. `## Comparison` - Alternatives, measurements, and cost, under this name whatever is being compared
+Example READMEs use this section order, leaving out any that don't apply: intro, Related Apps, Prerequisites, Configuration, Installation, Development, Deployment, Usage, Cleanup, Architecture Diagram, Application Details, Comparison.
 
 ## Keep personal details out of the repository
 

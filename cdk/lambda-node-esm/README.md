@@ -1,6 +1,6 @@
 # cdk-lambda-node-esm
 
-CDK app that deploys the same Node.js Lambda handler twice, once bundled the default CommonJS (CJS) way and once as an ES module (ESM) bundle, so you can compare package size and cold start. The ESM bundle came out 40% smaller, with a cold start about 50 ms (7%) faster.
+CDK app that deploys the same Node.js Lambda handler twice, once bundled the default CommonJS (CJS) way and once as an ES module (ESM) bundle, so you can compare package size and cold start. With the AWS SDK bundled, the ESM bundle came out 40% smaller, with a cold start about 50 ms (7%) faster.
 
 ## Prerequisites
 
@@ -79,7 +79,5 @@ Measured on 2026-10-08 in `eu-central-1` with `aws-cdk-lib` 2.270.0, esbuild 0.2
 | `esm-lambda` | 611 KB | 162 KB | 356 ms | 280 ms | 635 ms | 112 MB |
 
 The ESM bundle is 40% smaller and initializes about 66 ms faster. Its first invocation is about 14 ms slower, so the end-to-end cold start gain is about 50 ms (7%).
-
-### When this matters
 
 The gain comes almost entirely from the AWS SDK. `bundleAwsSDK: true` puts the SDK in the bundle, which pins its version instead of relying on the copy in the Lambda runtime. Without it, `NodejsFunction` leaves `@aws-sdk/*` out, and both bundles of this handler shrink to about 29 KB, with no meaningful difference between them.
