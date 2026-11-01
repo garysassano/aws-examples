@@ -2,6 +2,10 @@
 
 CDK app that detects whether an uploaded image contains a cat, with Amazon Rekognition or with an open model on a SageMaker Serverless Inference endpoint, and pushes the result back to the browser with AppSync Events.
 
+### Related Apps
+
+- [cdk/appsync-events](../../cdk/appsync-events) - Handles AppSync Events channels with Lambda and DynamoDB data sources.
+
 ## Prerequisites
 
 - **_AWS:_**
