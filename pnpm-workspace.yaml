@@ -1,7 +1,6 @@
 packages:
   - "cdk/*"
   - "cdktn/*"
-  - "sst/*"
   # Client apps that ship inside an example, such as a demo CLI or web UI.
   - "cdk/*/src/demo/*"
   - "cdk/*/src/website"
@@ -9,11 +8,6 @@ packages:
 # Shared versions. Examples reference these as `catalog:`; a dependency only one
 # example uses stays pinned in that example's package.json.
 catalog:
-  astro: ^7.3.8
-  astro-sst: ^3.1.4
-  "@astrojs/check": ^0.9.10
-  "@astrojs/preact": ^6.0.6
-  "@astrojs/rss": ^4.0.19
   aws-cdk: ^2.1146.1
   aws-cdk-lib: ^2.275.0
   # Alpha modules ship in lockstep with aws-cdk-lib; bump them together.
@@ -40,7 +34,6 @@ catalog:
   # Pinned to the version the other @aws-sdk/client-* entries resolve to: it depends on the same
   # version of client-s3 exactly, and a newer one would install a second, incompatible client-s3.
   "@aws-sdk/s3-presigned-post": 3.1148.0
-  "@aws-sdk/s3-request-presigner": ^3.1148.0
   "@biomejs/biome": ^2.5.15
   cargo-lambda-cdk: ^0.0.36
   cdktn: ^0.24.0
@@ -66,7 +59,6 @@ catalog:
   "@opentelemetry/sdk-trace-base": ^2.11.0
   "@opentelemetry/sdk-trace-node": ^2.11.0
   "@opentelemetry/semantic-conventions": ^1.43.0
-  sst: ^4.17.2
   tsx: ^4.23.15
   "@types/aws-lambda": ^8.10.163
   "@types/node": ^26.6.4
@@ -90,9 +82,6 @@ allowBuilds:
   # Its postinstall only checks versions for the optional protobufjs CLI;
   # nothing that loads protobufjs at runtime depends on it.
   protobufjs: false
-  # Prebuilt binaries arrive as optional @img/sharp-* packages; the install
-  # script only matters when building sharp from source.
-  sharp: false
 
 minimumReleaseAge: 4320
 minimumReleaseAgeStrict: true
