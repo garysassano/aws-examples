@@ -1,0 +1,35 @@
+{
+  "name": "cdk-lambda-web-mcp-server",
+  "private": true,
+  "version": "0.0.0",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "cdk": "cdk",
+    "check": "pnpm lint && pnpm typecheck && pnpm synth",
+    "deploy": "cdk deploy",
+    "destroy": "cdk destroy",
+    "dev": "tsx watch src/functions/mcp-server/index.ts",
+    "diff": "cdk diff",
+    "format": "biome format --write .",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "synth": "cdk synth --strict",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/node": "^2.1.2",
+    "@modelcontextprotocol/server": "^2.4.0",
+    "aws-cdk-lib": "catalog:",
+    "constructs": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "catalog:",
+    "@types/node": "catalog:",
+    "aws-cdk": "catalog:",
+    "esbuild": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:"
+  }
+}

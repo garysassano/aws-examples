@@ -9,6 +9,7 @@ The frontend's endpoint is public (`ApplicationManaged`). The backend's endpoint
 ### Related Apps
 
 - [cdktn/lambda-web-adapter](../lambda-web-adapter) - Runs the same app through the Lambda Web Adapter in container images, with Upstash Redis for state.
+- [cdk/lambda-web-mcp-server](../../cdk/lambda-web-mcp-server) - Runs an MCP server as a Web Function with AWS CDK, behind `IamAuth`.
 
 ## Prerequisites
 

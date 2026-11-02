@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "isolatedModules": true,
+    "lib": [
+      "ES2025"
+    ],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "noEmit": true,
+    "noImplicitReturns": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "strictPropertyInitialization": false,
+    "target": "ES2025",
+    "types": [
+      "node"
+    ]
+  },
+  "include": [
+    "src/**/*.ts"
+  ],
+  "exclude": [
+    "cdk.out",
+    "node_modules"
+  ]
+}
