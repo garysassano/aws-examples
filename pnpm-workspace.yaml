@@ -21,7 +21,7 @@ catalog:
   "@aws-lambda-powertools/jmespath": ^2.35.0
   "@aws-lambda-powertools/logger": ^2.35.0
   "@aws-lambda-powertools/parser": ^2.35.0
-  "@aws-sdk/client-bedrock-runtime": ^3.1148.0
+  "@aws-sdk/client-bedrock-runtime": ^3.1160.0
   "@aws-sdk/client-dynamodb": ^3.1148.0
   "@aws-sdk/client-ecs": ^3.1148.0
   "@aws-sdk/client-rekognition": ^3.1148.0
@@ -59,7 +59,7 @@ catalog:
   "@opentelemetry/sdk-trace-node": ^2.11.0
   "@opentelemetry/semantic-conventions": ^1.43.0
   tsx: ^4.23.15
-  "@types/aws-lambda": ^8.10.163
+  "@types/aws-lambda": ^8.10.164
   "@types/node": ^26.6.4
   typescript: ^7.0.2
   vitest: ^5.0.5
