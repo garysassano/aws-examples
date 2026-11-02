@@ -5,6 +5,7 @@ For CDK examples under `cdk/`, use `cdk/AGENTS.md`. For CDKTN examples under `cd
 ## Example READMEs
 
 Example READMEs use this section order, leaving out any that don't apply: intro, Related Apps, Prerequisites, Configuration, Installation, Development, Deployment, Usage, Cleanup, Architecture Diagram, Application Details, Comparison.
+The title is `#`, Related Apps is `###` because it belongs to the intro, every other section is `##`, and subsections under them start at `###`.
 
 ## Keep personal details out of the repository
 
