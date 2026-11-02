@@ -8,13 +8,13 @@ import {
 import { PolicyStatement } from "aws-cdk-lib/aws-iam";
 import { Architecture, LoggingFormat, Runtime } from "aws-cdk-lib/aws-lambda";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
-import { CfnOutput, Duration, Stack, type StackProps } from "aws-cdk-lib/core";
+import { CfnOutput, Duration, Stack, type StackProps, Token } from "aws-cdk-lib/core";
 import type { Construct } from "constructs";
 
-// Nova 2 Lite through its global cross-Region inference profile, which Bedrock routes to any
-// commercial Region that serves the model.
-const FOUNDATION_MODEL_ID = "amazon.nova-2-lite-v1:0";
-const INFERENCE_PROFILE_ID = `global.${FOUNDATION_MODEL_ID}`;
+// Nova Micro, the cheapest text model on Bedrock, which it serves only through the US and EU
+// cross-Region inference profiles.
+const FOUNDATION_MODEL_ID = "amazon.nova-micro-v1:0";
+const GEOGRAPHIES = ["us", "eu"];
 
 // API Gateway streams a response for up to 15 minutes, past the 29s integration timeout of a
 // buffered response.
@@ -23,6 +23,15 @@ const STREAM_TIMEOUT = Duration.minutes(15);
 export class MyStack extends Stack {
   constructor(scope: Construct, id: string, props: StackProps = {}) {
     super(scope, id, props);
+
+    // The profile ID starts with the geography of the Region it is called from, such as `eu.`.
+    const geography = Token.isUnresolved(this.region) ? undefined : this.region.split("-")[0];
+    if (!geography || !GEOGRAPHIES.includes(geography)) {
+      throw new Error(
+        `Deploy to a US or EU Region to use ${FOUNDATION_MODEL_ID}, not ${this.region}`,
+      );
+    }
+    const inferenceProfileId = `${geography}.${FOUNDATION_MODEL_ID}`;
 
     //==============================================================================
     // LAMBDA
@@ -37,19 +46,20 @@ export class MyStack extends Stack {
       timeout: STREAM_TIMEOUT,
       loggingFormat: LoggingFormat.JSON,
       environment: {
-        MODEL_ID: INFERENCE_PROFILE_ID,
+        MODEL_ID: inferenceProfileId,
       },
       bundling: {
         bundleAwsSDK: true,
       },
     });
 
-    // ConverseStream needs bedrock:InvokeModelWithResponseStream on the inference profile, on the
-    // model in this Region, and on the Region-less model ARN that global routing resolves to.
+    // ConverseStream needs bedrock:InvokeModelWithResponseStream on the inference profile and on the
+    // model in each Region the profile routes to. The condition limits the model statement to
+    // calls through this profile, so it needs no list of destination Regions.
     const inferenceProfileArn = this.formatArn({
       service: "bedrock",
       resource: "inference-profile",
-      resourceName: INFERENCE_PROFILE_ID,
+      resourceName: inferenceProfileId,
     });
     bedrockStreamingFunction.addToRolePolicy(
       new PolicyStatement({
@@ -63,6 +73,7 @@ export class MyStack extends Stack {
         resources: [
           this.formatArn({
             service: "bedrock",
+            region: "*",
             account: "",
             resource: "foundation-model",
             resourceName: FOUNDATION_MODEL_ID,
@@ -70,26 +81,6 @@ export class MyStack extends Stack {
         ],
         conditions: {
           StringEquals: { "bedrock:InferenceProfileArn": inferenceProfileArn },
-        },
-      }),
-    );
-    bedrockStreamingFunction.addToRolePolicy(
-      new PolicyStatement({
-        actions: ["bedrock:InvokeModelWithResponseStream"],
-        resources: [
-          this.formatArn({
-            service: "bedrock",
-            region: "",
-            account: "",
-            resource: "foundation-model",
-            resourceName: FOUNDATION_MODEL_ID,
-          }),
-        ],
-        conditions: {
-          StringEquals: {
-            "aws:RequestedRegion": "unspecified",
-            "bedrock:InferenceProfileArn": inferenceProfileArn,
-          },
         },
       }),
     );

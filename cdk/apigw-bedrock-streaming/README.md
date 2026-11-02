@@ -7,7 +7,7 @@ CDK app that deploys a REST API with [response streaming](https://docs.aws.amazo
 - **_AWS:_**
   - Must have authenticated with [Default Credentials](https://docs.aws.amazon.com/cdk/v2/guide/cli.html#cli_auth) in your local environment.
   - Must have completed the [CDK bootstrapping](https://docs.aws.amazon.com/cdk/v2/guide/bootstrapping.html) for the target AWS environment.
-  - The target Region must offer the [global inference profile](https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-amazon-nova-2-lite.html) for Amazon Nova 2 Lite.
+  - The target Region must be in the US or the EU, where Bedrock serves [Amazon Nova Micro](https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-amazon-nova-micro.html) through the `us.` or `eu.` inference profile.
 - **_mise:_**
   - [Install mise](https://mise.jdx.dev/installing-mise.html), which manages the required toolchain.
 
@@ -56,7 +56,7 @@ This removes every stack resource, including the function's log group.
   - The integration timeout and the function timeout are both 15 minutes, the longest API Gateway streams a response; a buffered response is limited to 29 seconds.
   - The stage throttles requests to 5 per second with a burst of 10, since the API is public and every request spends Bedrock tokens.
 - `bedrock-streaming-function`
-  - The [handler](./src/functions/bedrock-streaming/index.ts) validates the body with Zod, then calls `ConverseStream` on the `global.amazon.nova-2-lite-v1:0` inference profile.
+  - The [handler](./src/functions/bedrock-streaming/index.ts) validates the body with Zod, then calls `ConverseStream` on the `us.` or `eu.` inference profile of Nova Micro, the cheapest text model on Bedrock, picked from the deploy Region.
   - It sends the status only after Bedrock accepts the request, so a throttled or failed call returns `429` or `502` instead of a `200` with a broken body.
   - `awslambda.HttpResponseStream.from` writes the status, the headers, and the 8-byte delimiter that API Gateway expects before the payload, and `pipeline()` writes each text delta to the stream.
-  - The role may call `bedrock:InvokeModelWithResponseStream` only on that inference profile and on the Nova 2 Lite model it routes to, following the [global cross-Region inference policy](https://docs.aws.amazon.com/bedrock/latest/userguide/global-cross-region-inference.html).
+  - The role may call `bedrock:InvokeModelWithResponseStream` only on that inference profile and on the Nova Micro model in the Regions it routes to, following the [geographic cross-Region inference policy](https://docs.aws.amazon.com/bedrock/latest/userguide/geographic-cross-region-inference.html).
