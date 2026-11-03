@@ -40,7 +40,7 @@ export interface WebFunctionProps {
  * A Node web server, run as a Lambda Web Function with its own execution role, and exposed
  * over one HTTPS endpoint in the stack's Region.
  *
- * aws-cdk-lib has only L1 constructs for Web Functions so far; aws/aws-cdk#39234 tracks the L2.
+ * aws-cdk-lib has only L1 constructs for Web Functions.
  */
 export class WebFunction extends Construct {
   readonly role: Role;
@@ -157,7 +157,7 @@ export class WebFunction extends Construct {
     this.endpoint.node.addDependency(this.function);
 
     // The CloudFormation Validate schemas bundled with aws-cdk-lib 2.275.0 predate Web
-    // Functions. aws/aws-cdk#39441 updates them; drop this once a release includes it.
+    // Functions.
     for (const resource of [this.function, this.revision, this.endpoint]) {
       Validations.of(resource).acknowledge({
         id: "CloudFormation-Validate::F3006",
