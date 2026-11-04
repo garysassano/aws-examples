@@ -2,6 +2,10 @@
 
 CDK app that deploys a Lambda function with an LMI (Lambda Managed Instances) capacity provider. This repository is intended to demonstrate [AWS Lambda Managed Instances](https://aws.amazon.com/about-aws/whats-new/2025/11/aws-lambda-managed-instances/).
 
+### Related Apps
+
+- [cdk/soci-lazy-loading](../soci-lazy-loading) - Runs a large container image on Lambda Managed Instances and Fargate, with and without SOCI lazy loading.
+
 ## Prerequisites
 
 - **_AWS:_**
