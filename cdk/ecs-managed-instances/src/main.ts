@@ -2,13 +2,16 @@ import { App, Aspects, RemovalPolicies } from "aws-cdk-lib/core";
 import { DenyLogGroupCreation } from "./aspects/deny-log-group-creation.js";
 import { MyStack } from "./stacks/my-stack.js";
 
+const devEnv = {
+  account: process.env.CDK_DEFAULT_ACCOUNT,
+  // Pinned: c9g (Graviton5) instances are offered in only a few Regions
+  region: "eu-central-1",
+};
+
 const app = new App();
 
 new MyStack(app, "cdk-ecs-managed-instances-dev", {
-  env: {
-    account: process.env.CDK_DEFAULT_ACCOUNT,
-    region: process.env.CDK_DEFAULT_REGION,
-  },
+  env: devEnv,
 });
 
 // Delete log groups with their stacks, so nothing is left behind and a redeploy can recreate them.
