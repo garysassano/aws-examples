@@ -36,10 +36,6 @@
 <g data-edge-from="proxy" data-edge-to="server">
 <polyline points="474,102 806,102" fill="none" stroke="#232F3E" stroke-width="2" stroke-linejoin="miter"/>
 <polygon points="814,102 806,98 806,106" fill="#232F3E"/>
-<rect x="521.8" y="58.48" width="244.4" height="18" rx="4" fill="#EEF2F6" stroke="#AAB7C4" stroke-width="1" data-chip="api"/>
-<text x="644" y="71.48" font-family="Consolas, Menlo, DejaVu Sans Mono, Liberation Mono, monospace" font-size="12" text-anchor="middle" fill="#232F3E" font-weight="normal">
-<tspan x="644" dy="0">lambda:InvokeWebFunctionEndpoint</tspan>
-</text>
 <text x="644" y="91.48" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="middle" fill="#232F3E" font-weight="normal">
 <tspan x="644" dy="0"><tspan font-family="Consolas, Menlo, DejaVu Sans Mono, Liberation Mono, monospace">POST /mcp</tspan>, SigV4</tspan>
 </text>
