@@ -59,7 +59,7 @@ The Python project sets `exclude-newer = "3 days"`, uv's [dependency cooldown](h
 
 ## Comparison
 
-Measured on 2026-10-11 in `eu-central-1` on the `python3.14` runtime (Python 3.14.7), arm64, 512 MB. Builds ran on an x86_64 host, timing a whole `cdk synth` with only that function in the stack, as the median of three runs. Each run starts from an empty `cdk.out`, except the handler-only change, which keeps the previous synth's.
+Measured on 2026-10-11 in `eu-central-1` with the `python3.14` runtime (Python 3.14.7), arm64, 512 MB. Builds ran on an x86_64 host, timing a whole `cdk synth` with only that function in the stack, as the median of three runs. Each run starts from an empty `cdk.out`, except the handler-only change, which keeps the previous synth's.
 
 ### Lambda
 
