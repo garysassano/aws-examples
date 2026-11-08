@@ -106,9 +106,11 @@ Both examples run the same Node servers unchanged. This example wraps them in co
 
 ### Measured Latency
 
+Measured on 2026-10-23 in `eu-central-1`, from two runs of 300 sequential, warm page loads per example, with the cold-start loads left out.
+
 | Frontend → backend hop | p50      | p95      |
 | ---------------------- | -------- | -------- |
 | Lambda Web Adapter     | 15–17 ms | 22–23 ms |
 | Lambda Web Functions   | 6 ms     | 7–8 ms   |
 
-The hop is the frontend's signed request to the backend, minus the database call, as the page shows it: SigV4 signing, the network inside the Region, and the platform's routing to the server. With the adapter, that routing goes through the function URL, the Lambda Invoke path, and the adapter's event-to-HTTP translation. The figures come from two runs of 300 sequential, warm page loads per example in `eu-central-1` on 2026-10-23, with the cold-start loads left out.
+The hop is the frontend's signed request to the backend, minus the database call, as the page shows it: SigV4 signing, the network inside the Region, and the platform's routing to the server. With the adapter, that routing goes through the function URL, the Lambda Invoke path, and the adapter's event-to-HTTP translation.

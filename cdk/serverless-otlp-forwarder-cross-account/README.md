@@ -141,7 +141,7 @@ Each transport admits every account in the organization, so the comparison that 
 
 ### Delivery latency
 
-Measured in `eu-central-1` on 2 October 2026, with `span-producer` running once a minute and each transport deployed for its own 15-minute window. Delivery latency is the forwarder's `DeliveryLatency` metric: the time from the latest span end in a batch to the batch reaching the forwarder. These are figures from one small function over short windows, so treat them as orders of magnitude rather than benchmarks.
+Measured on 2026-10-02 in `eu-central-1`, with `span-producer` running once a minute and each transport deployed for its own 15-minute window. Delivery latency is the forwarder's `DeliveryLatency` metric: the time from the latest span end in a batch to the batch reaching the forwarder. These are figures from one small function over short windows, so treat them as orders of magnitude rather than benchmarks.
 
 Part of each latency is a batching window this app configures, which trades latency for fewer forwarder invocations and can be lowered to zero. The rest is added by the services themselves. At one span batch a minute, a batch never fills before its window ends, so each window adds its full length:
 
@@ -185,7 +185,7 @@ Costs that every transport shares are left out: span ingestion into Transaction 
 
 ### Price list
 
-Prices for `eu-central-1` from the [AWS Price List API](https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/price-changes.html), as of 2 October 2026:
+Prices for `eu-central-1` from the [AWS Price List API](https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/price-changes.html), as of 2026-10-02:
 
 | Service | Item | Price |
 | --- | --- | --- |

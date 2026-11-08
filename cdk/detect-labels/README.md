@@ -99,11 +99,11 @@ This removes whichever stacks you deployed, including the buckets and their obje
 
 ## Comparison
 
-Measured by uploading the same 51 photos (33 cats, 17 other animals, and a European wildcat left out of the counts) through each deployed stack in `eu-central-1`, one at a time.
+Measured on 2026-10-31 in `eu-central-1` by uploading the same 51 photos (33 cats, 17 other animals, and a European wildcat left out of the counts) through each deployed stack, one at a time.
 
 ### Cost
 
-For the 51 photos, with `eu-central-1` list prices as of 31 October 2026:
+For the 51 photos, with `eu-central-1` list prices as of 2026-10-31:
 
 |                | Rekognition | SageMaker Serverless                       |
 | -------------- | ----------- | ------------------------------------------ |

@@ -105,7 +105,7 @@ Managed instances are hidden from the default EC2 listing, so the script finds t
 
 ## Comparison
 
-Measured in a test AWS account in `eu-central-1` in November 2026, with five cold starts per variant.
+Measured on 2026-11-08 in `eu-central-1`, with five cold starts per variant.
 
 ![Cold start timings with and without SOCI](./src/assets/timing-chart.svg)
 
@@ -116,14 +116,14 @@ Each bar is the run with the median `ready` time, so its phases add up to it. Th
 - **Load:** importing PyTorch and reading the weights. With SOCI, this is when the files the workload reads are downloaded.
 - **Waiting:** Lambda only, until the function is marked active and the first invoke reaches it.
 
-| Service | Variant         | Platform | Image | Load | Waiting | `ready` | Range       |
-| ------- | --------------- | -------: | ----: | ---: | ------: | ------: | ----------- |
-| Fargate | `plain-init`    |     10.3 |  69.7 |  1.2 |       - |    81.2 | 80.6-83.3   |
-| Fargate | `soci-init`     |      9.9 |   3.7 |  9.6 |       - |    23.2 | 23.0-25.9   |
-| LMI     | `plain-init`    |     40.0 |  65.3 |  2.0 |    14.2 |   121.5 | 100.8-123.4 |
-| LMI     | `soci-init`     |     40.4 |   9.8 | 18.9 |    12.5 |    81.6 | 80.9-82.9   |
-| LMI     | `plain-handler` |     40.0 |  66.7 |  1.1 |    14.9 |   122.7 | 122.1-124.5 |
-| LMI     | `soci-handler`  |     40.0 |  10.2 | 18.8 |    11.4 |    80.5 | 79.6-81.2   |
+| Service        | Variant         | Platform | Image | Load | Waiting | `ready` | Range       |
+| -------------- | --------------- | -------: | ----: | ---: | ------: | ------: | ----------- |
+| ECS on Fargate | `plain-init`    |     10.3 |  69.7 |  1.2 |       - |    81.2 | 80.6-83.3   |
+| ECS on Fargate | `soci-init`     |      9.9 |   3.7 |  9.6 |       - |    23.2 | 23.0-25.9   |
+| LMI            | `plain-init`    |     40.0 |  65.3 |  2.0 |    14.2 |   121.5 | 100.8-123.4 |
+| LMI            | `soci-init`     |     40.4 |   9.8 | 18.9 |    12.5 |    81.6 | 80.9-82.9   |
+| LMI            | `plain-handler` |     40.0 |  66.7 |  1.1 |    14.9 |   122.7 | 122.1-124.5 |
+| LMI            | `soci-handler`  |     40.0 |  10.2 | 18.8 |    11.4 |    80.5 | 79.6-81.2   |
 
 What the numbers show:
 
