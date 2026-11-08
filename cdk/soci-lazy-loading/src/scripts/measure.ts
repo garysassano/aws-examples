@@ -33,14 +33,28 @@ const logs = new CloudWatchLogsClient({ region: REGION });
 
 /** What app.py returns. */
 interface WorkloadResult {
-  startedAt: number;
   loadSeconds: number;
   requestSeconds: number;
+  /** Epoch seconds when the first request returned with the workload loaded. */
+  readyAt: number;
   snapshotter?: string;
 }
 
-/** One run's timings in seconds, by column name. */
-type Sample = Record<string, number>;
+/**
+ * One run in seconds. The phases follow each other, so they add up to `ready`, the time from
+ * asking for capacity to the first request returning with the workload loaded.
+ */
+interface Sample {
+  /** Task provisioning, or instance launch and Lambda's scheduling before the environment. */
+  platform: number;
+  /** From fetching the image to the workload starting. */
+  image: number;
+  /** Importing the libraries and reading the weights. */
+  load: number;
+  /** Lambda only: waiting for the function to be marked active, and for the first invoke. */
+  waiting: number;
+  ready: number;
+}
 
 const seconds = (from: Date | undefined, to: Date | undefined) =>
   ((to?.getTime() ?? Number.NaN) - (from?.getTime() ?? Number.NaN)) / 1000;
@@ -112,10 +126,14 @@ async function runFargateTask(variant: string): Promise<Sample> {
     throw new Error(`${family} used ${result.snapshotter}, not ${expectedSnapshotter}`);
   }
 
+  // pullStoppedAt comes before the layers are unpacked, so the image phase ends when the workload starts
+  const loadStartedAt = new Date((result.readyAt - result.loadSeconds) * 1000);
   return {
-    pull: seconds(task.pullStartedAt, task.pullStoppedAt),
+    platform: seconds(task.createdAt, task.pullStartedAt),
+    image: seconds(task.pullStartedAt, loadStartedAt),
     load: result.loadSeconds,
-    ready: seconds(task.createdAt, new Date(result.startedAt * 1000)) + result.loadSeconds,
+    waiting: 0,
+    ready: seconds(task.createdAt, new Date(result.readyAt * 1000)),
   };
 }
 
@@ -196,7 +214,7 @@ async function readSystemLogTimings(FunctionName: string, since: Date) {
     const creating = times.get("Execution environment is being created.");
     const created = times.get("Execution environment created.");
     if (activating && active && creating && created && active > activating) {
-      return { environment: seconds(creating, created), active: seconds(activating, active) };
+      return { activating, creating, created };
     }
     await sleep(5_000);
   }
@@ -213,25 +231,33 @@ async function runLmiColdStart(variant: string): Promise<Sample> {
   const requestedAt = new Date();
   await scaleFunction(functionName, 1);
   const result = await invokeUntilServed(functionName);
-  const timings = await readSystemLogTimings(functionName, requestedAt);
-
+  const { activating, creating, created } = await readSystemLogTimings(functionName, requestedAt);
   await scaleFunction(functionName, 0);
-  return { ...timings, load: result.loadSeconds, firstRequest: result.requestSeconds };
+
+  // Loading during initialization happens inside environment creation
+  const platform = seconds(activating, creating);
+  const image = seconds(creating, created) - (variant.endsWith("-init") ? result.loadSeconds : 0);
+  const ready = seconds(activating, new Date(result.readyAt * 1000));
+  return {
+    platform,
+    image,
+    load: result.loadSeconds,
+    waiting: ready - platform - image - result.loadSeconds,
+    ready,
+  };
 }
 
 //==============================================================================
 // REPORT
 //==============================================================================
 
-const median = (values: number[]) => values.toSorted((a, b) => a - b)[(values.length - 1) >> 1];
-
+// The median run rather than per-phase medians, so the phases still add up to `ready`.
 function summarize(variant: string, samples: Sample[]) {
+  const byReady = samples.toSorted((a, b) => a.ready - b.ready);
+  const run = byReady[(byReady.length - 1) >> 1];
   const row: Record<string, string> = { variant };
-  for (const column of Object.keys(samples[0] ?? {})) {
-    const values = samples.map((sample) => sample[column]);
-    row[column] =
-      `${median(values).toFixed(1)} (${Math.min(...values).toFixed(1)}-${Math.max(...values).toFixed(1)})`;
-  }
+  for (const [phase, value] of Object.entries(run)) row[phase] = value.toFixed(1);
+  row.range = `${byReady[0].ready.toFixed(1)}-${byReady.at(-1)?.ready.toFixed(1)}`;
   return row;
 }
 
@@ -246,7 +272,10 @@ async function measure(
     console.log(`${service}: run ${run}/${RUNS}`);
     await Promise.all(
       variants.map(async ({ name }) => {
-        samples.get(name)?.push(await sample(name));
+        const values = await sample(name);
+        // Kept in the output so totals and other summaries can be recomputed later
+        console.log(JSON.stringify({ service, run, variant: name, ...values }));
+        samples.get(name)?.push(values);
       }),
     );
   }
@@ -262,7 +291,7 @@ const [fargate, lmi] = await Promise.all([
   measure("LMI", VARIANTS, runLmiColdStart),
 ]);
 
-console.log(`Seconds, median (min-max) of ${RUNS} runs`);
+console.log(`Seconds, from the median run of ${RUNS}, with the range of ready`);
 console.log("Fargate");
 console.table(fargate);
 console.log("Lambda Managed Instances");

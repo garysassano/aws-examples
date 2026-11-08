@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="912" height="370" viewBox="-16 -16 912 370" role="img" aria-labelledby="title description">
+<title id="title">Cold start timings with and without SOCI</title>
+<desc id="description">Stacked bars of the median run per variant, phases in the order they happen. Fargate plain-init: ready 81.2 s (platform 10.3, image 69.7, load 1.2, waiting 0.0); Fargate soci-init: ready 23.2 s (platform 9.9, image 3.7, load 9.6, waiting 0.0); LMI plain-init: ready 121.5 s (platform 40.0, image 65.3, load 2.0, waiting 14.2); LMI soci-init: ready 81.6 s (platform 40.4, image 9.8, load 18.9, waiting 12.5); LMI plain-handler: ready 122.7 s (platform 40.0, image 66.7, load 1.1, waiting 14.9); LMI soci-handler: ready 80.5 s (platform 40.0, image 10.2, load 18.8, waiting 11.4).</desc>
+<style>
+svg { --surface: #fcfcfb; --text: #0b0b0b; --muted: #52514e; --grid: #e4e3df; --platform: #85847f; --image: #2a78d6; --load: #eb6834; --hatch: #85847f; }
+@media (prefers-color-scheme: dark) {
+  svg { --surface: #1a1a19; --text: #f0efec; --muted: #c3c2b7; --grid: #34332f; --platform: #6e6d68; --image: #3987e5; --load: #d95926; --hatch: #8a8984; }
+}
+text { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; font-size: 13px; }
+.bg { fill: var(--surface); }
+.txt { fill: var(--text); }
+.muted { fill: var(--muted); }
+.head { font-weight: 600; }
+.total { font-weight: 600; font-variant-numeric: tabular-nums; }
+.total .muted { font-weight: 400; }
+.tick { font-size: 12px; font-variant-numeric: tabular-nums; }
+.inside { fill: #fff; font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.grid { stroke: var(--grid); stroke-width: 1; }
+.hatch-bg { fill: var(--surface); }
+.hatch-line { stroke: var(--hatch); stroke-width: 1.5; }
+</style>
+<defs>
+<pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+<rect class="hatch-bg" width="6" height="6"/><line class="hatch-line" x1="0" y1="0" x2="0" y2="6"/>
+</pattern>
+</defs>
+<rect class="bg" x="-16" y="-16" width="912" height="370"/>
+<line class="grid" x1="150.0" y1="44" x2="150.0" y2="294"/>
+<text class="muted tick" x="150.0" y="310" text-anchor="middle">0</text>
+<line class="grid" x1="232.9" y1="44" x2="232.9" y2="294"/>
+<text class="muted tick" x="232.9" y="310" text-anchor="middle">20</text>
+<line class="grid" x1="315.7" y1="44" x2="315.7" y2="294"/>
+<text class="muted tick" x="315.7" y="310" text-anchor="middle">40</text>
+<line class="grid" x1="398.6" y1="44" x2="398.6" y2="294"/>
+<text class="muted tick" x="398.6" y="310" text-anchor="middle">60</text>
+<line class="grid" x1="481.4" y1="44" x2="481.4" y2="294"/>
+<text class="muted tick" x="481.4" y="310" text-anchor="middle">80</text>
+<line class="grid" x1="564.3" y1="44" x2="564.3" y2="294"/>
+<text class="muted tick" x="564.3" y="310" text-anchor="middle">100</text>
+<line class="grid" x1="647.1" y1="44" x2="647.1" y2="294"/>
+<text class="muted tick" x="647.1" y="310" text-anchor="middle">120</text>
+<line class="grid" x1="730.0" y1="44" x2="730.0" y2="294"/>
+<text class="muted tick" x="730.0" y="310" text-anchor="middle">140</text>
+<text class="muted tick" x="440.0" y="328" text-anchor="middle">Seconds to the first request served with the workload loaded</text>
+<rect class="seg platform" fill="var(--platform)" x="150" y="8" width="12" height="12" rx="2"/>
+<text class="txt" x="168" y="18">Platform</text>
+<rect class="seg image" fill="var(--image)" x="250.0" y="8" width="12" height="12" rx="2"/>
+<text class="txt" x="268.0" y="18">Image</text>
+<rect class="seg load" fill="var(--load)" x="327.5" y="8" width="12" height="12" rx="2"/>
+<text class="txt" x="345.5" y="18">Load</text>
+<rect class="seg waiting" fill="url(#hatch)" x="397.5" y="8" width="12" height="12" rx="2"/>
+<text class="txt" x="415.5" y="18">Waiting</text>
+<text class="muted" x="880" y="18" text-anchor="end">median run of 5, range in parentheses</text>
+<text class="txt head" x="0" y="56">Fargate</text>
+<text class="txt" x="138" y="82.0" text-anchor="end">plain-init</text>
+<rect class="seg platform" fill="var(--platform)" x="150.0" y="68" width="40.8" height="20"><title>Platform: 10.3 s</title></rect>
+<rect class="seg image" fill="var(--image)" x="192.8" y="68" width="286.7" height="20"><title>Image: 69.7 s</title></rect>
+<text class="inside" x="198.8" y="82.0">70</text>
+<path class="seg load" fill="var(--load)" d="M481.5,68 h1.0 a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 h-1.0 z"><title>Load: 1.2 s</title></path>
+<text class="txt total" x="494.6" y="82.0">81.2 s<tspan class="muted"> (80.6–83.3)</tspan></text>
+<text class="txt" x="138" y="114.0" text-anchor="end">soci-init</text>
+<rect class="seg platform" fill="var(--platform)" x="150.0" y="100" width="39.0" height="20"><title>Platform: 9.9 s</title></rect>
+<rect class="seg image" fill="var(--image)" x="191.0" y="100" width="13.5" height="20"><title>Image: 3.7 s</title></rect>
+<path class="seg load" fill="var(--load)" d="M206.5,100 h35.7 a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 h-35.7 z"><title>Load: 9.6 s</title></path>
+<text class="inside" x="212.5" y="114.0">10</text>
+<text class="txt total" x="254.2" y="114.0">23.2 s<tspan class="muted"> (23.0–25.9)</tspan></text>
+<text class="txt head" x="0" y="150">Lambda Managed Instances</text>
+<text class="txt" x="138" y="176.0" text-anchor="end">plain-init</text>
+<rect class="seg platform" fill="var(--platform)" x="150.0" y="162" width="163.8" height="20"><title>Platform: 40.0 s</title></rect>
+<rect class="seg image" fill="var(--image)" x="315.8" y="162" width="268.6" height="20"><title>Image: 65.3 s</title></rect>
+<text class="inside" x="321.8" y="176.0">65</text>
+<rect class="seg load" fill="var(--load)" x="586.5" y="162" width="6.3" height="20"><title>Load: 2.0 s</title></rect>
+<path class="seg waiting" fill="url(#hatch)" d="M594.7,162 h54.8 a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 h-54.8 z"><title>Waiting: 14.2 s</title></path>
+<text class="txt total" x="661.6" y="176.0">121.5 s<tspan class="muted"> (100.8–123.4)</tspan></text>
+<text class="txt" x="138" y="208.0" text-anchor="end">soci-init</text>
+<rect class="seg platform" fill="var(--platform)" x="150.0" y="194" width="165.2" height="20"><title>Platform: 40.4 s</title></rect>
+<rect class="seg image" fill="var(--image)" x="317.2" y="194" width="38.5" height="20"><title>Image: 9.8 s</title></rect>
+<text class="inside" x="323.2" y="208.0">10</text>
+<rect class="seg load" fill="var(--load)" x="357.7" y="194" width="76.5" height="20"><title>Load: 18.9 s</title></rect>
+<text class="inside" x="363.7" y="208.0">19</text>
+<path class="seg waiting" fill="url(#hatch)" d="M436.2,194 h47.9 a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 h-47.9 z"><title>Waiting: 12.5 s</title></path>
+<text class="txt total" x="496.0" y="208.0">81.6 s<tspan class="muted"> (80.9–82.9)</tspan></text>
+<text class="txt" x="138" y="240.0" text-anchor="end">plain-handler</text>
+<rect class="seg platform" fill="var(--platform)" x="150.0" y="226" width="163.8" height="20"><title>Platform: 40.0 s</title></rect>
+<rect class="seg image" fill="var(--image)" x="315.8" y="226" width="274.1" height="20"><title>Image: 66.7 s</title></rect>
+<text class="inside" x="321.8" y="240.0">67</text>
+<rect class="seg waiting" fill="url(#hatch)" x="592.0" y="226" width="59.8" height="20"><title>Waiting: 14.9 s</title></rect>
+<path class="seg load" fill="var(--load)" d="M653.8,226 h0.6 a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 h-0.6 z"><title>Load: 1.1 s</title></path>
+<text class="txt total" x="666.3" y="240.0">122.7 s<tspan class="muted"> (122.1–124.5)</tspan></text>
+<text class="txt" x="138" y="272.0" text-anchor="end">soci-handler</text>
+<rect class="seg platform" fill="var(--platform)" x="150.0" y="258" width="163.8" height="20"><title>Platform: 40.0 s</title></rect>
+<rect class="seg image" fill="var(--image)" x="315.8" y="258" width="40.5" height="20"><title>Image: 10.2 s</title></rect>
+<text class="inside" x="321.8" y="272.0">10</text>
+<rect class="seg waiting" fill="url(#hatch)" x="358.3" y="258" width="45.3" height="20"><title>Waiting: 11.4 s</title></rect>
+<path class="seg load" fill="var(--load)" d="M405.6,258 h73.8 a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 h-73.8 z"><title>Load: 18.8 s</title></path>
+<text class="inside" x="411.6" y="272.0">19</text>
+<text class="txt total" x="491.4" y="272.0">80.5 s<tspan class="muted"> (79.6–81.2)</tspan></text>
+</svg>
