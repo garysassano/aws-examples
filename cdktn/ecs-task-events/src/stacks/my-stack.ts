@@ -207,8 +207,8 @@ export class MyStack extends TerraformStack {
             },
             // The task never reached RUNNING.
             { stopCode: ["TaskFailedToStart"] },
-            // One of the stopped task error categories, such as CannotPullContainerError,
-            // OutOfMemoryError, or ResourceNotFoundException, which ECS puts before a colon.
+            // One of the stopped task error categories, such as CannotPullContainerError or
+            // ResourceNotFoundException, which ECS puts before a colon.
             { stoppedReason: [{ wildcard: "*Error:*" }, { wildcard: "*Exception:*" }] },
           ],
         },

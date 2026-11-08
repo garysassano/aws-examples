@@ -51,9 +51,10 @@ const getTags = async (taskDefinition: string) => {
 };
 
 /**
- * ECS names the error category before a colon, usually at the start, as in
- * `CannotPullContainerError: ...`, but sometimes after context, as in
- * `Fetching secret data ...: ResourceNotFoundException: ...`.
+ * ECS names the error category before a colon. On Fargate it comes first, as in
+ * `ResourceInitializationError: unable to pull secrets ...`, but the docs also show it
+ * after context, as in `Fetching secret data ...: ResourceNotFoundException: ...`, so
+ * the first category anywhere in the reason wins.
  */
 const ERROR_CATEGORY = /\b([A-Z][A-Za-z]*(?:Error|Exception)):/;
 
