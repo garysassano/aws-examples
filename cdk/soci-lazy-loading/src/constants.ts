@@ -10,5 +10,6 @@ export const SOCI_TAG = "soci";
 export const VARIANTS = [
   { name: "plain-init", tag: PLAIN_TAG, loadAt: "init" },
   { name: "soci-init", tag: SOCI_TAG, loadAt: "init" },
+  { name: "plain-handler", tag: PLAIN_TAG, loadAt: "handler" },
   { name: "soci-handler", tag: SOCI_TAG, loadAt: "handler" },
 ] as const;

@@ -8,8 +8,6 @@ files when the image is lazy loaded.
 import os
 import time
 
-STARTED_AT = time.time()
-
 _load_seconds = None
 
 
@@ -38,7 +36,7 @@ def handler(event=None, context=None):
         _load_seconds = load()
 
     return {
-        "startedAt": STARTED_AT,
         "loadSeconds": _load_seconds,
         "requestSeconds": time.perf_counter() - begin,
+        "readyAt": time.time(),
     }
