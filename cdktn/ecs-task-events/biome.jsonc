@@ -6,7 +6,6 @@
     "includes": [
       "src/**",
       "!src/assets",
-      "!src/functions",
       "test/**",
       "package.json",
       "cdktf.json",

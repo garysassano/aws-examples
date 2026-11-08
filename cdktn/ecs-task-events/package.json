@@ -1,5 +1,5 @@
 {
-  "name": "cdktn-ecs-task-events-tagger",
+  "name": "cdktn-ecs-task-events",
   "private": true,
   "version": "0.0.0",
   "license": "MIT",
@@ -22,8 +22,6 @@
   "dependencies": {
     "@aws-lambda-powertools/logger": "catalog:",
     "@aws-sdk/client-ecs": "catalog:",
-    "@middy/core": "catalog:",
-    "@middy/http-error-handler": "catalog:",
     "cdktn": "catalog:",
     "constructs": "catalog:"
   },
