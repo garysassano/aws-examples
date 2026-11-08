@@ -86,6 +86,10 @@
 <text x="1050" y="261" font-family="Consolas, Menlo, DejaVu Sans Mono, Liberation Mono, monospace" font-size="12" text-anchor="middle" fill="#232F3E" font-weight="normal">
 <tspan x="1050" dy="0">sagemaker:InvokeEndpoint</tspan>
 </text>
+<rect x="978.2" y="282" width="143.6" height="18" rx="4" fill="#EAF2FC" stroke="#7FA7D8" stroke-width="1" data-chip="option"/>
+<text x="1050" y="295" font-family="Consolas, Menlo, DejaVu Sans Mono, Liberation Mono, monospace" font-size="12" text-anchor="middle" fill="#232F3E" font-weight="normal">
+<tspan x="1050" dy="0">detector=sagemaker</tspan>
+</text>
 </g>
 <g data-edge-from="detect" data-edge-to="rek">
 <polyline points="920,424 1152,424" fill="none" stroke="#232F3E" stroke-width="2" stroke-linejoin="miter"/>
@@ -93,6 +97,10 @@
 <rect x="956.6" y="398" width="186.8" height="18" rx="4" fill="#EEF2F6" stroke="#AAB7C4" stroke-width="1" data-chip="api"/>
 <text x="1050" y="411" font-family="Consolas, Menlo, DejaVu Sans Mono, Liberation Mono, monospace" font-size="12" text-anchor="middle" fill="#232F3E" font-weight="normal">
 <tspan x="1050" dy="0">rekognition:DetectLabels</tspan>
+</text>
+<rect x="971" y="432" width="158" height="18" rx="4" fill="#EAF2FC" stroke="#7FA7D8" stroke-width="1" data-chip="option"/>
+<text x="1050" y="445" font-family="Consolas, Menlo, DejaVu Sans Mono, Liberation Mono, monospace" font-size="12" text-anchor="middle" fill="#232F3E" font-weight="normal">
+<tspan x="1050" dy="0">detector=rekognition</tspan>
 </text>
 </g>
 <g data-edge-from="detect" data-edge-to="events">
@@ -233,8 +241,8 @@
 <text x="1245" y="444" font-family="Arial, Helvetica, sans-serif" font-size="14" text-anchor="middle" fill="#232F3E" font-weight="600">
 <tspan x="1245" dy="0">Rekognition</tspan>
 </text>
-<text x="1245" y="466" font-family="Consolas, Menlo, DejaVu Sans Mono, Liberation Mono, monospace" font-size="12" text-anchor="middle" fill="#232F3E" font-weight="normal">
-<tspan x="1245" dy="0">detector=rekognition</tspan>
+<text x="1245" y="466" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="middle" fill="#536577" font-weight="normal">
+<tspan x="1245" dy="0">AWS-managed model</tspan>
 </text>
 </g>
 <g data-node-id="sm">
@@ -251,8 +259,8 @@
 <text x="1245" y="294" font-family="Arial, Helvetica, sans-serif" font-size="14" text-anchor="middle" fill="#232F3E" font-weight="600">
 <tspan x="1245" dy="0">SageMaker endpoint</tspan>
 </text>
-<text x="1245" y="316" font-family="Consolas, Menlo, DejaVu Sans Mono, Liberation Mono, monospace" font-size="12" text-anchor="middle" fill="#232F3E" font-weight="normal">
-<tspan x="1245" dy="0">detector=sagemaker</tspan>
+<text x="1245" y="316" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="middle" fill="#536577" font-weight="normal">
+<tspan x="1245" dy="0">D-FINE-L model</tspan>
 </text>
 </g>
 <g data-node-id="events">
@@ -291,15 +299,22 @@
 </text>
 </g>
 <g data-legend="">
-<polyline points="1198.66,100 1226.66,100" fill="none" stroke="#232F3E" stroke-width="2" stroke-linejoin="miter"/>
-<polygon points="1234.66,100 1226.66,96 1226.66,104" fill="#232F3E"/>
-<text x="1246.66" y="104" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="start" fill="#536577" font-weight="normal">
-<tspan x="1246.66" dy="0">Request</tspan>
+<polyline points="1206.92,100 1234.92,100" fill="none" stroke="#232F3E" stroke-width="2" stroke-linejoin="miter"/>
+<polygon points="1242.92,100 1234.92,96 1234.92,104" fill="#232F3E"/>
+<text x="1254.92" y="104" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="start" fill="#536577" font-weight="normal">
+<tspan x="1254.92" dy="0">Request</tspan>
 </text>
-<polyline points="1198.66,124 1226.66,124" fill="none" stroke="#232F3E" stroke-width="2" stroke-linejoin="miter" stroke-dasharray="6 5"/>
-<polygon points="1234.66,124 1226.66,120 1226.66,128" fill="#232F3E"/>
-<text x="1246.66" y="128" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="start" fill="#536577" font-weight="normal">
-<tspan x="1246.66" dy="0">Event</tspan>
+<polyline points="1206.92,124 1234.92,124" fill="none" stroke="#232F3E" stroke-width="2" stroke-linejoin="miter" stroke-dasharray="6 5"/>
+<polygon points="1242.92,124 1234.92,120 1234.92,128" fill="#232F3E"/>
+<text x="1254.92" y="128" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="start" fill="#536577" font-weight="normal">
+<tspan x="1254.92" dy="0">Event</tspan>
+</text>
+<rect x="1155.72" y="139" width="93.2" height="18" rx="4" fill="#EAF2FC" stroke="#7FA7D8" stroke-width="1" data-chip="option"/>
+<text x="1202.32" y="152" font-family="Consolas, Menlo, DejaVu Sans Mono, Liberation Mono, monospace" font-size="12" text-anchor="middle" fill="#232F3E" font-weight="normal">
+<tspan x="1202.32" dy="0">-c detector</tspan>
+</text>
+<text x="1254.92" y="152" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="start" fill="#536577" font-weight="normal">
+<tspan x="1254.92" dy="0">Deploy option</tspan>
 </text>
 </g>
 <circle cx="270" cy="150" r="15" fill="#232F3E"/>
@@ -322,14 +337,6 @@
 <text x="655" y="455.5" font-family="Arial, Helvetica, sans-serif" font-size="16" text-anchor="middle" fill="#FFFFFF" font-weight="bold">
 <tspan x="655" dy="0">5</tspan>
 </text>
-<circle cx="1050" cy="450" r="15" fill="#232F3E"/>
-<text x="1050" y="455.5" font-family="Arial, Helvetica, sans-serif" font-size="16" text-anchor="middle" fill="#FFFFFF" font-weight="bold">
-<tspan x="1050" dy="0">6</tspan>
-</text>
-<circle cx="1050" cy="300" r="15" fill="#232F3E"/>
-<text x="1050" y="305.5" font-family="Arial, Helvetica, sans-serif" font-size="16" text-anchor="middle" fill="#FFFFFF" font-weight="bold">
-<tspan x="1050" dy="0">6</tspan>
-</text>
 <circle cx="1017.5" cy="600" r="15" fill="#232F3E"/>
 <text x="1017.5" y="605.5" font-family="Arial, Helvetica, sans-serif" font-size="16" text-anchor="middle" fill="#FFFFFF" font-weight="bold">
 <tspan x="1017.5" dy="0">7</tspan>
@@ -337,5 +344,9 @@
 <circle cx="677.5" cy="600" r="15" fill="#232F3E"/>
 <text x="677.5" y="605.5" font-family="Arial, Helvetica, sans-serif" font-size="16" text-anchor="middle" fill="#FFFFFF" font-weight="bold">
 <tspan x="677.5" dy="0">8</tspan>
+</text>
+<circle cx="1050" cy="349" r="15" fill="#232F3E"/>
+<text x="1050" y="354.5" font-family="Arial, Helvetica, sans-serif" font-size="16" text-anchor="middle" fill="#FFFFFF" font-weight="bold">
+<tspan x="1050" dy="0">6</tspan>
 </text>
 </svg>
