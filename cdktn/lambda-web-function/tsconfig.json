@@ -15,6 +15,6 @@
     "target": "ES2025",
     "types": ["node"]
   },
-  "include": ["src/main.ts", "src/constructs/**/*.ts", "src/stacks/**/*.ts", "src/utils/**/*.ts", "test/**/*.ts"],
+  "include": ["src/main.ts", "src/constructs/**/*.ts", "src/stacks/**/*.ts", "test/**/*.ts"],
   "exclude": [".gen", "cdktn.out", "dist", "node_modules", "src/functions"]
 }

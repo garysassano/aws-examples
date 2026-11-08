@@ -11,9 +11,14 @@
     "terraform": ">=1.5.7",
     "opentofu": ">=1.6.0"
   },
+  "sendUsageTelemetry": "false",
   "terraformProviders": [
-    "hashicorp/aws@~> 6.68.0",
+    "hashicorp/aws@~> 6.72.0",
     "kreuzwerker/docker@~> 4.6.0",
     "upstash/upstash@~> 2.1.0"
-  ]
+  ],
+  "context": {
+    "failOnConstructsOutsideOfStacks": "true",
+    "canonicalAssetHashes": "true"
+  }
 }

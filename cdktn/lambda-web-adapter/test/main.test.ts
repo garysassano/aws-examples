@@ -69,8 +69,8 @@ describe("MyStack", () => {
     expect(image.build.sbom).toBe("false");
     expect(image.build.context).toMatch(new RegExp(`src/functions/${dir}$`));
     // A hash of the whole build context, computed at synth time.
-    expect(image.triggers.filesha256).toMatch(/^[0-9a-f]{64}$/);
-    expect(push.triggers.filesha256).toBe(image.triggers.filesha256);
+    expect(image.triggers.contextHash).toMatch(/^[0-9A-F]{32}$/);
+    expect(push.triggers.contextHash).toBe(image.triggers.contextHash);
   });
 
   it.each(apps)("deploys $name from its pushed image digest", ({ id, name }) => {
