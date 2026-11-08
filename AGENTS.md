@@ -9,7 +9,7 @@ The title is `#`, Related Apps is `###` because it belongs to the intro, every o
 
 A README describes the app as it is now. Don't link upstream issues or PRs that would change it, or say what can go once they ship; track that in an issue on this repository, and update the example when the change is released.
 
-Measured results such as timings, sizes, and costs go stale as services change, so open each set of them with one sentence giving the date as `YYYY-MM-DD`, the Region, what the numbers depend on, and how they were sampled, for example "Measured on 2026-10-08 in `eu-central-1` with `nodejs24.x` on arm64, 1024 MB, and 15 interleaved cold starts per function." Date prices the same way ("list prices as of 2026-10-31"), and update the date whenever the numbers are re-measured.
+Measured results such as timings, sizes, and costs go stale as services change, so open each set of them with "Measured on YYYY-MM-DD in `<region>`", date prices as "list prices as of YYYY-MM-DD", and update the date whenever the numbers are re-measured. Say how they were measured, such as versions, configuration, and sample size, once and where it reads best: in that sentence, a table header, the chart, or the text around it.
 
 ## Keep personal details out of the repository
 
