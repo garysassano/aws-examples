@@ -1,3 +1,6 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { AssetHash } from "cdktn";
 import { Construct } from "constructs";
 import { CloudwatchLogGroup } from "../../.gen/providers/aws/cloudwatch-log-group/index.js";
 import { EcrRepository } from "../../.gen/providers/aws/ecr-repository/index.js";
@@ -7,7 +10,6 @@ import { LambdaFunction } from "../../.gen/providers/aws/lambda-function/index.j
 import { LambdaFunctionUrl } from "../../.gen/providers/aws/lambda-function-url/index.js";
 import { Image } from "../../.gen/providers/docker/image/index.js";
 import { RegistryImage } from "../../.gen/providers/docker/registry-image/index.js";
-import { hashBuildContext } from "../utils/hash-context.js";
 
 export interface LambdaWebAppProps {
   /** Name of the ECR repository and the function, and prefix of its execution role. */
@@ -55,7 +57,10 @@ export class LambdaWebApp extends Construct {
     });
 
     // Rebuilds and pushes the image whenever a file in the build context changes.
-    const triggers = { filesha256: hashBuildContext(props.buildContext) };
+    // The hash leaves out what .dockerignore keeps out of the context.
+    const dockerignore = readFileSync(join(props.buildContext, ".dockerignore"), "utf8");
+    const exclude = dockerignore.split("\n").filter((line) => line.trim() && !line.startsWith("#"));
+    const triggers = { contextHash: AssetHash.of(props.buildContext, { exclude }) };
 
     const image = new Image(this, "Image", {
       name: repository.repositoryUrl,

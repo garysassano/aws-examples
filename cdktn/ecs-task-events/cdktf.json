@@ -11,5 +11,10 @@
     "terraform": ">=1.5.7",
     "opentofu": ">=1.6.0"
   },
-  "terraformProviders": ["hashicorp/aws@~> 6.72.0", "jSherz/node-lambda-packager@~> 1.15.0"]
+  "sendUsageTelemetry": "false",
+  "terraformProviders": ["hashicorp/aws@~> 6.72.0", "jSherz/node-lambda-packager@~> 1.15.0"],
+  "context": {
+    "failOnConstructsOutsideOfStacks": "true",
+    "canonicalAssetHashes": "true"
+  }
 }
