@@ -1255,6 +1255,9 @@ importers:
       '@aws-lambda-powertools/logger':
         specifier: 'catalog:'
         version: 2.35.0(@aws-lambda-powertools/jmespath@2.35.0)(@middy/core@7.9.2)
+      '@aws-lambda-powertools/parser':
+        specifier: 'catalog:'
+        version: 2.35.0(@middy/core@7.9.2)(zod@4.6.7)
       '@aws-sdk/client-ecs':
         specifier: 'catalog:'
         version: 3.1148.0
@@ -1264,6 +1267,9 @@ importers:
       constructs:
         specifier: 'catalog:'
         version: 10.8.1
+      zod:
+        specifier: 'catalog:'
+        version: 4.6.7
     devDependencies:
       '@biomejs/biome':
         specifier: 'catalog:'

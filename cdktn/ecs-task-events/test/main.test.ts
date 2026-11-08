@@ -28,7 +28,7 @@ describe("MyStack", () => {
         containers: { exitCode: [{ "anything-but": 0 }] },
       },
       { stopCode: ["TaskFailedToStart"] },
-      { stoppedReason: [{ wildcard: "*Error:*" }] },
+      { stoppedReason: [{ wildcard: "*Error:*" }, { wildcard: "*Exception:*" }] },
     ]);
   });
 

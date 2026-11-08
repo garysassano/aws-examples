@@ -21,9 +21,11 @@
   },
   "dependencies": {
     "@aws-lambda-powertools/logger": "catalog:",
+    "@aws-lambda-powertools/parser": "catalog:",
     "@aws-sdk/client-ecs": "catalog:",
     "cdktn": "catalog:",
-    "constructs": "catalog:"
+    "constructs": "catalog:",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@biomejs/biome": "catalog:",

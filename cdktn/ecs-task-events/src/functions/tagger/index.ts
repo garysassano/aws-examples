@@ -1,18 +1,32 @@
 import { Logger } from "@aws-lambda-powertools/logger";
+import { parse } from "@aws-lambda-powertools/parser";
+import { EventBridgeEnvelope } from "@aws-lambda-powertools/parser/envelopes/eventbridge";
 import { DescribeTaskDefinitionCommand, ECSClient } from "@aws-sdk/client-ecs";
-import type { Context, EventBridgeEvent } from "aws-lambda";
+import type { Context } from "aws-lambda";
+import { z } from "zod";
 
-/** The fields of an ECS Task State Change event that the tagger reads. */
-interface TaskStateChange {
-  clusterArn: string;
+/**
+ * The fields of an ECS Task State Change event's `detail` that the tagger reads, optional
+ * where the `aws.ecs@ECSTaskStateChange` schema in the EventBridge schema registry says so.
+ * Powertools ships no ECS schema, so this extends its EventBridge envelope.
+ */
+const TaskStateChange = z.object({
+  clusterArn: z.string(),
   /** `service:<name>` for a service's tasks, `family:<name>` for a standalone task. */
-  group: string;
-  taskArn: string;
-  taskDefinitionArn: string;
-  stopCode: string;
-  stoppedReason: string;
-  containers: { name: string; exitCode?: number; reason?: string }[];
-}
+  group: z.string().optional(),
+  taskArn: z.string(),
+  taskDefinitionArn: z.string(),
+  stopCode: z.string().optional(),
+  stoppedReason: z.string().optional(),
+  containers: z.array(
+    z.object({
+      name: z.string(),
+      exitCode: z.number().optional(),
+      reason: z.string().optional(),
+    }),
+  ),
+});
+type TaskStateChange = z.infer<typeof TaskStateChange>;
 
 const ecs = new ECSClient();
 const logger = new Logger();
@@ -36,32 +50,29 @@ const getTags = async (taskDefinition: string) => {
   return tags;
 };
 
-/** ECS puts platform errors before a colon, as in `CannotPullContainerError: ...`. */
-const getError = ({ stopCode, stoppedReason }: TaskStateChange) => {
-  const separator = stoppedReason.indexOf(": ");
-  if (separator > 0) {
-    return { code: stoppedReason.slice(0, separator), message: stoppedReason.slice(separator + 2) };
-  }
-  return { code: stopCode, message: stoppedReason };
-};
+/**
+ * ECS names the error category before a colon, usually at the start, as in
+ * `CannotPullContainerError: ...`, but sometimes after context, as in
+ * `Fetching secret data ...: ResourceNotFoundException: ...`.
+ */
+const ERROR_CATEGORY = /\b([A-Z][A-Za-z]*(?:Error|Exception)):/;
 
-export const handler = async (
-  event: EventBridgeEvent<"ECS Task State Change", TaskStateChange>,
-  context: Context,
-): Promise<void> => {
+const getErrorCode = ({ stopCode, stoppedReason = "" }: TaskStateChange) =>
+  ERROR_CATEGORY.exec(stoppedReason)?.[1] ?? stopCode;
+
+export const handler = async (event: unknown, context: Context): Promise<void> => {
   logger.addContext(context);
 
-  const { detail } = event;
-  const [groupType, groupName] = detail.group.split(":", 2);
-  const error = getError(detail);
+  const detail = parse(event, EventBridgeEnvelope, TaskStateChange);
+  const [groupType, groupName] = detail.group?.split(":", 2) ?? [];
 
   logger.info("ECS task stopped with an error", {
     ecs_cluster: detail.clusterArn.split("/").pop(),
     ecs_service: groupType === "service" ? groupName : undefined,
     ecs_task_id: detail.taskArn.split("/").pop(),
     ecs_task_definition: detail.taskDefinitionArn.split("/").pop(),
-    error_code: error.code,
-    error_message: error.message,
+    error_code: getErrorCode(detail),
+    error_message: detail.stoppedReason,
     exit_codes: Object.fromEntries(
       detail.containers
         .filter((container) => container.exitCode !== undefined)
