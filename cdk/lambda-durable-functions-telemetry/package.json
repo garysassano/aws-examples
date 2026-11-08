@@ -1,0 +1,47 @@
+{
+  "name": "cdk-lambda-durable-functions-telemetry",
+  "private": true,
+  "version": "0.0.0",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "cdk": "cdk",
+    "check": "pnpm lint && pnpm typecheck && pnpm synth",
+    "deploy": "cdk deploy",
+    "destroy": "cdk destroy",
+    "diff": "cdk diff",
+    "format": "biome format --write .",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "start-executions": "node --import tsx src/scripts/start-executions.ts",
+    "synth": "cdk synth --strict",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@aws-crypto/sha256-js": "^5.2.0",
+    "@aws-sdk/client-cloudwatch-logs": "^3.1162.0",
+    "@aws-sdk/client-dynamodb": "catalog:",
+    "@aws-sdk/client-eventbridge": "^3.1162.0",
+    "@aws-sdk/client-firehose": "^3.1162.0",
+    "@aws-sdk/client-lambda": "^3.1162.0",
+    "@aws-sdk/client-rds-data": "^3.1162.0",
+    "@aws-sdk/client-redshift-data": "^3.1162.0",
+    "@aws-sdk/client-s3": "catalog:",
+    "@aws-sdk/client-sqs": "catalog:",
+    "@aws-sdk/credential-provider-node": "^3.972.93",
+    "@aws-sdk/util-dynamodb": "^3.996.9",
+    "@aws/durable-execution-sdk-js": "^3.0.0",
+    "@aws/durable-execution-sdk-js-telemetry-exporter": "^1.0.0",
+    "@smithy/signature-v4": "^4.2.4",
+    "aws-cdk-lib": "catalog:",
+    "constructs": "catalog:"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "catalog:",
+    "@types/node": "catalog:",
+    "aws-cdk": "catalog:",
+    "esbuild": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:"
+  }
+}
