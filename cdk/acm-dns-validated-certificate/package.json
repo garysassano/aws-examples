@@ -1,0 +1,32 @@
+{
+  "name": "cdk-acm-dns-validated-certificate",
+  "private": true,
+  "version": "0.0.0",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "cdk": "cdk",
+    "check": "pnpm lint && pnpm typecheck && pnpm synth",
+    "deploy": "cdk deploy --all",
+    "destroy": "cdk destroy --all",
+    "diff": "cdk diff --all",
+    "format": "biome format --write .",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "synth": "cdk synth --strict",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@open-constructs/aws-cdk": "^0.2.0",
+    "aws-cdk-lib": "catalog:",
+    "constructs": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "catalog:",
+    "@types/node": "catalog:",
+    "aws-cdk": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:"
+  }
+}
