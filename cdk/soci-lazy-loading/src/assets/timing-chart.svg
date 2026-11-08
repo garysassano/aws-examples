@@ -51,7 +51,7 @@ text { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; fo
 <rect class="seg waiting" fill="url(#hatch)" x="397.5" y="8" width="12" height="12" rx="2"/>
 <text class="txt" x="415.5" y="18">Waiting</text>
 <text class="muted" x="880" y="18" text-anchor="end">median run of 5, range in parentheses</text>
-<text class="txt head" x="0" y="56">Fargate</text>
+<text class="txt head" x="0" y="56">ECS on Fargate</text>
 <text class="txt" x="138" y="82.0" text-anchor="end">plain-init</text>
 <rect class="seg platform" fill="var(--platform)" x="150.0" y="68" width="40.8" height="20"><title>Platform: 10.3 s</title></rect>
 <rect class="seg image" fill="var(--image)" x="192.8" y="68" width="286.7" height="20"><title>Image: 69.7 s</title></rect>
