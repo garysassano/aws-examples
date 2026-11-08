@@ -4,10 +4,6 @@ CDK app that measures [Seekable OCI (SOCI)](https://github.com/awslabs/soci-snap
 
 SOCI starts a container before its image has been downloaded and fetches files as they are read. The app pushes one 3.7 GiB image to Amazon ECR under two tags, with and without a SOCI index, runs it on both services, and reports where the time goes. Both tags hold the same layers, so the index is the only difference.
 
-### Related Apps
-
-- [cdk/lambda-managed-instances](../lambda-managed-instances) - Runs a minimal function on Lambda Managed Instances from a zip archive.
-
 ## Prerequisites
 
 - **_AWS:_**

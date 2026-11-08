@@ -5,7 +5,6 @@ CDK app that deploys a Lambda function with an LMI (Lambda Managed Instances) ca
 ### Related Apps
 
 - [cdk/ecs-managed-instances](../ecs-managed-instances) - Runs a minimal nginx service on ECS Managed Instances.
-- [cdk/soci-lazy-loading](../soci-lazy-loading) - Runs a large container image on Lambda Managed Instances and Fargate, with and without SOCI lazy loading.
 
 ## Prerequisites
 
