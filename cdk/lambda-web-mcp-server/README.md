@@ -2,7 +2,7 @@
 
 CDK app that runs a remote [MCP](https://modelcontextprotocol.io/) server as an [AWS Lambda Web Function](https://docs.aws.amazon.com/lambda/latest/dg/web-functions.html) behind IAM authentication, so MCP clients such as Claude Code reach it with ordinary AWS credentials through [MCP Proxy for AWS](https://github.com/aws/mcp-proxy-for-aws).
 
-The server is a plain Node HTTP server that uses the MCP TypeScript SDK over stateless Streamable HTTP. Its endpoint uses `IamAuth`, so Lambda rejects any request that isn't signed with SigV4 by a principal allowed `lambda:InvokeWebFunctionEndpoint`, before the request reaches the code. MCP clients can't sign requests themselves, so the proxy runs on your computer as a stdio MCP server and signs each request with your credentials. There is no OAuth server to run and no secret in the app.
+The server is a plain Node HTTP server that uses the MCP TypeScript SDK over stateless Streamable HTTP. Its endpoint uses `IamAuth`, so Lambda rejects any request that isn't signed with SigV4 by a principal allowed `lambda:InvokeWebFunctionEndpoint`, before the request reaches the code. Clients such as Claude Code can't sign requests themselves, so the proxy runs on your computer as a stdio MCP server and signs each request with your credentials. There is no OAuth server to run and no secret in the app.
 
 ### Related Apps
 
