@@ -6,6 +6,7 @@ import {
   type CfnUserPoolClient,
   FeaturePlan,
   LambdaVersion,
+  ManagedLoginVersion,
   OAuthScope,
   ResourceServerScope,
   UserPool,
@@ -19,6 +20,7 @@ import {
 } from "aws-cdk-lib/aws-lambda-nodejs";
 import {
   CfnOutput,
+  Duration,
   Fn,
   RemovalPolicy,
   Stack,
@@ -102,11 +104,14 @@ export class MyStack extends Stack {
       reason: "The bundled schemas predate the token-exchange flows",
     });
 
-    // The agent gets its actor token from the token endpoint, which needs a domain. Prefixes are
-    // unique per Region, so this one ends with part of the stack's ID.
+    // The token endpoint, where the agent sends both grants, needs a domain. It accepts token
+    // exchange grants only on a managed login domain, and answers `token_exchange_requires_managed_login`
+    // on a classic hosted UI one. Prefixes are unique per Region, so this one ends with part of the
+    // stack's ID.
     const stackIdSuffix = Fn.select(4, Fn.split("-", Fn.select(2, Fn.split("/", this.stackId))));
     const domain = userPool.addDomain("Domain", {
       cognitoDomain: { domainPrefix: `token-exchange-${stackIdSuffix}` },
+      managedLoginVersion: ManagedLoginVersion.NEWER_MANAGED_LOGIN,
     });
 
     const issuer = userPool.userPoolProviderUrl;
@@ -131,8 +136,9 @@ export class MyStack extends Stack {
     const agentFunction = new NodejsFunction(this, "AgentFunction", {
       ...functionDefaults,
       entry: entry("agent"),
-      // GetDerivedToken is newer than the SDK in the Lambda runtime.
-      bundling: { ...functionDefaults.bundling, bundleAwsSDK: true },
+      // Room for a cold start plus three HTTPS calls: the secret, the two grants, and the orders API.
+      memorySize: 256,
+      timeout: Duration.seconds(10),
       environment: {
         USER_POOL_ID: userPool.userPoolId,
         AGENT_CLIENT_ID: agentClient.userPoolClientId,
