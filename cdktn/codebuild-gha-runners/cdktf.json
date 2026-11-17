@@ -8,8 +8,8 @@
   "projectId": "37da78e7-457b-4bc6-8287-c577a3b4bd44",
   "sendCrashReports": "false",
   "targetVersions": {
-    "terraform": ">=1.5.7",
-    "opentofu": ">=1.6.0"
+    "terraform": ">=1.11.0",
+    "opentofu": ">=1.11.0"
   },
   "sendUsageTelemetry": "false",
   "terraformProviders": ["hashicorp/aws@~> 6.72.0", "integrations/github@~> 6.13.0"],
