@@ -86,10 +86,6 @@ allowBuilds:
 
 minimumReleaseAge: 4320
 minimumReleaseAgeStrict: true
-# Temporary: GetDerivedToken, which cdk/cognito-token-exchange calls, first shipped in
-# client-cognito-identity-provider 3.1170.0 on 2026-11-16. Remove after 2026-11-19.
-minimumReleaseAgeExclude:
-  - "@aws-sdk/client-cognito-identity-provider@3.1170.0"
 
 # mise owns the package-manager binary.
 pmOnFail: ignore

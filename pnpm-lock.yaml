@@ -296,8 +296,8 @@ importers:
   cdk/cognito-token-exchange:
     dependencies:
       '@aws-sdk/client-cognito-identity-provider':
-        specifier: ^3.1170.0
-        version: 3.1170.0
+        specifier: ^3.1169.0
+        version: 3.1169.0
       aws-cdk-lib:
         specifier: 'catalog:'
         version: 2.275.0(constructs@10.8.1)
@@ -1471,8 +1471,8 @@ packages:
     resolution: {integrity: sha512-4lsxer5lcjFt+UgiHWi4WrSjXd8vdiOUalPkL5GMbZGf36BXBBE0RvecF7xR/p8q3I2fVakXhU/ErkZp2jmR7A==}
     engines: {node: '>=20.0.0'}
 
-  '@aws-sdk/client-cognito-identity-provider@3.1170.0':
-    resolution: {integrity: sha512-LsfgsLwrD7Hu4pF2W7AMR9nHxxtCtIa/9NjYycxBGj9JW1QqKNXc9JQc+rZ3ajNI1U2ZEZrHYciGGkqsrSX/tg==}
+  '@aws-sdk/client-cognito-identity-provider@3.1169.0':
+    resolution: {integrity: sha512-BDMuvX7FRc2gHsPNNje0w1bHp307XoaZQDZn02MqD4xNBxSQdpeABwBzGdxqTJEMB+IHbQCd5X5DO0M/6+rAKg==}
     engines: {node: '>=20.0.0'}
 
   '@aws-sdk/client-dynamodb@3.1148.0':
@@ -4619,7 +4619,7 @@ snapshots:
       '@smithy/types': 4.19.0
       tslib: 2.8.1
 
-  '@aws-sdk/client-cognito-identity-provider@3.1170.0':
+  '@aws-sdk/client-cognito-identity-provider@3.1169.0':
     dependencies:
       '@aws-sdk/core': 3.981.0
       '@aws-sdk/credential-provider-node': 3.972.97
