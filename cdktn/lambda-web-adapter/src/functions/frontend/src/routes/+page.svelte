@@ -1,110 +1,110 @@
 <script lang="ts">
-import { onMount, untrack } from "svelte";
-import { prefersReducedMotion } from "svelte/motion";
-import { fly } from "svelte/transition";
-import { type SubmitFunction, enhance } from "$app/forms";
-import { refreshAll } from "$app/navigation";
-import hono from "../assets/hono.svg";
-import svelte from "../assets/svelte.svg";
-import upstashRedis from "../assets/upstash-redis.svg";
-import type { PageData, PageProps } from "./$types";
+  import { onMount, untrack } from "svelte";
+  import { prefersReducedMotion } from "svelte/motion";
+  import { fly } from "svelte/transition";
+  import { type SubmitFunction, enhance } from "$app/forms";
+  import { refreshAll } from "$app/navigation";
+  import hono from "../assets/hono.svg";
+  import svelte from "../assets/svelte.svg";
+  import upstashRedis from "../assets/upstash-redis.svg";
+  import type { PageData, PageProps } from "./$types";
 
-let { data, form }: PageProps = $props();
+  let { data, form }: PageProps = $props();
 
-type Counter = Pick<PageData, "clicks" | "hops">;
+  type Counter = Pick<PageData, "clicks" | "hops">;
 
-// The load function's result, replaced by each click's result until `load` runs again,
-// as it does when the tab becomes visible.
-let counter: Counter = $derived(data);
+  // The load function's result, replaced by each click's result until `load` runs again,
+  // as it does when the tab becomes visible.
+  let counter: Counter = $derived(data);
 
-const ICONS: Record<string, string> = { SvelteKit: svelte, Hono: hono, Redis: upstashRedis };
+  const ICONS: Record<string, string> = { SvelteKit: svelte, Hono: hono, Redis: upstashRedis };
 
-// Most clicks finish before the indicator would appear, so they never flash it;
-// once it appears, it stays long enough to read.
-const SHOW_AFTER_MS = 300;
-const SHOW_AT_LEAST_MS = 400;
+  // Most clicks finish before the indicator would appear, so they never flash it;
+  // once it appears, it stays long enough to read.
+  const SHOW_AFTER_MS = 300;
+  const SHOW_AT_LEAST_MS = 400;
 
-let submitting = $state(false);
-let busy = $state(false);
+  let submitting = $state(false);
+  let busy = $state(false);
 
-// One floating "+1" per successful click, removed when its animation ends.
-let bumps = $state<number[]>([]);
-let nextBump = 0;
+  // One floating "+1" per successful click, removed when its animation ends.
+  let bumps = $state<number[]>([]);
+  let nextBump = 0;
 
-// Each successful click sends a packet of light along the arrows, one hop after
-// the other, lighting each head as it arrives. Packets run independently, so a burst
-// of clicks shows as a stream rather than restarting or queueing one animation.
-// A packet is removed on a timer, which also works when one finishes before the page
-// hydrates.
-const HOP_MS = 420;
-const HOP_GAP_MS = 320;
-const MAX_PACKETS = 4;
+  // Each successful click sends a packet of light along the arrows, one hop after
+  // the other, lighting each head as it arrives. Packets run independently, so a burst
+  // of clicks shows as a stream rather than restarting or queueing one animation.
+  // A packet is removed on a timer, which also works when one finishes before the page
+  // hydrates.
+  const HOP_MS = 420;
+  const HOP_GAP_MS = 320;
+  const MAX_PACKETS = 4;
 
-// A page load sends nothing, so it plays no packet, unless the page is itself the
-// result of an increment: a form submission without JavaScript, where `form` holds
-// the action's result.
-// Only the initial value matters; later results send their own packets.
-let packets = $state<number[]>(untrack(() => form) ? [0] : []);
-let nextPacket = 1;
+  // A page load sends nothing, so it plays no packet, unless the page is itself the
+  // result of an increment: a form submission without JavaScript, where `form` holds
+  // the action's result.
+  // Only the initial value matters; later results send their own packets.
+  let packets = $state<number[]>(untrack(() => form) ? [0] : []);
+  let nextPacket = 1;
 
-const packetMs = () => HOP_MS + HOP_GAP_MS * (counter.hops.length - 1) + 50;
+  const packetMs = () => HOP_MS + HOP_GAP_MS * (counter.hops.length - 1) + 50;
 
-function removeLater(id: number) {
-  setTimeout(() => (packets = packets.filter((packet) => packet !== id)), packetMs());
-}
+  function removeLater(id: number) {
+    setTimeout(() => (packets = packets.filter((packet) => packet !== id)), packetMs());
+  }
 
-function sendPacket() {
-  if (prefersReducedMotion.current || packets.length >= MAX_PACKETS) return;
-  const id = nextPacket++;
-  packets.push(id);
-  removeLater(id);
-}
+  function sendPacket() {
+    if (prefersReducedMotion.current || packets.length >= MAX_PACKETS) return;
+    const id = nextPacket++;
+    packets.push(id);
+    removeLater(id);
+  }
 
-onMount(() => {
-  if (packets.length) removeLater(0);
-});
+  onMount(() => {
+    if (packets.length) removeLater(0);
+  });
 
-// Switching tabs fires both visibilitychange and focus; one refresh is enough.
-let lastRefresh = 0;
-// Whether focus left the page, for another app or another window.
-let away = false;
+  // Switching tabs fires both visibilitychange and focus; one refresh is enough.
+  let lastRefresh = 0;
+  // Whether focus left the page, for another app or another window.
+  let away = false;
 
-function refresh() {
-  const now = performance.now();
-  if (now - lastRefresh < 1000) return;
-  lastRefresh = now;
-  refreshAll();
-}
+  function refresh() {
+    const now = performance.now();
+    if (now - lastRefresh < 1000) return;
+    lastRefresh = now;
+    refreshAll();
+  }
 
-const count: SubmitFunction<Counter> = () => {
-  submitting = true;
-  let shownAt = 0;
-  const timer = setTimeout(() => {
-    busy = true;
-    shownAt = performance.now();
-  }, SHOW_AFTER_MS);
+  const count: SubmitFunction<Counter> = () => {
+    submitting = true;
+    let shownAt = 0;
+    const timer = setTimeout(() => {
+      busy = true;
+      shownAt = performance.now();
+    }, SHOW_AFTER_MS);
 
-  return async ({ result, update }) => {
-    if (result.type === "success" && result.data) {
-      // The action returns the new count, so it is shown without rerunning `load`.
-      counter = result.data;
-      // Click effects are decoration, so readers who prefer reduced motion get none;
-      // the count itself still updates.
-      if (!prefersReducedMotion.current) bumps.push(nextBump++);
-      sendPacket();
-    } else {
-      // Errors, failures, and redirects get SvelteKit's default handling.
-      await update();
-    }
-    clearTimeout(timer);
-    if (busy) {
-      const left = SHOW_AT_LEAST_MS - (performance.now() - shownAt);
-      if (left > 0) await new Promise((resolve) => setTimeout(resolve, left));
-    }
-    busy = false;
-    submitting = false;
+    return async ({ result, update }) => {
+      if (result.type === "success" && result.data) {
+        // The action returns the new count, so it is shown without rerunning `load`.
+        counter = result.data;
+        // Click effects are decoration, so readers who prefer reduced motion get none;
+        // the count itself still updates.
+        if (!prefersReducedMotion.current) bumps.push(nextBump++);
+        sendPacket();
+      } else {
+        // Errors, failures, and redirects get SvelteKit's default handling.
+        await update();
+      }
+      clearTimeout(timer);
+      if (busy) {
+        const left = SHOW_AT_LEAST_MS - (performance.now() - shownAt);
+        if (left > 0) await new Promise((resolve) => setTimeout(resolve, left));
+      }
+      busy = false;
+      submitting = false;
+    };
   };
-};
 </script>
 
 <!-- Counts made elsewhere appear when the page comes back: when its tab is shown
@@ -151,7 +151,8 @@ const count: SubmitFunction<Counter> = () => {
         <span
           class="bump"
           aria-hidden="true"
-          onanimationend={() => (bumps = bumps.filter((bump) => bump !== id))}>+1</span
+          onanimationend={() => (bumps = bumps.filter((bump) => bump !== id))}
+          >+1</span
         >
       {/each}
       <!-- Disabled at once against double submits, but styled as busy only once `busy`. -->
@@ -182,12 +183,16 @@ const count: SubmitFunction<Counter> = () => {
         <li class="hop" style:--i={i}>
           <span class="ms" title="{from} → {hop.to} on the last request">{hop.ms} ms</span>
           <span class="line">
-            {#each packets as id (id)}<span class="packet" aria-hidden="true"></span>{/each}
+            {#each packets as id (id)}
+              <span class="packet" aria-hidden="true"></span>
+            {/each}
           </span>
           <span class="head" aria-hidden="true">
-            <svg width="9" height="12" viewBox="0 0 9 12"><path d="M1.5 1.5 7 6 1.5 10.5" /></svg>
+            <svg width="9" height="12" viewBox="0 0 9 12" aria-hidden="true">
+              <path d="M1.5 1.5 7 6 1.5 10.5" />
+            </svg>
             {#each packets as id (id)}
-              <svg class="flash" width="9" height="12" viewBox="0 0 9 12">
+              <svg class="flash" width="9" height="12" viewBox="0 0 9 12" aria-hidden="true">
                 <path d="M1.5 1.5 7 6 1.5 10.5" />
               </svg>
             {/each}
@@ -201,8 +206,12 @@ const count: SubmitFunction<Counter> = () => {
 
 {#snippet node(name: string, vendor?: string)}
   <li class="node">
-    {#if ICONS[name]}<img class="logo" src={ICONS[name]} alt="" width="12" height="12" />{/if}
-    {#if vendor}<span class="vendor">{vendor}</span>{/if}{name}
+    {#if ICONS[name]}
+      <img class="logo" src={ICONS[name]} alt="" width="12" height="12" />
+    {/if}
+    {#if vendor}
+      <span class="vendor">{vendor}</span>
+    {/if}{name}
   </li>
 {/snippet}
 

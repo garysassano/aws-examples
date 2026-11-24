@@ -34,7 +34,7 @@ catalog:
   # Pinned to the version the other @aws-sdk/client-* entries resolve to: it depends on the same
   # version of client-s3 exactly, and a newer one would install a second, incompatible client-s3.
   "@aws-sdk/s3-presigned-post": 3.1148.0
-  "@biomejs/biome": ^2.5.15
+  "@biomejs/biome": ^2.6.9
   cargo-lambda-cdk: ^0.0.36
   cdktn: ^0.25.0
   cdktn-cli: ^0.25.0

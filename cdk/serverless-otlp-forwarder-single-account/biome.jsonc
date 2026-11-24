@@ -6,6 +6,8 @@
     "includes": [
       "src/**",
       "!src/assets",
+      // Tera templates, whose tags Biome would format as HTML text.
+      "!src/functions/app-frontend/src/templates",
       "package.json",
       "cdk.json"
     ]
