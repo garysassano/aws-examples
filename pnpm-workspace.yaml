@@ -34,7 +34,7 @@ catalog:
   # Pinned to the version the other @aws-sdk/client-* entries resolve to: it depends on the same
   # version of client-s3 exactly, and a newer one would install a second, incompatible client-s3.
   "@aws-sdk/s3-presigned-post": 3.1148.0
-  "@biomejs/biome": ^2.5.15
+  "@biomejs/biome": ^2.6.9
   cargo-lambda-cdk: ^0.0.36
   cdktn: ^0.25.0
   cdktn-cli: ^0.25.0
@@ -86,6 +86,18 @@ allowBuilds:
 
 minimumReleaseAge: 4320
 minimumReleaseAgeStrict: true
+minimumReleaseAgeExclude:
+  - "@biomejs/biome@2.6.9"
+  - "@biomejs/cli-android-arm64@2.6.9"
+  - "@biomejs/cli-android-x64@2.6.9"
+  - "@biomejs/cli-darwin-arm64@2.6.9"
+  - "@biomejs/cli-darwin-x64@2.6.9"
+  - "@biomejs/cli-linux-arm64@2.6.9"
+  - "@biomejs/cli-linux-arm64-musl@2.6.9"
+  - "@biomejs/cli-linux-x64@2.6.9"
+  - "@biomejs/cli-linux-x64-musl@2.6.9"
+  - "@biomejs/cli-win32-arm64@2.6.9"
+  - "@biomejs/cli-win32-x64@2.6.9"
 
 # mise owns the package-manager binary.
 pmOnFail: ignore

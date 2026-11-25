@@ -13,22 +13,5 @@
       "cdktf.json",
       "vitest.config.ts"
     ]
-  },
-  "overrides": [
-    {
-      // Biome reads only the script block, so it cannot see what the markup uses.
-      "includes": ["**/*.svelte"],
-      "linter": {
-        "rules": {
-          "correctness": {
-            "noUnusedImports": "off",
-            "noUnusedVariables": "off"
-          },
-          "style": {
-            "useConst": "off"
-          }
-        }
-      }
-    }
-  ]
+  }
 }
