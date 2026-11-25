@@ -321,6 +321,11 @@
     stroke-linecap: round;
   }
 
+  button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+
   button:hover:not([aria-busy="true"]) {
     transform: translateY(-1px);
     filter: brightness(1.06);
@@ -331,11 +336,6 @@
 
   button:active:not([aria-busy="true"]) {
     transform: translateY(0) scale(0.98);
-  }
-
-  button:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 3px;
   }
 
   button[aria-busy="true"] {
