@@ -8,6 +8,7 @@ import {
   Runtime,
 } from "aws-cdk-lib/aws-lambda";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
+import { LogGroup } from "aws-cdk-lib/aws-logs";
 import { Duration, Stack, type StackProps } from "aws-cdk-lib/core";
 import type { Construct } from "constructs";
 
@@ -39,6 +40,11 @@ export class MyStack extends Stack {
       memorySize: 2048,
       timeout: Duration.minutes(1),
       loggingFormat: LoggingFormat.JSON,
+      // Lambda starts execution environments when it publishes the function, so the log group
+      // must exist before the function; CDK's default one is created after it, too late to log.
+      logGroup: new LogGroup(this, "LMIFunctionLogGroup", {
+        logGroupName: "/aws/lambda/lmi-function",
+      }),
     });
 
     lmiCapacityProvider.addFunction(lmiFunction, {
