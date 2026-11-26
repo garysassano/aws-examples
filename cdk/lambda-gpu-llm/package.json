@@ -1,0 +1,37 @@
+{
+  "name": "cdk-lambda-gpu-llm",
+  "private": true,
+  "version": "0.0.0",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "build-image": "node --import tsx src/scripts/build-image.ts",
+    "cdk": "cdk",
+    "chat": "node --import tsx src/scripts/chat.ts",
+    "check": "pnpm lint && pnpm typecheck && pnpm synth -c variant=all",
+    "deploy": "cdk deploy cdk-lambda-gpu-llm-image-dev --require-approval never && pnpm build-image && cdk deploy --all --require-approval never",
+    "destroy": "cdk destroy --all --force",
+    "diff": "cdk diff --all",
+    "format": "biome format --write .",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "measure": "node --import tsx src/scripts/measure.ts",
+    "synth": "cdk synth --strict",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "catalog:",
+    "constructs": "catalog:"
+  },
+  "devDependencies": {
+    "@aws-sdk/client-cloudwatch-logs": "^3.1148.0",
+    "@aws-sdk/client-codebuild": "^3.1148.0",
+    "@aws-sdk/client-ec2": "^3.1148.0",
+    "@aws-sdk/client-lambda": "^3.1148.0",
+    "@biomejs/biome": "catalog:",
+    "@types/node": "catalog:",
+    "aws-cdk": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:"
+  }
+}
