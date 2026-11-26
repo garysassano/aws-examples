@@ -74,6 +74,11 @@ export class ComputeStack extends Stack {
         memorySize: 4096,
         timeout: Duration.minutes(5),
         loggingFormat: LoggingFormat.JSON,
+        // Lambda starts execution environments when it publishes the function, so the log group
+        // must exist before the function; CDK's default one is created after it, too late to log.
+        logGroup: new LogGroup(this, `LogGroup-${name}`, {
+          logGroupName: `/aws/lambda/${RESOURCE_PREFIX}-${name}`,
+        }),
         environment: { LOAD_AT: loadAt },
       });
 
